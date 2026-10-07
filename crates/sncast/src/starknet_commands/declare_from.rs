@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use clap::{ArgGroup, Args};
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::artifacts::sierra_class_from_file;
-use sncast::helpers::rpc::FreeProvider;
+use sncast::helpers::rpc::{FreeProvider, RpcArgs};
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
 use sncast::response::ui::UI;
@@ -56,6 +56,9 @@ pub struct DeclareFrom {
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
+
+    #[command(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(Args, Clone, Debug, Default)]
@@ -110,7 +113,7 @@ pub enum ContractSource {
 pub async fn declare_from<S>(
     contract_source: ContractSource,
     no_abi: bool,
-    common_args: &DeclareCommonArgs,
+    common_args: DeclareCommonArgs,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
@@ -159,9 +162,7 @@ where
     declare_with_artifacts(
         sierra,
         casm,
-        &common_args.fee_args,
-        &common_args.dry_run_args,
-        common_args.nonce,
+        common_args,
         no_abi,
         account,
         wait_config,

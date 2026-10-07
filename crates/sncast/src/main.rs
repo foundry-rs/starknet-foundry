@@ -1,6 +1,6 @@
 use std::num::{NonZeroU8, NonZeroU16};
 
-use crate::starknet_commands::declare::declare_with_artifacts;
+use crate::starknet_commands::declare::{DeclareCommonArgs, declare_with_artifacts};
 use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::get::Get;
@@ -375,9 +375,9 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
 
     match cli.command {
         Commands::Declare(declare) => {
-            let provider = declare.common.rpc.get_provider(&config, ui).await?;
+            let provider = declare.rpc.get_provider(&config, ui).await?;
 
-            let account = get_account(&config, &provider, &declare.common.rpc, ui).await?;
+            let account = get_account(&config, &provider, &declare.rpc, ui).await?;
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(
@@ -395,9 +395,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
             let result = with_account!(&account, |account| {
                 starknet_commands::declare::declare(
                     declare.contract_name.clone(),
-                    declare.common.fee_args,
-                    declare.common.dry_run_args,
-                    declare.common.nonce,
+                    declare.common,
                     declare.no_abi,
                     account,
                     &artifacts,
@@ -432,7 +430,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                 let contract_definition: SierraClass =
                     serde_json::from_str(&contract_artifacts.sierra)
                         .context("Failed to parse sierra artifact")?;
-                let network_flag = generate_network_flag(&declare.common.rpc, &config);
+                let network_flag = generate_network_flag(&declare.rpc, &config);
                 Some(DeployCommandMessage::new(
                     &contract_definition.abi,
                     declare.no_abi,
@@ -475,14 +473,14 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                 }
             };
 
-            let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
-            let account = get_account(&config, &provider, &declare_from.common.rpc, ui).await?;
+            let provider = declare_from.rpc.get_provider(&config, ui).await?;
+            let account = get_account(&config, &provider, &declare_from.rpc, ui).await?;
 
             let result = with_account!(&account, |account| {
                 starknet_commands::declare_from::declare_from(
                     contract_source,
                     declare_from.no_abi,
-                    &declare_from.common,
+                    declare_from.common,
                     account,
                     wait_config,
                     false,
@@ -567,14 +565,17 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                     serde_json::from_str(&contract_artifacts.casm)
                         .context("Failed to parse casm artifact")?;
                 let local_abi = contract_definition.abi.clone();
+                let common_args = DeclareCommonArgs {
+                    fee_args,
+                    dry_run_args,
+                    nonce,
+                };
 
                 let declare_result = with_account!(&account, |account| {
                     declare_with_artifacts(
                         contract_definition,
                         casm_contract_definition,
-                        &fee_args,
-                        &dry_run_args,
-                        nonce,
+                        common_args,
                         no_abi,
                         account,
                         WaitForTx {
