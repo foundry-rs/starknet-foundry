@@ -40,9 +40,6 @@ pub struct DeclareCommonArgs {
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
-
-    #[command(flatten)]
-    pub rpc: RpcArgs,
 }
 
 #[derive(Args)]
@@ -62,6 +59,9 @@ pub struct Declare {
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
+
+    #[command(flatten)]
+    pub rpc: RpcArgs,
 }
 
 // TODO(#3785)
@@ -69,9 +69,7 @@ pub struct Declare {
 #[expect(clippy::result_large_err)]
 pub async fn declare<S>(
     contract_name: String,
-    fee_args: FeeArgs,
-    dry_run_args: DryRunArgs,
-    nonce: Option<Felt>,
+    common: DeclareCommonArgs,
     no_abi: bool,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     artifacts: &ContractArtifactsMap,
@@ -92,9 +90,7 @@ where
     declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        &fee_args,
-        &dry_run_args,
-        nonce,
+        common,
         no_abi,
         account,
         wait_config,
@@ -128,9 +124,7 @@ pub fn compile_sierra_to_casm(
 pub async fn declare_with_artifacts<S>(
     mut sierra_class: SierraClass,
     compiled_casm: CompiledClass,
-    fee_args: &FeeArgs,
-    dry_run_args: &DryRunArgs,
-    nonce: Option<Felt>,
+    common: DeclareCommonArgs,
     no_abi: bool,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -158,8 +152,9 @@ where
         casm_class_hash,
     );
 
-    if dry_run_args.dry_run {
-        return dry_run_args
+    if common.dry_run_args.dry_run {
+        return common
+            .dry_run_args
             .estimate(|| declaration.estimate_fee())
             .await
             .map(DeclareResponse::DryRun)
@@ -168,14 +163,14 @@ where
             });
     }
 
-    let fee_settings = if fee_args.max_fee.is_some() {
+    let fee_settings = if common.fee_args.max_fee.is_some() {
         let fee_estimate = declaration
             .estimate_fee()
             .await
             .map_err(|error| anyhow!("Failed to estimate fee: {error}"))?;
-        fee_args.try_into_fee_settings(Some(&fee_estimate))
+        common.fee_args.try_into_fee_settings(Some(&fee_estimate))
     } else {
-        fee_args.try_into_fee_settings(None)
+        common.fee_args.try_into_fee_settings(None)
     };
 
     let FeeSettings {
@@ -197,7 +192,7 @@ where
         l1_data_gas => DeclarationV3::l1_data_gas,
         l1_data_gas_price => DeclarationV3::l1_data_gas_price,
         tip => DeclarationV3::tip,
-        nonce => DeclarationV3::nonce
+        common.nonce => DeclarationV3::nonce
     );
 
     let declared = declaration.send().await;
