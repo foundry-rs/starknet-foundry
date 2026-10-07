@@ -68,8 +68,14 @@ impl EventSpyAssertionsTraitImpl<T, +starknet::Event<T>, +Drop<T>> of EventSpyAs
 
         for (from, event) in events.span() {
             if !received_events.is_emitted(*from, event) {
-                let from: felt252 = (*from).into();
-                panic!("Event with matching data and keys was not emitted from {}", from);
+                let (event, contract_address, contract_full_path) = format_event(*from, event);
+                let contract_full_path = contract_full_path.unwrap_or("contract");
+                panic!(
+                    "Event {} was not emitted from {} at {}",
+                    event,
+                    contract_full_path,
+                    contract_address,
+                );
             }
         };
     }
@@ -79,11 +85,27 @@ impl EventSpyAssertionsTraitImpl<T, +starknet::Event<T>, +Drop<T>> of EventSpyAs
 
         for (from, event) in events.span() {
             if received_events.is_emitted(*from, event) {
-                let from: felt252 = (*from).into();
-                panic!("Event with matching data and keys was emitted from {}", from);
+                let (event, contract_address, contract_full_path) = format_event(*from, event);
+                let contract_full_path = contract_full_path.unwrap_or("contract");
+                panic!(
+                    "Event {} was emitted from {} at {}",
+                    event,
+                    contract_full_path,
+                    contract_address,
+                );
             }
         };
     }
+}
+
+fn format_event<T, +starknet::Event<T>, +Drop<T>>(
+    from: ContractAddress, event: @T,
+) -> (ByteArray, ByteArray, Option<ByteArray>) {
+    let event: Event = event.into();
+    let mut input = array![];
+    from.serialize(ref input);
+    event.serialize(ref input);
+    execute_cheatcode_and_deserialize::<'format_event'>(input.span())
 }
 
 pub trait IsEmitted<T, +starknet::Event<T>, +Drop<T>> {

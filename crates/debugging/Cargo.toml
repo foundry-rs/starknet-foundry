@@ -6,6 +6,9 @@ edition.workspace = true
 [lints]
 workspace = true
 
+[features]
+starkloupe = ["cheatnet/starkloupe"]
+
 [dependencies]
 blockifier.workspace = true
 cairo-annotations.workspace = true

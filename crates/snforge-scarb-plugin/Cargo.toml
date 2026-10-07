@@ -1,6 +1,8 @@
+[workspace]
+
 [package]
 name = "snforge_scarb_plugin"
-version = "0.63.0"
+version = "0.64.1"
 edition = "2024"
 publish = false
 rust-version = "1.87.0"
@@ -15,6 +17,7 @@ debug-assertions = true
 [lints.clippy]
 pedantic = { level = "deny", priority = -1 }
 missing_errors_doc = "allow"
+assert_is_empty = "allow"
 
 [dependencies]
 cairo-lang-macro = "0.2.1"

@@ -246,7 +246,11 @@ mod tests {
             used_l1_resources: L1Resources::default(),
             used_syscalls_vm_resources: HashMap::default(),
             used_syscalls_sierra_gas: HashMap::default(),
+            #[cfg(feature = "starkloupe")]
+            tracked_resource: None,
             vm_trace: None,
+            #[cfg(feature = "starkloupe")]
+            vm_memory: None,
             gas_consumed: 0,
             events: vec![],
             signature: vec![],

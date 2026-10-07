@@ -47,6 +47,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
+          cache: false
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --profile ci --lib -p forge
@@ -92,6 +93,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
+          cache: false
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Install cairo-profiler
         run: |
@@ -133,6 +135,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
+          cache: false
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Get Devnet version from .tool-versions
         id: get-devnet-version
@@ -162,7 +165,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
+        uses: mikefarah/yq@504fc38780cc46be8444ea1b72fb55919fc0bfb0 # v4.54.1
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 

@@ -72,15 +72,14 @@ fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<Strin
                  --- DIFF ---\n\
                  {out}"
             );
-        } else {
-            panic!(
-                "Output does not match.\n\n\
-                 --- FULL OUTPUT ---\n\
-                 {full_output}\n\n\
-                 --- DIFF ---\n\
-                 {out}"
-            );
         }
+        panic!(
+            "Output does not match.\n\n\
+             --- FULL OUTPUT ---\n\
+             {full_output}\n\n\
+             --- DIFF ---\n\
+             {out}"
+        );
     }
 }
 

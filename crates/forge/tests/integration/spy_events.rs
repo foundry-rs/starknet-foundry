@@ -78,6 +78,145 @@ fn spy_events_simple() {
 }
 
 #[test]
+fn spy_events_emitted_by_library_call() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, test_address, Event,
+                EventSpy, EventSpyAssertionsTrait
+            };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_one_event(ref self: TContractState, some_data: felt252);
+            }
+
+            #[starknet::contract]
+            mod SpyEventsChecker {
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    FirstEvent: FirstEvent
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct FirstEvent {
+                    some_data: felt252
+                }
+            }
+
+            #[test]
+            fn spy_events_emitted_by_library_call() {
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
+                let dispatcher = ISpyEventsCheckerLibraryDispatcher {
+                    class_hash: contract.class_hash.clone()
+                };
+
+                let mut spy = spy_events();
+                dispatcher.emit_one_event(123);
+
+                spy.assert_emitted(@array![
+                    (
+                        test_address(),
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data: 123 }
+                        )
+                    )
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "contract::SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn spy_events_emitted_by_library_call_fails() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, test_address, Event,
+                EventSpy, EventSpyAssertionsTrait
+            };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_one_event(ref self: TContractState, some_data: felt252);
+            }
+
+            #[starknet::contract]
+            mod SpyEventsChecker {
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    FirstEvent: FirstEvent
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct FirstEvent {
+                    some_data: felt252
+                }
+            }
+
+            #[test]
+            fn spy_events_emitted_by_library_call_fails() {
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
+                let dispatcher = ISpyEventsCheckerLibraryDispatcher {
+                    class_hash: contract.class_hash.clone()
+                };
+
+                let mut spy = spy_events();
+                dispatcher.emit_one_event(123);
+
+                spy.assert_emitted(@array![
+                    (
+                        test_address(),
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data: 456 }
+                        )
+                    )
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "contract::SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "spy_events_emitted_by_library_call_fails",
+        "Event { keys: [0xa7f959d3eee3641c46990c878d8b5c3072bd06e41c69736b51b45017c5dad6], data: [0x1c8] } was not emitted from contract at",
+    );
+}
+
+#[test]
 fn assert_emitted_fails() {
     let test = test_case!(
         indoc!(
@@ -147,9 +286,8 @@ fn assert_emitted_fails() {
     assert_case_output_contains(
         &result,
         "assert_emitted_fails",
-        "Event with matching data and",
+        "Event FirstEvent { some_data: 0x7b } was not emitted from contract::SpyEventsChecker at",
     );
-    assert_case_output_contains(&result, "assert_emitted_fails", "keys was not emitted");
 }
 
 #[test]
@@ -256,12 +394,12 @@ fn expect_three_events_while_two_emitted() {
     assert_case_output_contains(
         &result,
         "expect_three_events_while_two_emitted",
-        "Event with matching data and",
+        "contract::SpyEventsChecker",
     );
     assert_case_output_contains(
         &result,
         "expect_three_events_while_two_emitted",
-        "keys was not emitted",
+        "Event ThirdEvent {",
     );
 }
 
@@ -429,12 +567,7 @@ fn event_emitted_wrong_data_asserted() {
     assert_case_output_contains(
         &result,
         "event_emitted_wrong_data_asserted",
-        "Event with matching data and",
-    );
-    assert_case_output_contains(
-        &result,
-        "event_emitted_wrong_data_asserted",
-        "keys was not emitted from",
+        "Event FirstEvent { some_data: 0x7c } was not emitted from contract::SpyEventsChecker at",
     );
 }
 
@@ -486,6 +619,56 @@ fn emit_unnamed_event() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+}
+
+#[test]
+fn emit_unnamed_event_fails() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
+                EventSpyAssertionsTrait
+            };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_event_syscall(ref self: TContractState, some_key: felt252, some_data: felt252);
+            }
+
+            #[test]
+            fn emit_unnamed_event_fails() {
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events();
+                dispatcher.emit_event_syscall(123, 456);
+
+                spy.assert_emitted(@array![
+                    (contract_address, Event { keys: array![123], data: array![457] })
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "contract::SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "emit_unnamed_event_fails",
+        "Event { keys: [0x7b], data: [0x1c9] } was not emitted from contract::SpyEventsChecker at",
+    );
 }
 
 #[test]
@@ -627,9 +810,8 @@ fn assert_not_emitted_fails() {
     assert_case_output_contains(
         &result,
         "assert_not_emitted_fails",
-        "Event with matching data and",
+        "Event FirstEvent { some_data: 0x7b } was emitted from contract::SpyEventsChecker at",
     );
-    assert_case_output_contains(&result, "assert_not_emitted_fails", "keys was emitted");
 }
 
 #[test]
@@ -810,4 +992,306 @@ fn test_filtering() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+}
+
+#[test]
+fn assert_emitted_with_replaced_bytecode() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use core::clone::Clone;
+            use snforge_std::{
+                declare, replace_bytecode, spy_events, ContractClassTrait, DeclareResultTrait,
+                EventSpyAssertionsTrait
+            };
+
+            #[starknet::interface]
+            trait IReplaceBytecode<TContractState> {
+                fn emit_event(ref self: TContractState);
+            }
+
+            #[starknet::contract]
+            mod ReplaceBytecodeB {
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    ValueChanged: ValueChanged,
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct ValueChanged {
+                    value: felt252,
+                }
+            }
+
+            #[test]
+            fn assert_emitted_with_replaced_bytecode() {
+                let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
+                let replacement = declare("ReplaceBytecodeB").unwrap().contract_class().class_hash.clone();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let dispatcher = IReplaceBytecodeDispatcher { contract_address };
+
+                replace_bytecode(contract_address, replacement);
+
+                let mut spy = spy_events();
+                dispatcher.emit_event();
+
+                spy.assert_emitted(@array![
+                    (
+                        contract_address,
+                        ReplaceBytecodeB::Event::ValueChanged(
+                            ReplaceBytecodeB::ValueChanged { value: 420 }
+                        )
+                    )
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeB",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn assert_not_emitted_with_replaced_bytecode() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use core::clone::Clone;
+            use snforge_std::{
+                declare, replace_bytecode, spy_events, ContractClassTrait, DeclareResultTrait,
+                EventSpyAssertionsTrait
+            };
+
+            #[starknet::interface]
+            trait IReplaceBytecode<TContractState> {
+                fn emit_event(ref self: TContractState);
+            }
+
+            #[starknet::contract]
+            mod ReplaceBytecodeB {
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    ValueChanged: ValueChanged,
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct ValueChanged {
+                    value: felt252,
+                }
+            }
+
+            #[test]
+            fn assert_not_emitted_with_replaced_bytecode() {
+                let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
+                let replacement = declare("ReplaceBytecodeB").unwrap().contract_class().class_hash.clone();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let dispatcher = IReplaceBytecodeDispatcher { contract_address };
+
+                replace_bytecode(contract_address, replacement);
+
+                let mut spy = spy_events();
+                dispatcher.emit_event();
+
+                spy.assert_not_emitted(@array![
+                    (
+                        contract_address,
+                        ReplaceBytecodeB::Event::ValueChanged(
+                            ReplaceBytecodeB::ValueChanged { value: 2137 }
+                        )
+                    )
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeB",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn assert_emitted_with_replaced_bytecode_fails() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use core::clone::Clone;
+            use snforge_std::{
+                declare, replace_bytecode, spy_events, ContractClassTrait, DeclareResultTrait,
+                EventSpyAssertionsTrait
+            };
+
+            #[starknet::interface]
+            trait IReplaceBytecode<TContractState> {
+                fn emit_event(ref self: TContractState);
+            }
+
+            #[starknet::contract]
+            mod ReplaceBytecodeB {
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    ValueChanged: ValueChanged,
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct ValueChanged {
+                    value: felt252,
+                }
+            }
+
+            #[test]
+            fn assert_emitted_with_replaced_bytecode_fails() {
+                let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
+                let replacement = declare("ReplaceBytecodeB").unwrap().contract_class().class_hash.clone();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let dispatcher = IReplaceBytecodeDispatcher { contract_address };
+
+                replace_bytecode(contract_address, replacement);
+
+                let mut spy = spy_events();
+                dispatcher.emit_event();
+
+                spy.assert_emitted(@array![
+                    (
+                        contract_address,
+                        ReplaceBytecodeB::Event::ValueChanged(
+                            ReplaceBytecodeB::ValueChanged { value: 2137 }
+                        )
+                    )
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeB",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "assert_emitted_with_replaced_bytecode_fails",
+        "Event ValueChanged { value: 0x859 } was not emitted from contract::ReplaceBytecodeB at",
+    );
+}
+
+#[test]
+fn assert_not_emitted_with_replaced_bytecode_fails() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use core::clone::Clone;
+            use snforge_std::{
+                declare, replace_bytecode, spy_events, ContractClassTrait, DeclareResultTrait,
+                EventSpyAssertionsTrait
+            };
+
+            #[starknet::interface]
+            trait IReplaceBytecode<TContractState> {
+                fn emit_event(ref self: TContractState);
+            }
+
+            #[starknet::contract]
+            mod ReplaceBytecodeB {
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    ValueChanged: ValueChanged,
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct ValueChanged {
+                    value: felt252,
+                }
+            }
+
+            #[test]
+            fn assert_not_emitted_with_replaced_bytecode_fails() {
+                let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
+                let replacement = declare("ReplaceBytecodeB").unwrap().contract_class().class_hash.clone();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let dispatcher = IReplaceBytecodeDispatcher { contract_address };
+
+                replace_bytecode(contract_address, replacement);
+
+                let mut spy = spy_events();
+                dispatcher.emit_event();
+
+                spy.assert_not_emitted(@array![
+                    (
+                        contract_address,
+                        ReplaceBytecodeB::Event::ValueChanged(
+                            ReplaceBytecodeB::ValueChanged { value: 420 }
+                        )
+                    )
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "contract::ReplaceBytecodeB",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "assert_not_emitted_with_replaced_bytecode_fails",
+        "Event ValueChanged { value: 0x1a4 } was emitted from contract::ReplaceBytecodeB at",
+    );
 }

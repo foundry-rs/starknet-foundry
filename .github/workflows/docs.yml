@@ -35,7 +35,7 @@ jobs:
       MDBOOK_VARIABLES_VERSION: 0.3.0
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067
         with:
           toolchain: stable
       - uses: actions/setup-node@v7
@@ -53,6 +53,7 @@ jobs:
         uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: latest
+          cache: false
       - name: Generate and build snforge_std docs
         run: scarb doc --build
         working-directory: ./snforge_std

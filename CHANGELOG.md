@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.64.1] - 2026-10-06
+
+### Cast
+
+#### Added
+
+- `sncast get chain-id` command for fetching network's chain id.
+- `sncast get syncing` command for fetching node's syncing status.
+
+#### Changed
+
+- Invalid Cairo-like calldata now reports missing and unexpected positional arguments, alongside the provided arguments and expected argument names and types.
+- Error message for a struct constructor invocation whose fields do not match the ABI now lists the expected fields (with their types) along with the provided fields.
+
+#### Fixed
+
+- Invalid tuple lengths in Cairo-like calldata now produce a data transformer error instead of failing during contract execution.
+
+## [0.64.0] - 2026-09-16
+
 ### Forge
 
 #### Added
@@ -14,10 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Possibility to set an L2 gas limit via unnamed argument `#[available_gas(...)]`, equivalent to `#[available_gas(l2_gas: ...)]`.
 - `CACHEDIR.TAG` file is now created in the cache directory.
 - CASM compilation results are now cached between `snforge test` runs.
+- Support for Starknet v0.14.4
 
 #### Fixed
 
 - Raw Sierra tests now use compiler-inferred function costs as their initial gas budget, allowing correct gas refunds beyond the contract entry-point precharge.
+- `assert_emitted` and `assert_not_emitted` now display decoded expected events and their emitting contract in failure messages.
 
 ### Cast
 
@@ -98,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for structs, enums, tuples, arrays and spans in [live debugging]((https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#live-debugging))
-⚠️ These features work best with Scarb >= 2.19.0 and `[cairo] add-types-debug-info = true` config (or equivalent) in Scarb.toml. 
+⚠️ These features work best with Scarb >= 2.19.0 and `[cairo] add-types-debug-info = true` config (or equivalent) in Scarb.toml.
 You may still use other Scarb versions but names of structs, enums, their fields and variants will not be available.
 
 - Backtrace support for panics that originate directly in a test function body, not only inside called contracts. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#backtrace).
@@ -113,7 +135,7 @@ You may still use other Scarb versions but names of structs, enums, their fields
 - `snforge_std::declare` now fails with a clear, deterministic error when a contract name resolves to multiple contracts, instead of non-deterministically selecting one of them. The module tree path (e.g. `my_package::module::MyContract` or `module::MyContract`) can now be passed to `declare` to disambiguate contracts that share a name.
 - Fixed `#[should_panic(expected: (...))]` matching for panic data containing byte array values inside tuples.
 
-### Cast 
+### Cast
 
 #### Added
 

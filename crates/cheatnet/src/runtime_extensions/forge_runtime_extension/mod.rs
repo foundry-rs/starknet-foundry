@@ -1,5 +1,6 @@
 use self::contracts_data::ContractsData;
 use crate::runtime_extensions::common::sum_syscall_usage;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::event_formatter::FormattedEvent;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::{
@@ -327,6 +328,46 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .get_events(events_offset);
 
                 Ok(CheatcodeHandlingResult::from_serializable(events))
+            }
+            "format_event" => {
+                let contract_address = input_reader.read()?;
+                let keys: Vec<Felt> = input_reader.read()?;
+                let data: Vec<Felt> = input_reader.read()?;
+
+                let state = &extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .base
+                    .state;
+
+                let replacement_class_hash = extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .replaced_bytecode_contracts
+                    .get(&contract_address)
+                    .copied();
+
+                let class_hash = replacement_class_hash
+                    .or_else(|| state.get_class_hash_at(contract_address).ok());
+
+                let formatted_event = FormattedEvent::new(
+                    self.contracts_data,
+                    contract_address,
+                    class_hash,
+                    &keys,
+                    &data,
+                );
+
+                Ok(CheatcodeHandlingResult::from_serializable((
+                    ByteArray::from(formatted_event.event.as_str()),
+                    ByteArray::from(formatted_event.contract_address.as_str()),
+                    formatted_event
+                        .contract_full_module_path
+                        .as_deref()
+                        .map(ByteArray::from),
+                )))
             }
             "spy_messages_to_l1" => {
                 let messages_offset = extended_runtime
