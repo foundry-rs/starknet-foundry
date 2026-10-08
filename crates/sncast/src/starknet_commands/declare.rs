@@ -1,23 +1,32 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use foundry_ui::OutputFormat;
 use shared::rpc::get_starknet_version;
-use sncast::helpers::artifacts::{ContractArtifactsMap, resolve_contract_artifacts};
+use sncast::helpers::artifacts::resolve_contract_artifacts;
+use sncast::helpers::command::process_command_result;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
-use sncast::helpers::rpc::RpcArgs;
-use sncast::response::declare::{
-    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
+use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
+use sncast::helpers::scarb_utils::{
+    BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
+use sncast::response::declare::{
+    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
+};
+use sncast::response::errors::{
+    SNCastProviderError, SNCastStarknetError, StarknetCommandError, handle_starknet_command_error,
+};
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
-use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
+use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
 use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};
 use starknet_rust::core::types::{
     ContractExecutionError, DeclareTransactionResult, StarknetError, TransactionExecutionErrorData,
 };
-use starknet_rust::providers::ProviderError;
+use starknet_rust::providers::{Provider as _, ProviderError};
 use starknet_rust::{
     accounts::{Account, SingleOwnerAccount},
     core::types::contract::{CompiledClass, SierraClass},
@@ -25,6 +34,7 @@ use starknet_rust::{
     signers::Signer,
 };
 use starknet_types_core::felt::Felt;
+use std::process::ExitCode;
 use std::sync::Arc;
 use universal_sierra_compiler_api::compile_contract_sierra;
 
@@ -64,40 +74,85 @@ pub struct Declare {
     pub rpc: RpcArgs,
 }
 
-// TODO(#3785)
-#[expect(clippy::too_many_arguments)]
-#[expect(clippy::result_large_err)]
-pub async fn declare<S>(
-    contract_name: String,
-    common: DeclareCommonArgs,
-    no_abi: bool,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
-    artifacts: &ContractArtifactsMap,
+pub async fn declare(
+    args: Declare,
     wait_config: WaitForTx,
-    skip_on_already_declared: bool,
+    config: CastConfig,
     ui: &UI,
-) -> Result<DeclareResponse, StarknetCommandError>
-where
-    S: Signer + Sync + Send,
-{
-    let contract_artifacts = resolve_contract_artifacts(&contract_name, artifacts)?;
+) -> Result<ExitCode> {
+    let provider = args.rpc.get_provider(&config, ui).await?;
+    let account = get_account(&config, &provider, &args.rpc, ui).await?;
+    let scarb_toml_path = assert_manifest_path_exists()?;
+    let package = get_package_metadata(&scarb_toml_path, &args.package)?;
+    let base_ui = ui.base_ui();
+
+    let artifacts = build_and_load_artifacts(
+        &package,
+        &BuildConfig {
+            scarb_toml_path,
+            json: base_ui.output_format() == OutputFormat::Json,
+            profile: config.scarb_profile.clone(),
+        },
+        base_ui,
+    )
+    .context("Failed to build contract")?;
+
+    let contract_artifacts = resolve_contract_artifacts(&args.contract_name, &artifacts)?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;
     let casm_contract_definition: CompiledClass =
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
-    declare_with_artifacts(
+    let result = with_account!(&account, |account| declare_with_artifacts(
         contract_definition,
         casm_contract_definition,
-        common,
-        no_abi,
+        args.common,
+        args.no_abi,
         account,
         wait_config,
-        skip_on_already_declared,
+        false,
         ui,
     )
-    .await
+    .await)
+    .map_err(handle_starknet_command_error)?;
+
+    let response = match result {
+        DeclareResponse::Success(response) => response,
+        DeclareResponse::DryRun(response) => {
+            return Ok(process_command_result("declare", Ok(response), ui, None));
+        }
+        DeclareResponse::AlreadyDeclared(_) => {
+            unreachable!("Argument `skip_on_already_declared` is false")
+        }
+    };
+
+    let contract_artifacts = resolve_contract_artifacts(&args.contract_name, &artifacts)
+        .context("Failed to get contract artifacts")?;
+    let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
+        .context("Failed to parse sierra artifact")?;
+    let network_flag = generate_network_flag(&args.rpc, &config);
+
+    let deploy_message = DeployCommandMessage::new(
+        &contract_definition.abi,
+        args.no_abi,
+        &response,
+        &config.account,
+        &config.accounts_file,
+        config.keystore.as_ref(),
+        network_flag,
+    );
+
+    let response = Ok(response);
+
+    let block_explorer_link =
+        block_explorer_link_if_allowed(&response, provider.chain_id().await?, &config).await;
+
+    let res = process_command_result("declare", response, ui, block_explorer_link);
+
+    ui.print_notification(deploy_message?);
+
+    Ok(res)
 }
 
 #[expect(clippy::result_large_err)]
