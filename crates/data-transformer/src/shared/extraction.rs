@@ -23,6 +23,9 @@ pub fn find_entry_point_by_selector(
     entry_point_type: EntryPointType,
 ) -> Option<AbiFunction> {
     search_for_entry_point(abi, searched_selector, entry_point_type).or_else(|| {
+        // If the user doesn't explicitly define a constructor in the contract,
+        // it won't be present in the ABI. In such cases, an implicit constructor
+        // with no arguments is assumed.
         (entry_point_type == EntryPointType::Constructor
             && searched_selector == CONSTRUCTOR_AS_SELECTOR)
             .then(default_constructor)
