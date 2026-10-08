@@ -8,11 +8,13 @@ use blockifier::execution::call_info::OrderedEvent;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::CallSuccess;
 use cheatnet::trace_data::{CallTrace, CallTraceNode, TraceDataCallFailure};
 use data_transformer::{
-    ReverseTransformError, ReverseTransformEventError, reverse_transform_event,
-    reverse_transform_input, reverse_transform_output,
+    ReverseTransformError, ReverseTransformEventError, reverse_transform_entry_point_input,
+    reverse_transform_entry_point_output, reverse_transform_event,
 };
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
+use starknet_rust::core::types::EntryPointType as AbiEntryPointType;
 use starknet_rust::core::types::contract::AbiEntry;
 use starknet_types_core::felt::Felt;
 
@@ -110,10 +112,23 @@ impl<'a> Collector<'a> {
             .expect("`ABI` should be present")
     }
 
+    fn abi_entry_point_type(&self) -> AbiEntryPointType {
+        match self.call_trace.entry_point.entry_point_type {
+            EntryPointType::External => AbiEntryPointType::External,
+            EntryPointType::L1Handler => AbiEntryPointType::L1Handler,
+            EntryPointType::Constructor => AbiEntryPointType::Constructor,
+        }
+    }
+
     fn collect_transformed_calldata(&self, abi: &[AbiEntry]) -> TransformedCalldata {
         let calldata = &self.call_trace.entry_point.calldata.0;
         let selector = &self.call_trace.entry_point.entry_point_selector.0;
-        let transformed = match reverse_transform_input(calldata, abi, selector) {
+        let transformed = match reverse_transform_entry_point_input(
+            calldata,
+            abi,
+            selector,
+            self.abi_entry_point_type(),
+        ) {
             Ok(s) => s,
             Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(calldata),
             Err(e) => panic!("Failed to decode calldata: {e}"),
@@ -125,7 +140,12 @@ impl<'a> Collector<'a> {
         let selector = &self.call_trace.entry_point.entry_point_selector.0;
         TransformedCallResult(match &self.call_trace.result {
             Ok(CallSuccess { ret_data }) => {
-                let ret_data_str = match reverse_transform_output(ret_data, abi, selector) {
+                let ret_data_str = match reverse_transform_entry_point_output(
+                    ret_data,
+                    abi,
+                    selector,
+                    self.abi_entry_point_type(),
+                ) {
                     Ok(s) => s,
                     Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(ret_data),
                     Err(e) => panic!("Failed to decode call result: {e}"),
