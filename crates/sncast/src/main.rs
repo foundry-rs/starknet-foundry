@@ -1,7 +1,7 @@
 use std::num::{NonZeroU8, NonZeroU16};
 
 use crate::starknet_commands::declare::{DeclareCommonArgs, declare_with_artifacts};
-use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
+use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::get::Get;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
@@ -376,65 +376,9 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
         Commands::Declare(args) => {
             starknet_commands::declare::declare(args, wait_config, config, ui).await
         }
-        Commands::DeclareFrom(declare_from) => {
-            let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
-                ContractSource::LocalFile {
-                    sierra_path: sierra_file,
-                }
-            } else {
-                let block_id = get_block_id(&declare_from.block_id)?;
-                let class_hash = declare_from
-                    .class_hash
-                    .expect("missing class_hash")
-                    .resolve(&config)?;
-                let source_provider = declare_from.source_rpc.get_provider(ui).await?;
-
-                ContractSource::Network {
-                    source_provider,
-                    class_hash,
-                    block_id,
-                }
-            };
-
-            let provider = declare_from.rpc.get_provider(&config, ui).await?;
-            let account = get_account(&config, &provider, &declare_from.rpc, ui).await?;
-
-            let result = with_account!(&account, |account| {
-                starknet_commands::declare_from::declare_from(
-                    contract_source,
-                    declare_from.no_abi,
-                    declare_from.common,
-                    account,
-                    wait_config,
-                    false,
-                    ui,
-                )
-                .await
-            });
-
-            let result = match result {
-                Ok(DeclareResponse::DryRun(response)) => {
-                    return Ok(process_command_result("declare", Ok(response), ui, None));
-                }
-                Ok(DeclareResponse::Success(declare_transaction_response)) => {
-                    Ok(declare_transaction_response)
-                }
-                Ok(DeclareResponse::AlreadyDeclared(_)) => {
-                    unreachable!("Argument `skip_on_already_declared` is false")
-                }
-                Err(err) => Err(handle_starknet_command_error(err)),
-            };
-
-            let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            Ok(process_command_result(
-                "declare-from",
-                result,
-                ui,
-                block_explorer_link,
-            ))
+        Commands::DeclareFrom(args) => {
+            starknet_commands::declare_from::declare_from(args, wait_config, config, ui).await
         }
-
         Commands::Deploy(deploy) => {
             if deploy.common.contract_identifier.contract_name.is_none() && deploy.no_abi {
                 bail!("`--no-abi` can only be used with `--contract-name`");

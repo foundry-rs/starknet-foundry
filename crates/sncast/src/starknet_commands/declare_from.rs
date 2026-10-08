@@ -6,19 +6,23 @@ use anyhow::{Context, Result};
 use clap::{ArgGroup, Args};
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::artifacts::sierra_class_from_file;
+use sncast::helpers::command::process_command_result;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::{FreeProvider, RpcArgs};
 use sncast::response::declare::DeclareResponse;
-use sncast::response::errors::{SNCastProviderError, StarknetCommandError};
+use sncast::response::errors::{
+    SNCastProviderError, StarknetCommandError, handle_starknet_command_error,
+};
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
-use sncast::{Network, WaitForTx, get_provider};
-use starknet_rust::accounts::SingleOwnerAccount;
-use starknet_rust::core::types::contract::{AbiEntry, SierraClass, SierraClassDebugInfo};
+use sncast::{Network, WaitForTx, get_account, get_block_id, get_provider, with_account};
+use starknet_rust::core::types::contract::{SierraClass, SierraClassDebugInfo};
 use starknet_rust::core::types::{BlockId, ContractClass, FlattenedSierraClass};
 use starknet_rust::providers::Provider;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use starknet_rust::signers::Signer;
 use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
+use std::process::ExitCode;
 use url::Url;
 
 #[derive(Args)]
@@ -109,21 +113,88 @@ pub enum ContractSource {
     },
 }
 
-#[expect(clippy::result_large_err)]
-pub async fn declare_from<S>(
-    contract_source: ContractSource,
-    no_abi: bool,
-    common_args: DeclareCommonArgs,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
+pub async fn declare_from(
+    args: DeclareFrom,
     wait_config: WaitForTx,
-    skip_on_already_declared: bool,
+    config: CastConfig,
     ui: &UI,
-) -> Result<DeclareResponse, StarknetCommandError>
-where
-    S: Signer + Sync + Send,
-{
-    let sierra = match &contract_source {
-        ContractSource::LocalFile { sierra_path } => sierra_class_from_file(sierra_path)?,
+) -> Result<ExitCode> {
+    let contract_source = get_contract_source(
+        args.sierra_file,
+        &args.block_id,
+        args.class_hash.as_ref(),
+        &args.source_rpc,
+        &config,
+        ui,
+    )
+    .await?;
+
+    let provider = args.rpc.get_provider(&config, ui).await?;
+    let account = get_account(&config, &provider, &args.rpc, ui).await?;
+    let sierra = get_sierra_class(&contract_source)
+        .await
+        .map_err(handle_starknet_command_error)?;
+    let casm = compile_sierra_to_casm(&sierra)?;
+
+    let result = with_account!(&account, |account| declare_with_artifacts(
+        sierra,
+        casm,
+        args.common,
+        args.no_abi,
+        account,
+        wait_config,
+        false,
+        ui
+    )
+    .await)
+    .map_err(handle_starknet_command_error)?;
+
+    let response = match result {
+        DeclareResponse::Success(response) => Ok(response),
+        DeclareResponse::DryRun(response) => {
+            return Ok(process_command_result(
+                "declare-from",
+                Ok(response),
+                ui,
+                None,
+            ));
+        }
+        DeclareResponse::AlreadyDeclared(_) => {
+            unreachable!("Argument `skip_on_already_declared` is false")
+        }
+    };
+
+    let block_explorer_link =
+        block_explorer_link_if_allowed(&response, provider.chain_id().await?, &config).await;
+
+    Ok(process_command_result(
+        "declare-from",
+        response,
+        ui,
+        block_explorer_link,
+    ))
+}
+
+fn flattened_sierra_to_sierra(class: FlattenedSierraClass) -> Result<SierraClass> {
+    Ok(SierraClass {
+        sierra_program: class.sierra_program,
+        sierra_program_debug_info: SierraClassDebugInfo {
+            type_names: vec![],
+            libfunc_names: vec![],
+            user_func_names: vec![],
+        },
+        contract_class_version: class.contract_class_version,
+        entry_points_by_type: class.entry_points_by_type,
+        abi: serde_json::from_str(&class.abi)?,
+    })
+}
+
+#[expect(clippy::result_large_err)]
+async fn get_sierra_class(
+    contract_source: &ContractSource,
+) -> Result<SierraClass, StarknetCommandError> {
+    match contract_source {
+        ContractSource::LocalFile { sierra_path } => sierra_class_from_file(sierra_path),
         ContractSource::Network {
             source_provider,
             class_hash,
@@ -153,35 +224,32 @@ where
                     "The provided sierra class hash {class_hash:#x} does not match the computed class hash {sierra_class_hash:#x} from the fetched contract."
                 )));
             }
-            sierra
+            Ok(sierra)
         }
-    };
-
-    let casm = compile_sierra_to_casm(&sierra)?;
-
-    declare_with_artifacts(
-        sierra,
-        casm,
-        common_args,
-        no_abi,
-        account,
-        wait_config,
-        skip_on_already_declared,
-        ui,
-    )
-    .await
+    }
 }
 
-fn flattened_sierra_to_sierra(class: FlattenedSierraClass) -> Result<SierraClass> {
-    Ok(SierraClass {
-        sierra_program: class.sierra_program,
-        sierra_program_debug_info: SierraClassDebugInfo {
-            type_names: vec![],
-            libfunc_names: vec![],
-            user_func_names: vec![],
-        },
-        contract_class_version: class.contract_class_version,
-        entry_points_by_type: class.entry_points_by_type,
-        abi: serde_json::from_str::<Vec<AbiEntry>>(&class.abi)?,
-    })
+async fn get_contract_source(
+    sierra_file: Option<PathBuf>,
+    block_id: &str,
+    class_hash: Option<&ClassHash>,
+    source_rpc: &SourceRpcArgs,
+    config: &CastConfig,
+    ui: &UI,
+) -> Result<ContractSource> {
+    if let Some(sierra_file) = sierra_file {
+        Ok(ContractSource::LocalFile {
+            sierra_path: sierra_file,
+        })
+    } else {
+        let block_id = get_block_id(block_id)?;
+        let class_hash = class_hash.expect("missing class_hash").resolve(config)?;
+        let source_provider = source_rpc.get_provider(ui).await?;
+
+        Ok(ContractSource::Network {
+            source_provider,
+            class_hash,
+            block_id,
+        })
+    }
 }
