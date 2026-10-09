@@ -20,6 +20,7 @@ use sncast::response::errors::{
 };
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
+use sncast::response::verify::VerifyResponse;
 use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
 use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};
@@ -38,6 +39,12 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use universal_sierra_compiler_api::compile_contract_sierra;
 
+use crate::starknet_commands::verify::explorer::ContractIdentifier;
+use crate::starknet_commands::verify::{
+    VerifyCommonArgs, resolve_verification_network, verify_contract,
+};
+use shared::utils::contract_name_from_module_path;
+
 /// Common args shared by declare command variants.
 #[derive(Args)]
 pub struct DeclareCommonArgs {
@@ -54,6 +61,7 @@ pub struct DeclareCommonArgs {
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
+#[command(mut_arg("verifier", |arg| arg.required(false)))]
 pub struct Declare {
     /// Contract name or module tree path
     #[arg(short = 'c', long)]
@@ -72,14 +80,22 @@ pub struct Declare {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    #[command(flatten)]
+    pub verify: Option<VerifyCommonArgs>,
 }
 
 pub async fn declare(
     args: Declare,
-    wait_config: WaitForTx,
+    mut wait_config: WaitForTx,
     config: CastConfig,
     ui: &UI,
 ) -> Result<ExitCode> {
+    if args.verify.is_some() {
+        // Force waiting for deployment before verification
+        wait_config.wait = true;
+    }
+
     let provider = args.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &args.rpc, ui).await?;
     let scarb_toml_path = assert_manifest_path_exists()?;
@@ -117,7 +133,7 @@ pub async fn declare(
     .await)
     .map_err(handle_starknet_command_error)?;
 
-    let response = match result {
+    let mut response = match result {
         DeclareResponse::Success(response) => response,
         DeclareResponse::DryRun(response) => {
             return Ok(process_command_result("declare", Ok(response), ui, None));
@@ -126,6 +142,35 @@ pub async fn declare(
             unreachable!("Argument `skip_on_already_declared` is false")
         }
     };
+
+    if let Some(verifier) = args.verify {
+        let workspace_dir = package
+            .manifest_path
+            .parent()
+            .ok_or(anyhow!("Failed to obtain workspace dir"))?;
+
+        let network =
+            resolve_verification_network(None, config.network_params.network(), &provider).await?;
+
+        let verification_result = verify_contract(
+            verifier,
+            ContractIdentifier::ClassHash {
+                class_hash: response.class_hash.0.to_fixed_hex_string(),
+            },
+            contract_name_from_module_path(&args.contract_name).to_string(),
+            args.package.clone(),
+            &provider,
+            network,
+            workspace_dir.to_path_buf(),
+            ui,
+        )
+        .await;
+
+        match verification_result {
+            Ok(VerifyResponse { message }) => response.verification_message = Some(message),
+            Err(e) => ui.print_error("declare", format!("Failed to verify the contract: {e}")),
+        }
+    }
 
     let contract_artifacts = resolve_contract_artifacts(&args.contract_name, &artifacts)
         .context("Failed to get contract artifacts")?;
@@ -262,6 +307,7 @@ where
             DeclareResponse::Success(DeclareTransactionResponse {
                 class_hash: class_hash.into_(),
                 transaction_hash: transaction_hash.into_(),
+                verification_message: None,
             }),
             wait_config,
             ui,

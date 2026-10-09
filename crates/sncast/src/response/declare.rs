@@ -18,6 +18,8 @@ use std::fmt::Write;
 pub struct DeclareTransactionResponse {
     pub class_hash: PaddedFelt,
     pub transaction_hash: PaddedFelt,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verification_message: Option<String>,
 }
 
 impl SncastCommandMessage for DeclareTransactionResponse {
@@ -27,6 +29,9 @@ impl SncastCommandMessage for DeclareTransactionResponse {
             .blank_line()
             .field("Class Hash", &self.class_hash.into_hex_string())
             .field("Transaction Hash", &self.transaction_hash.into_hex_string())
+            .if_some(self.verification_message.as_ref(), |b, m| {
+                b.blank_line().text_field(m)
+            })
             .build()
     }
 }
