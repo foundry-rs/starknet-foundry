@@ -42,6 +42,10 @@ pub struct TxTrace {
     #[arg(long)]
     pub full: bool,
 
+    /// Display raw felt values without ABI decoding
+    #[arg(long)]
+    pub raw: bool,
+
     #[command(flatten)]
     pub rpc: RpcArgs,
 }
@@ -69,13 +73,18 @@ pub async fn tx_trace(tx_trace: TxTrace, config: CastConfig, ui: &UI) -> Result<
 
     let result = match result {
         Ok(trace) => {
-            let FetchedContractClasses { classes, failures } =
-                fetch_contract_classes(&provider, class_hashes(&trace)).await;
+            let decoder = if tx_trace.raw {
+                TraceDecoder::default()
+            } else {
+                let FetchedContractClasses { classes, failures } =
+                    fetch_contract_classes(&provider, class_hashes(&trace)).await;
 
-            let class_fetch_failures = failures
-                .into_iter()
-                .map(|failure| (failure.class_hash, failure.error.to_string()));
-            let decoder = TraceDecoder::new(classes, class_fetch_failures);
+                let class_fetch_failures = failures
+                    .into_iter()
+                    .map(|failure| (failure.class_hash, failure.error.to_string()));
+
+                TraceDecoder::new(classes, class_fetch_failures)
+            };
 
             Ok(TransactionTraceResponse::new(trace, decoder, tx_trace.full))
         }

@@ -5,6 +5,22 @@ expression: output.as_stdout()
 Success: Transaction trace retrieved
 
 Type:                   DEPLOY_ACCOUNT
+Validate Invocation
+  Call Type:            CALL
+  Calldata:             0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564, 0xfe8f0de4a7d0819c, 0x7cfe1b3bd3971955a37672cafd11283e7f5205bb0e2f14c695385c1f4f495e1
+  Caller Address:       0x0000000000000000000000000000000000000000000000000000000000000000
+  Class Hash:           0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564
+  Contract Address:     0x025bd632d7c8b7d557145b48c83b60c9db90c01f063abc8c3b96c970f0417159
+  Entry Point Selector: __validate_deploy__
+  Entry Point Type:     EXTERNAL
+  Events:               []
+  Execution Resources
+    L1 Gas:             0
+    L2 Gas:             320000
+  Is Reverted:          false
+  Messages:             []
+  Result:               success: 0x56414c4944
+  Calls:                []
 Constructor Invocation
   Call Type:            CALL
   Calldata:             0x7cfe1b3bd3971955a37672cafd11283e7f5205bb0e2f14c695385c1f4f495e1
@@ -24,10 +40,6 @@ Constructor Invocation
   Messages:             []
   Result:               success
   Calls:                []
-Execution Resources
-  L1 Data Gas:          448
-  L1 Gas:               0
-  L2 Gas:               875840
 Fee Transfer Invocation
   Call Type:            CALL
   Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 7007861473595136_u256
@@ -47,19 +59,7 @@ Fee Transfer Invocation
   Messages:             []
   Result:               success: true
   Calls:                []
-Validate Invocation
-  Call Type:            CALL
-  Calldata:             0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564, 0xfe8f0de4a7d0819c, 0x7cfe1b3bd3971955a37672cafd11283e7f5205bb0e2f14c695385c1f4f495e1
-  Caller Address:       0x0000000000000000000000000000000000000000000000000000000000000000
-  Class Hash:           0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564
-  Contract Address:     0x025bd632d7c8b7d557145b48c83b60c9db90c01f063abc8c3b96c970f0417159
-  Entry Point Selector: __validate_deploy__
-  Entry Point Type:     EXTERNAL
-  Events:               []
-  Execution Resources
-    L1 Gas:             0
-    L2 Gas:             320000
-  Is Reverted:          false
-  Messages:             []
-  Result:               success: 0x56414c4944
-  Calls:                []
+Execution Resources
+  L1 Data Gas:          448
+  L1 Gas:               0
+  L2 Gas:               875840

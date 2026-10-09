@@ -45,13 +45,15 @@ impl Serialize for TransactionTraceResponse {
         S: Serializer,
     {
         let mut json = serde_json::to_value(&self.trace).map_err(S::Error::custom)?;
-        let mut context = self.decoder.context();
-        decode_trace_json(&self.trace, &mut json, &mut context).map_err(S::Error::custom)?;
+        if self.decoder.enabled {
+            let mut context = self.decoder.context();
+            decode_trace_json(&self.trace, &mut json, &mut context).map_err(S::Error::custom)?;
 
-        let decoding_warnings = context.decoding_warnings();
-        if !decoding_warnings.is_empty() {
-            json["decoding_warnings"] =
-                serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            let decoding_warnings = context.decoding_warnings();
+            if !decoding_warnings.is_empty() {
+                json["decoding_warnings"] =
+                    serde_json::to_value(decoding_warnings).map_err(S::Error::custom)?;
+            }
         }
 
         json.serialize(serializer)
@@ -250,6 +252,7 @@ impl TraceDecodingWarning {
 
 #[derive(Default)]
 pub struct TraceDecoder {
+    enabled: bool,
     sierra_abis: HashMap<ClassHash, Vec<AbiEntry>>,
     legacy_class_hashes: HashSet<ClassHash>,
     legacy_selectors: HashMap<(ClassHash, Felt), String>,
@@ -262,7 +265,10 @@ impl TraceDecoder {
         contract_classes: HashMap<ClassHash, ContractClass>,
         class_fetch_failures: impl IntoIterator<Item = (ClassHash, String)>,
     ) -> Self {
-        let mut decoder = Self::default();
+        let mut decoder = Self {
+            enabled: true,
+            ..Self::default()
+        };
 
         for (class_hash, error) in class_fetch_failures {
             decoder.add_warning(TraceDecodingWarning::ClassFetchFailed { class_hash, error });
@@ -458,16 +464,15 @@ fn append_invoke(
         )
     };
 
+    let builder = append_validate(builder, context);
+    let builder = append_execute(builder, context);
+    let builder = append_fee_transfer(builder, context);
+
     if full {
-        let builder = append_execute(builder, context);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder, context);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder, context)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder, context);
-        let builder = append_execute(builder, context);
-        append_fee_transfer(builder, context)
+        builder
     }
 }
 
@@ -497,14 +502,14 @@ fn append_declare(
         )
     };
 
+    let builder = append_validate(builder, context);
+    let builder = append_fee_transfer(builder, context);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder, context);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder, context)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder, context);
-        append_fee_transfer(builder, context)
+        builder
     }
 }
 
@@ -543,16 +548,15 @@ fn append_deploy_account(
         )
     };
 
+    let builder = append_validate(builder, context);
+    let builder = append_constructor(builder, context);
+    let builder = append_fee_transfer(builder, context);
+
     if full {
-        let builder = append_constructor(builder, context);
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_fee_transfer(builder, context);
-        let builder = append_optional_state_diff(builder, trace.state_diff.as_ref(), 0);
-        append_validate(builder, context)
+        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        let builder = append_validate(builder, context);
-        let builder = append_constructor(builder, context);
-        append_fee_transfer(builder, context)
+        builder
     }
 }
 
@@ -573,12 +577,13 @@ fn append_l1_handler(
         )
     };
 
+    let builder = append_function(builder, context);
+
     if full {
         let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        let builder = append_function(builder, context);
         append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
     } else {
-        append_function(builder, context)
+        builder
     }
 }
 

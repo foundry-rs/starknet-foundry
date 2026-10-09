@@ -101,6 +101,14 @@ async fn test_invoke_transaction_trace() {
 }
 
 #[tokio::test]
+async fn test_raw() {
+    let args = &["get", "tx-trace", INVOKE_TX_HASH, "--raw", "--url", URL];
+    let output = runner(args).assert().success();
+
+    insta::assert_snapshot!(output.as_stdout());
+}
+
+#[tokio::test]
 async fn test_invoke_transaction_trace_full() {
     let args = &["get", "tx-trace", INVOKE_TX_HASH, "--full", "--url", URL];
     let output = runner(args).assert().success();
@@ -268,6 +276,22 @@ async fn test_json() {
         "ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 1945769550285990_u256"
     );
     assert_eq!(trace["fee_transfer_invocation"]["result"], "success: true");
+}
+
+#[tokio::test]
+async fn test_json_raw() {
+    let args = &[
+        "--json",
+        "get",
+        "tx-trace",
+        INVOKE_TX_HASH,
+        "--raw",
+        "--url",
+        URL,
+    ];
+    let output = runner(args).assert().success().stderr_eq("");
+
+    insta::assert_snapshot!(output.as_stdout());
 }
 
 #[tokio::test]
