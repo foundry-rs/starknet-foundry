@@ -131,6 +131,7 @@ impl<'a> Collector<'a> {
         ) {
             Ok(s) => s,
             Err(ReverseTransformError::FunctionNotFound(_)) => format_raw_felts(calldata),
+            // TODO(#4616): Handle invalid L1 handler calldata without panicking.
             Err(e) => panic!("Failed to decode calldata: {e}"),
         };
         TransformedCalldata(transformed)
