@@ -1,7 +1,7 @@
 use std::num::{NonZeroU8, NonZeroU16};
 
-use crate::starknet_commands::declare::declare_with_artifacts;
-use crate::starknet_commands::declare_from::{ContractSource, DeclareFrom};
+use crate::starknet_commands::declare::{DeclareCommonArgs, declare_with_artifacts};
+use crate::starknet_commands::declare_from::DeclareFrom;
 use crate::starknet_commands::deploy::{DeployArguments, DeployCommonArgs};
 use crate::starknet_commands::get::Get;
 use crate::starknet_commands::invoke::InvokeCommonArgs;
@@ -29,12 +29,11 @@ use sncast::helpers::configuration::{
 };
 use sncast::helpers::fee::FeeParams;
 use sncast::helpers::output_format::output_format_from_json_flag;
-use sncast::helpers::rpc::generate_network_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
 use sncast::response::declare::{
-    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
+    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
 use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
 use sncast::response::errors::{ResponseError, handle_starknet_command_error};
@@ -374,146 +373,12 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
     resolve_fee_args(&mut cli.command, &config.fee_params);
 
     match cli.command {
-        Commands::Declare(declare) => {
-            let provider = declare.common.rpc.get_provider(&config, ui).await?;
-
-            let account = get_account(&config, &provider, &declare.common.rpc, ui).await?;
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json: cli.json,
-                    profile: config.scarb_profile.clone(),
-                },
-                // TODO(#3959) Remove `base_ui`
-                ui.base_ui(),
-            )
-            .context("Failed to build contract")?;
-
-            let result = with_account!(&account, |account| {
-                starknet_commands::declare::declare(
-                    declare.contract_name.clone(),
-                    declare.common.fee_args,
-                    declare.common.dry_run_args,
-                    declare.common.nonce,
-                    declare.no_abi,
-                    account,
-                    &artifacts,
-                    wait_config,
-                    false,
-                    ui,
-                )
-                .await
-            });
-
-            let result = match result {
-                Ok(DeclareResponse::DryRun(response)) => {
-                    return Ok(process_command_result("declare", Ok(response), ui, None));
-                }
-                Ok(DeclareResponse::Success(declare_transaction_response)) => {
-                    Ok(declare_transaction_response)
-                }
-                Ok(DeclareResponse::AlreadyDeclared(_)) => {
-                    unreachable!("Argument `skip_on_already_declared` is false")
-                }
-                Err(err) => Err(handle_starknet_command_error(err)),
-            };
-
-            let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-
-            let deploy_command_message = if let Ok(response) = &result {
-                // TODO(#3785)
-                let contract_artifacts =
-                    resolve_contract_artifacts(&declare.contract_name, &artifacts)
-                        .context("Failed to get contract artifacts")?;
-                let contract_definition: SierraClass =
-                    serde_json::from_str(&contract_artifacts.sierra)
-                        .context("Failed to parse sierra artifact")?;
-                let network_flag = generate_network_flag(&declare.common.rpc, &config);
-                Some(DeployCommandMessage::new(
-                    &contract_definition.abi,
-                    declare.no_abi,
-                    response,
-                    &config.account,
-                    &config.accounts_file,
-                    config.keystore.as_ref(),
-                    network_flag,
-                ))
-            } else {
-                None
-            };
-
-            let exit_code = process_command_result("declare", result, ui, block_explorer_link);
-
-            if let Some(deploy_command_message) = deploy_command_message {
-                ui.print_notification(deploy_command_message?);
-            }
-
-            Ok(exit_code)
+        Commands::Declare(args) => {
+            starknet_commands::declare::declare(args, wait_config, config, ui).await
         }
-
-        Commands::DeclareFrom(declare_from) => {
-            let contract_source = if let Some(sierra_file) = declare_from.sierra_file {
-                ContractSource::LocalFile {
-                    sierra_path: sierra_file,
-                }
-            } else {
-                let block_id = get_block_id(&declare_from.block_id)?;
-                let class_hash = declare_from
-                    .class_hash
-                    .expect("missing class_hash")
-                    .resolve(&config)?;
-                let source_provider = declare_from.source_rpc.get_provider(ui).await?;
-
-                ContractSource::Network {
-                    source_provider,
-                    class_hash,
-                    block_id,
-                }
-            };
-
-            let provider = declare_from.common.rpc.get_provider(&config, ui).await?;
-            let account = get_account(&config, &provider, &declare_from.common.rpc, ui).await?;
-
-            let result = with_account!(&account, |account| {
-                starknet_commands::declare_from::declare_from(
-                    contract_source,
-                    declare_from.no_abi,
-                    &declare_from.common,
-                    account,
-                    wait_config,
-                    false,
-                    ui,
-                )
-                .await
-            });
-
-            let result = match result {
-                Ok(DeclareResponse::DryRun(response)) => {
-                    return Ok(process_command_result("declare", Ok(response), ui, None));
-                }
-                Ok(DeclareResponse::Success(declare_transaction_response)) => {
-                    Ok(declare_transaction_response)
-                }
-                Ok(DeclareResponse::AlreadyDeclared(_)) => {
-                    unreachable!("Argument `skip_on_already_declared` is false")
-                }
-                Err(err) => Err(handle_starknet_command_error(err)),
-            };
-
-            let block_explorer_link =
-                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &config).await;
-            Ok(process_command_result(
-                "declare-from",
-                result,
-                ui,
-                block_explorer_link,
-            ))
+        Commands::DeclareFrom(args) => {
+            starknet_commands::declare_from::declare_from(args, wait_config, config, ui).await
         }
-
         Commands::Deploy(deploy) => {
             if deploy.common.contract_identifier.contract_name.is_none() && deploy.no_abi {
                 bail!("`--no-abi` can only be used with `--contract-name`");
@@ -567,14 +432,17 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                     serde_json::from_str(&contract_artifacts.casm)
                         .context("Failed to parse casm artifact")?;
                 let local_abi = contract_definition.abi.clone();
+                let common_args = DeclareCommonArgs {
+                    fee_args,
+                    dry_run_args,
+                    nonce,
+                };
 
                 let declare_result = with_account!(&account, |account| {
                     declare_with_artifacts(
                         contract_definition,
                         casm_contract_definition,
-                        &fee_args,
-                        &dry_run_args,
-                        nonce,
+                        common_args,
                         no_abi,
                         account,
                         WaitForTx {
