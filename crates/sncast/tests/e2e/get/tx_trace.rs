@@ -345,7 +345,17 @@ async fn test_warns_when_fetched_abi_cannot_decode_trace() {
         })),
     )
     .await;
-    mock_contract_class(&mock_server, json!([])).await;
+    mock_contract_class(
+        &mock_server,
+        json!([{
+            "type": "function",
+            "name": "unrelated_function",
+            "inputs": [],
+            "outputs": [],
+            "state_mutability": "view"
+        }]),
+    )
+    .await;
 
     let args = &[
         "get",
@@ -424,7 +434,17 @@ async fn test_json_includes_abi_decoding_warnings() {
         })),
     )
     .await;
-    mock_contract_class(&mock_server, json!([])).await;
+    mock_contract_class(
+        &mock_server,
+        json!([{
+            "type": "function",
+            "name": "unrelated_function",
+            "inputs": [],
+            "outputs": [],
+            "state_mutability": "view"
+        }]),
+    )
+    .await;
 
     let args = &[
         "--json",

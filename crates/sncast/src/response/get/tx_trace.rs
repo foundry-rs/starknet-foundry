@@ -271,10 +271,21 @@ impl TraceDecoder {
         for (class_hash, contract_class) in contract_classes {
             match contract_class {
                 ContractClass::Sierra(class) => {
-                    if let Ok(abi) = serde_json::from_str::<Vec<AbiEntry>>(&class.abi) {
-                        decoder.sierra_abis.insert(class_hash, abi);
-                    } else {
-                        decoder.add_warning(TraceDecodingWarning::MalformedAbi { class_hash });
+                    if class.abi.trim().is_empty() {
+                        decoder.add_warning(TraceDecodingWarning::MissingAbi { class_hash });
+                        continue;
+                    }
+
+                    match serde_json::from_str::<Vec<AbiEntry>>(&class.abi) {
+                        Ok(abi) if abi.is_empty() => {
+                            decoder.add_warning(TraceDecodingWarning::MissingAbi { class_hash });
+                        }
+                        Ok(abi) => {
+                            decoder.sierra_abis.insert(class_hash, abi);
+                        }
+                        Err(_) => {
+                            decoder.add_warning(TraceDecodingWarning::MalformedAbi { class_hash });
+                        }
                     }
                 }
                 ContractClass::Legacy(class) => {
@@ -934,4 +945,45 @@ fn format_result(status: &str, result: &str) -> String {
 
 fn format_raw_felts(felts: &[Felt]) -> String {
     felts.iter().map(Felt::to_hex_string).join(", ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TraceDecoder, TraceDecodingWarning};
+    use conversions::IntoConv;
+    use serde_json::json;
+    use starknet_rust::core::types::ContractClass;
+    use starknet_types_core::felt::Felt;
+    use std::collections::HashMap;
+    use test_case::test_case;
+
+    #[test_case("", true; "empty string")]
+    #[test_case(" \n\t", true; "blank string")]
+    #[test_case("[]", true; "empty array")]
+    #[test_case("invalid json", false; "invalid json")]
+    #[test_case("{}", false; "invalid abi shape")]
+    #[test_case(r#"[{"type":"function"}]"#, false; "invalid abi entry")]
+    fn distinguishes_missing_and_malformed_abi(abi: &str, missing: bool) {
+        let class_hash = Felt::from(0x456_u32).into_();
+        let class: ContractClass = serde_json::from_value(json!({
+            "sierra_program": [],
+            "contract_class_version": "0.1.0",
+            "entry_points_by_type": {
+                "CONSTRUCTOR": [],
+                "EXTERNAL": [],
+                "L1_HANDLER": []
+            },
+            "abi": abi
+        }))
+        .unwrap();
+        let decoder = TraceDecoder::new(HashMap::from([(class_hash, class)]), []);
+        let expected = if missing {
+            TraceDecodingWarning::MissingAbi { class_hash }
+        } else {
+            TraceDecodingWarning::MalformedAbi { class_hash }
+        };
+
+        assert_eq!(decoder.context().decoding_warnings(), vec![expected]);
+        assert!(decoder.sierra_abis.is_empty());
+    }
 }
