@@ -14,7 +14,7 @@ use sncast::helpers::rpc::FreeProvider;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
 use sncast::response::verify::VerifyResponse;
 use sncast::{get_chain_id, get_provider};
@@ -78,11 +78,11 @@ pub struct VerifyCommonArgs {
     pub verifier: Verifier,
 
     /// Include test files under src/ for verification (only applies to voyager)
-    #[arg(long, default_value = "false")]
+    #[arg(long, default_value = "false", requires = "verifier")]
     pub test_files: bool,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[arg(long, default_value = "false")]
+    #[arg(long, default_value = "false", requires = "verifier")]
     pub confirm_verification: bool,
 }
 
@@ -125,7 +125,7 @@ fn parse_verifier(value: &str) -> Result<Verifier, String> {
     <Verifier as ValueEnum>::from_str(value, true)
 }
 
-async fn resolve_verification_network(
+pub async fn resolve_verification_network(
     cli_network: Option<Network>,
     config_network: Option<Network>,
     provider: &JsonRpcClient<HttpTransport>,
