@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `get tx-trace` command to get the execution trace of a transaction.
+- `sncast declare` now support automatic verification. Providing `--verifier` flag will send a verification request. `--test-files` and `--confirm-verification` flags are also available.
 
 #### Changed
 
