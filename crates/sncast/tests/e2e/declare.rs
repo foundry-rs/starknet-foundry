@@ -7,7 +7,8 @@ use crate::helpers::fixtures::{
 use crate::helpers::output::get_declared_class_hash_from_json_output;
 use crate::helpers::runner::runner;
 use configuration::CONFIG_FILENAME;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
+use serde_json::json;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
@@ -18,6 +19,8 @@ use starknet_rust::core::types::{DeclareTransaction, Transaction, TransactionExe
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
 use test_case::test_case;
+use wiremock::matchers::{method, path_regex};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[test_case(false; "with_abi")]
 #[test_case(true; "no_abi")]
@@ -1083,4 +1086,165 @@ async fn test_dry_run_detailed() {
             "
         },
     );
+}
+
+async fn mock_voyager_verification(
+    status: u16,
+    body: serde_json::Value,
+    expected_calls: u64,
+) -> MockServer {
+    let mock_server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path_regex(r"^/?class-verify/0x[0-9a-f]+$"))
+        .respond_with(ResponseTemplate::new(status).set_body_json(body))
+        .expect(expected_calls)
+        .mount(&mock_server)
+        .await;
+    mock_server
+}
+
+fn declare_with_verification_args<'a>(extra: &[&'a str], json: bool) -> Vec<&'a str> {
+    let mut args = vec![];
+    if json {
+        args.push("--json");
+    }
+    args.extend([
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--confirm-verification",
+    ]);
+    args.extend(extra);
+    args
+}
+
+#[tokio::test]
+async fn test_happy_case_with_verification() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "test_happy_case_with_verification",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
+    let mock_server = mock_voyager_verification(200, json!({ "job_id": job_id }), 1).await;
+
+    let args = declare_with_verification_args(&[], false);
+    let output = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(tempdir.path())
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+        Success: Declaration completed
+
+        Class Hash:       0x[..]
+        Transaction Hash: 0x[..]
+
+        Map submitted for verification, you can query the status at: {}/class-verify/job/{job_id}
+        ",
+        mock_server.uri(),
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_with_verification_json_output() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "test_happy_case_with_verification_json_output",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
+    let mock_server = mock_voyager_verification(200, json!({ "job_id": job_id }), 1).await;
+
+    let args = declare_with_verification_args(&[], true);
+    let output = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(tempdir.path())
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let response: serde_json::Value = stdout
+        .lines()
+        .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+        .find(|v| v["type"] == "response")
+        .expect("No response found in output");
+
+    assert_eq!(response["command"], "declare");
+    assert!(response["class_hash"].as_str().unwrap().starts_with("0x"));
+    assert!(
+        response["verification_message"]
+            .as_str()
+            .unwrap()
+            .contains(&format!("class-verify/job/{job_id}"))
+    );
+}
+
+#[tokio::test]
+async fn test_verification_not_started_when_declaration_fails() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "test_verification_not_started_when_declaration_fails",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    // Verifier must not be called at all; `MockServer` checks `expect(0)` on drop
+    let mock_server = mock_voyager_verification(200, json!({ "job_id": "unused" }), 0).await;
+
+    let args = declare_with_verification_args(&["--nonce", "12345"], false);
+    let output = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(tempdir.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: declare
+        Error: Transaction execution error = [..]Account transaction nonce is invalid.[..]
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_verification_fails() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "test_verification_fails",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let mock_server =
+        mock_voyager_verification(400, json!({ "error": "Verification failed" }), 1).await;
+
+    let args = declare_with_verification_args(&[], false);
+    let output = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(tempdir.path())
+        .assert();
+
+    assert_stderr_contains(output, "Failed to verify the contract: Verification failed");
 }
