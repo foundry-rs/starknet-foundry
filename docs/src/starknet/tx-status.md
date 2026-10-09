@@ -92,6 +92,22 @@ $ sncast \
 Success: Transaction trace retrieved
 
 Type:                     INVOKE
+Validate Invocation
+  Call Type:              CALL
+  Calldata:               array![Call { to: ContractAddress(0x424ce41bea300e095e763d9fb4316af76c9da9c0fa926009f25b42b6f4ad04a), selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, calldata: array![0x441b0ab7fcd3923bd830e146e99ed90c4aebd19951eb6ed7b3713241aa8af, 0x29e701, 0xf29c0193adc354752489f1a7af2f507d72a5e5b76cce705094d05d72e21ab5, 0x6655cb7c, 0x304020100000000000000000000000000000000000000000000000000000000, 0x4, 0x27693e402, 0x276a2b3d2, 0x276a3f070, 0x276aeecf0, 0xb9eab07caffbd5538, 0x1, 0x2, 0x6771e459d1e5563ec13af0ca40f04406ff4b70e6cc9a534dce12957f46c0f24, 0x36383aebe2151145a66dd7a87d9c885a862339e35d2ee0bd9df4075d17a8979, 0x2cb74dff29a13dd5d855159349ec92f943bacf0547ff3734e7d84a15d08cbc5, 0xb1a29e2cfed2f0a9d5f137845280bb6ce746f2f4b6a2dd05ec794171f4012, 0x1f85c957582717816bd2c910ac678caf007f6f84d71bc5a95f38de0b6435163, 0x4225d1c8ee8e451a25e30c10689ef898e11ccf5c0f68d0fc7876c47b318e946].span() }]
+  Caller Address:         0x0000000000000000000000000000000000000000000000000000000000000000
+  Class Hash:             0x066559c86e66214ba1bc5d6512f6411aa066493e6086ff5d54f41a970d47fc5a
+  Contract Address:       0x01d091b30a2d20ca2509579f8beae26934bfdc3725c0b497f50b353b7a3c636f
+  Entry Point Selector:   __validate__
+  Entry Point Type:       EXTERNAL
+  Events:                 []
+  Execution Resources
+    L1 Gas:               8
+    L2 Gas:               0
+  Is Reverted:            false
+  Messages:               []
+  Result:                 success: 0x56414c4944
+  Calls:                  []
 Execute Invocation
   Call Type:              CALL
   Calldata:               array![Call { to: ContractAddress(0x424ce41bea300e095e763d9fb4316af76c9da9c0fa926009f25b42b6f4ad04a), selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, calldata: array![0x441b0ab7fcd3923bd830e146e99ed90c4aebd19951eb6ed7b3713241aa8af, 0x29e701, 0xf29c0193adc354752489f1a7af2f507d72a5e5b76cce705094d05d72e21ab5, 0x6655cb7c, 0x304020100000000000000000000000000000000000000000000000000000000, 0x4, 0x27693e402, 0x276a2b3d2, 0x276a3f070, 0x276aeecf0, 0xb9eab07caffbd5538, 0x1, 0x2, 0x6771e459d1e5563ec13af0ca40f04406ff4b70e6cc9a534dce12957f46c0f24, 0x36383aebe2151145a66dd7a87d9c885a862339e35d2ee0bd9df4075d17a8979, 0x2cb74dff29a13dd5d855159349ec92f943bacf0547ff3734e7d84a15d08cbc5, 0xb1a29e2cfed2f0a9d5f137845280bb6ce746f2f4b6a2dd05ec794171f4012, 0x1f85c957582717816bd2c910ac678caf007f6f84d71bc5a95f38de0b6435163, 0x4225d1c8ee8e451a25e30c10689ef898e11ccf5c0f68d0fc7876c47b318e946].span() }]
@@ -126,10 +142,6 @@ Execute Invocation
     Messages:             []
     Result:               success
     Calls:                []
-Execution Resources
-  L1 Data Gas:            640
-  L1 Gas:                 32
-  L2 Gas:                 0
 Fee Transfer Invocation
   Call Type:              CALL
   Calldata:               ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 4014902418114130240_u256
@@ -149,22 +161,25 @@ Fee Transfer Invocation
   Messages:               []
   Result:                 success: true
   Calls:                  []
-Validate Invocation
-  Call Type:              CALL
-  Calldata:               array![Call { to: ContractAddress(0x424ce41bea300e095e763d9fb4316af76c9da9c0fa926009f25b42b6f4ad04a), selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, calldata: array![0x441b0ab7fcd3923bd830e146e99ed90c4aebd19951eb6ed7b3713241aa8af, 0x29e701, 0xf29c0193adc354752489f1a7af2f507d72a5e5b76cce705094d05d72e21ab5, 0x6655cb7c, 0x304020100000000000000000000000000000000000000000000000000000000, 0x4, 0x27693e402, 0x276a2b3d2, 0x276a3f070, 0x276aeecf0, 0xb9eab07caffbd5538, 0x1, 0x2, 0x6771e459d1e5563ec13af0ca40f04406ff4b70e6cc9a534dce12957f46c0f24, 0x36383aebe2151145a66dd7a87d9c885a862339e35d2ee0bd9df4075d17a8979, 0x2cb74dff29a13dd5d855159349ec92f943bacf0547ff3734e7d84a15d08cbc5, 0xb1a29e2cfed2f0a9d5f137845280bb6ce746f2f4b6a2dd05ec794171f4012, 0x1f85c957582717816bd2c910ac678caf007f6f84d71bc5a95f38de0b6435163, 0x4225d1c8ee8e451a25e30c10689ef898e11ccf5c0f68d0fc7876c47b318e946].span() }]
-  Caller Address:         0x0000000000000000000000000000000000000000000000000000000000000000
-  Class Hash:             0x066559c86e66214ba1bc5d6512f6411aa066493e6086ff5d54f41a970d47fc5a
-  Contract Address:       0x01d091b30a2d20ca2509579f8beae26934bfdc3725c0b497f50b353b7a3c636f
-  Entry Point Selector:   __validate__
-  Entry Point Type:       EXTERNAL
-  Events:                 []
-  Execution Resources
-    L1 Gas:               8
-    L2 Gas:               0
-  Is Reverted:            false
-  Messages:               []
-  Result:                 success: 0x56414c4944
-  Calls:                  []
+Execution Resources
+  L1 Data Gas:            640
+  L1 Gas:                 32
+  L2 Gas:                 0
 ```
 
 </details>
+
+
+### Displaying Raw Trace Values
+
+Use `--raw` to display entry point selectors, calldata, and results as raw felt values without ABI decoding.
+
+```shell
+$ sncast \
+ get tx-trace \
+ 0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1 \
+ --raw \
+ --network sepolia
+```
+
+Combine `--raw` with `--full` to display all trace fields without ABI decoding, or with `--json` to output the trace in its original RPC structure.
