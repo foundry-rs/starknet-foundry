@@ -9,3 +9,4 @@ pub mod syncing;
 pub mod transaction;
 pub mod tx_receipt;
 pub mod tx_status;
+pub mod tx_trace;

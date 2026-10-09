@@ -14,6 +14,7 @@ pub mod syncing;
 pub mod transaction;
 pub mod tx_receipt;
 pub mod tx_status;
+pub mod tx_trace;
 
 #[derive(Args)]
 #[command(about = "Commands for querying Starknet state")]
@@ -35,6 +36,10 @@ pub enum GetCommands {
     /// Get the transaction by hash
     #[command(alias = "transaction")]
     Tx(transaction::Transaction),
+
+    /// Get the execution trace of a transaction
+    #[command(alias = "transaction-trace")]
+    TxTrace(tx_trace::TxTrace),
 
     /// Fetch balance of the account for specified token
     Balance(balance::Balance),
@@ -66,6 +71,8 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::TxStatus(status) => tx_status::tx_status(status, config, ui).await,
 
         GetCommands::Tx(tx) => transaction::transaction(tx, config, ui).await,
+
+        GetCommands::TxTrace(tx_trace) => tx_trace::tx_trace(tx_trace, config, ui).await,
 
         GetCommands::TxReceipt(tx) => tx_receipt::tx_receipt(tx, config, ui).await,
 

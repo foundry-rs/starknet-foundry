@@ -1,0 +1,27 @@
+---
+source: crates/sncast/tests/e2e/get/tx_trace.rs
+expression: output.as_stdout()
+---
+Success: Transaction trace retrieved
+
+Type:                     INVOKE
+Validate Invocation
+  Entry Point Selector:   __validate__
+  Contract Address:       0x0350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
+  Calldata:               array![Call { to: ContractAddress(0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0), selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, calldata: array![0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711].span() }]
+  Result:                 success: 0x56414c4944
+Execute Invocation
+  Entry Point Selector:   __execute__
+  Contract Address:       0x0350461cc881640ebbcebf747107d456ef008ec455cd95d2b76a7d9face671f1
+  Calldata:               array![Call { to: ContractAddress(0x69b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0), selector: 0xc844fd57777b0cd7e75c8ea68deec0adf964a6308da7a58de32364b7131cc8, calldata: array![0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, 0x4af604, 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d, 0x6693f6f8, 0x2030100000000000000000000000000000000000000000000000000000000, 0x4, 0x5f5e360, 0x5f5f9d1, 0x5f5f9d1, 0x5f6174c, 0x971578a2056f81, 0x3afd28a5c57d, 0x2, 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2, 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711].span() }]
+  Result:                 success: array![array![].span()]
+  Calls
+    Entry Point Selector: transmit
+    Contract Address:     0x069b1360564534bf59fa889041a60f2c60ef5b259cfbf87a436867538e2c53e0
+    Calldata:             ReportContext { config_digest: 0x4c141c4019d33c08b1d94a85d54c4e92c2a5b2c5a2889f12ab81ecf220752, epoch_and_round: 4912644_u64, extra_hash: 0x4e8d5ddbe29135d13a7edab22018a8f61cde628b468abfe63597996402ef4d }, 1720973048_u64, 0x2030100000000000000000000000000000000000000000000000000000000, array![100000608_u128, 100006353_u128, 100006353_u128, 100013900_u128], 42526329341833089_u128, 64858983089533_u128, array![Signature { r: 0x2f1f486eae02cc20f7fb08be2f88cbd44deca49bdc0ef031a4edf575f1cabf7, s: 0x2a539e3eaeadfc5ca897d7cbf38397fd7c6c6f3ccbc4f260d9d23a1e6bc5287, public_key: 0x6b72f55e68f1936feea371fab12ec039e8e1173579c03ac5c884ebf1653cce2 }, Signature { r: 0x4be40b6cab1d8e3acf5a99261cc3e07794b250a8afa04a1f44e2ac926895e6e, s: 0x167e81f05b6eddbe87180e9c27ba2f684a5d57709bb34c9e06f7d7f82b5c4b7, public_key: 0x319f9f7ce6e6c72e179557e79c57a542508867fa05b505cc32d2380ac72e711 }]
+    Result:               success
+Fee Transfer Invocation
+  Entry Point Selector:   transfer
+  Contract Address:       0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+  Calldata:               ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 1945769550285990_u256
+  Result:                 success: true

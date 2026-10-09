@@ -1,0 +1,17 @@
+---
+source: crates/sncast/tests/e2e/get/tx_trace.rs
+expression: output.as_stdout()
+---
+Success: Transaction trace retrieved
+
+Type:                     L1_HANDLER
+Function Invocation
+  Entry Point Selector:   receive_commitment
+  Contract Address:       0x0763c1a0ec1d64afe2d8d0a2c0cab6fd494dcb26d08ef1020b27aa5695761e21
+  Calldata:               0x423f7744017600727ce4789933e4648068835e28, 99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
+  Result:                 success
+  Calls
+    Entry Point Selector: receive_hash
+    Contract Address:     0x020f6d32589a0d57c72faed530354bac49144ca99aff3429cc3284514583b595
+    Calldata:             99359224995532825384289367229767519998085228603184343483478058520072918113310_u256, 6289449_u256
+    Result:               success
