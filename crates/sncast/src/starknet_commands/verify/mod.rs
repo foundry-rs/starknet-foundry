@@ -72,11 +72,11 @@ pub struct VerifyCommonArgs {
     pub verifier: Verifier,
 
     /// Include test files under src/ for verification (only applies to voyager)
-    #[arg(long, default_value = "false")]
+    #[arg(long, default_value = "false", requires = "verifier")]
     pub test_files: bool,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[arg(long, default_value = "false")]
+    #[arg(long, default_value = "false", requires = "verifier")]
     pub confirm_verification: bool,
 }
 
@@ -119,7 +119,7 @@ fn parse_verifier(value: &str) -> Result<Verifier, String> {
     <Verifier as ValueEnum>::from_str(value, true)
 }
 
-async fn resolve_verification_network(
+pub async fn resolve_verification_network(
     rpc: &RpcArgs,
     provider: &JsonRpcClient<HttpTransport>,
     config: &CastConfig,
