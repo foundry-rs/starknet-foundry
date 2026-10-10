@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `get tx-trace` command to get the execution trace of a transaction.
+
 ## [0.64.1] - 2026-10-06
 
 ### Cast
@@ -47,7 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allow resource bounds and tip settings under `fee-params` field in `snfoundry.toml` for transaction-sending commands.
 - CASM compilation results are now cached between relevant `sncast` commands.
-- `get tx-trace` command to get the execution trace of a transaction.
 
 #### Changed
 
