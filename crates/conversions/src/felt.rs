@@ -128,11 +128,11 @@ fn resolve(value: &str) -> String {
 
 impl TryInferFormat for Felt {
     fn infer_format_and_parse(value: &str) -> Result<Vec<Self>> {
-        if value.starts_with('\'') && value.ends_with('\'') {
+        if value.len() > 1 && value.starts_with('\'') && value.ends_with('\'') {
             let value = resolve(value).replace("\\'", "'");
 
             Felt::from_short_string(&value).map(|felt| vec![felt])
-        } else if value.starts_with('"') && value.ends_with('"') {
+        } else if value.len() > 1 && value.starts_with('"') && value.ends_with('"') {
             let value = resolve(value).replace("\\\"", "\"");
 
             Ok(ByteArray::from(value.as_str()).serialize_to_vec())
@@ -212,6 +212,24 @@ mod tests {
     fn short_string_null_byte_middle() {
         let felt = Felt::from_hex("0x61006263").unwrap();
         assert!(felt.to_short_string().is_err());
+    }
+
+    #[test]
+    fn infer_format_lone_quote_is_error() {
+        assert!(Felt::infer_format_and_parse("'").is_err());
+        assert!(Felt::infer_format_and_parse("\"").is_err());
+    }
+
+    #[test]
+    fn infer_format_empty_quoted_values() {
+        assert_eq!(
+            Felt::infer_format_and_parse("''").unwrap(),
+            vec![Felt::ZERO]
+        );
+        assert_eq!(
+            Felt::infer_format_and_parse("\"\"").unwrap(),
+            ByteArray::from("").serialize_to_vec()
+        );
     }
 
     #[test]

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- `read_txt` and the `var` cheatcode now return a parse error instead of panicking when a value is a lone `'` or `"`.
+
 ## [0.64.1] - 2026-10-06
 
 ### Cast
