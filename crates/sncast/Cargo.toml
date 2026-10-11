@@ -66,6 +66,7 @@ coins-ledger.workspace = true
 mimalloc.workspace = true
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
 ctor.workspace = true
 dtor.workspace = true
 insta.workspace = true
