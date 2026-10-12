@@ -78,7 +78,7 @@ fn syntax() {
         note: this error originates in the attribute macro: `fuzzer`
         note: this error originates in the attribute macro: `fork`
         
-        error[E2103]: Mismatched types: pattern cannot match against type "core::result::Result::<(core::starknet::contract_address::ContractAddress, core::array::Span::<core::felt252>), core::array::Array::<core::felt252>>".
+        error[E2103]: Mismatched types: pattern cannot match against type "Result::<(starknet::contract_address::ContractAddress, Span::<felt252>), Array::<felt252>>".
          --> [..]/tests/contract.cairo:14:9
             let (contract_address, _) = contract.deploy(constructor_calldata),unwrap();
                 ^^^^^^^^^^^^^^^^^^^^^
@@ -275,7 +275,7 @@ fn generic() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error[E2315]: Mismatched types. The type `generic_integrationtest::contract::MyStruct` cannot be created from a numeric literal.
+        error[E2315]: Mismatched types. The type `[..]MyStruct` cannot be created from a numeric literal.
          --> [..]/tests/contract.cairo:30:18
             assert!(s == 3);
                          ^
