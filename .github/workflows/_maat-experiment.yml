@@ -1,0 +1,32 @@
+name: Trigger Maat experiment
+
+on:
+ release:
+    types: [published] 
+
+
+jobs:
+  trigger-maat-experiment:
+    name: Trigger Maat experiment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version from tag
+        env:
+          RAW_REF: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION=${RAW_REF}
+
+          # Strip 'v' prefix from the version if it exists
+          VERSION=${VERSION#v}
+
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          
+      - name: Trigger Maat experiment
+        env:
+          GH_TOKEN: ${{ secrets.MAAT_CONTENTS_READ_ACTIONS_WRITE }}
+        run: |
+          gh workflow run experiment.yml \
+            --repo software-mansion/maat \
+            -f workspace="release" \
+            -f foundry="$VERSION" \
+            -f notify_team="true"
