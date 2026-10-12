@@ -11,12 +11,12 @@ use walkdir::WalkDir;
 
 use super::explorer::{ContractIdentifier, VerificationInterface, VerificationPayload};
 
-pub struct WalnutVerificationInterface {
+pub struct StarkloupeVerificationInterface {
     network: Network,
     workspace_dir: Utf8PathBuf,
 }
 
-impl WalnutVerificationInterface {
+impl StarkloupeVerificationInterface {
     pub fn gather_files(&self) -> Result<Vec<(String, std::path::PathBuf)>> {
         let mut files = Vec::new();
 
@@ -40,14 +40,14 @@ impl WalnutVerificationInterface {
 }
 
 #[async_trait::async_trait]
-impl VerificationInterface<'_> for WalnutVerificationInterface {
+impl VerificationInterface<'_> for StarkloupeVerificationInterface {
     fn new(
         network: Network,
         workspace_dir: Utf8PathBuf,
         _provider: &JsonRpcClient<HttpTransport>,
         _ui: &UI,
     ) -> Result<Self> {
-        Ok(WalnutVerificationInterface {
+        Ok(StarkloupeVerificationInterface {
             network,
             workspace_dir,
         })
@@ -109,8 +109,8 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
     }
 
     fn gen_explorer_url(&self) -> Result<String> {
-        let api_base_url =
-            env::var("VERIFIER_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
+        let api_base_url = env::var("VERIFIER_API_URL")
+            .unwrap_or_else(|_| "https://api.starkloupe.co".to_string());
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",

@@ -339,6 +339,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.13.1"
+          cache: false
 
       - run: cargo test --profile ci --package forge --features scarb_2_13_1 --test main e2e::plugin_versions::new_with_minimal_scarb
       - run: cargo test --profile ci --package forge --features scarb_2_13_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
@@ -475,7 +476,7 @@ jobs:
           exit 0
 
       - name: Check typos
-        uses: crate-ci/typos@v1.48.0
+        uses: crate-ci/typos@v1.50.3
 
   build-docs:
     name: Test Building Docs

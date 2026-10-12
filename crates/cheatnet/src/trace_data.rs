@@ -7,6 +7,8 @@ use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::execution::call_info::{
     CallInfo, ExecutionSummary, ExtendedExecutionResources, OrderedEvent, OrderedL2ToL1Message,
 };
+#[cfg(feature = "starkloupe")]
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::errors::AnnotatedEntryPointExecutionError;
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
@@ -32,6 +34,7 @@ pub type TraceDataCallResult = Result<CallSuccess, TraceDataCallFailure>;
 /// `Recoverable` - Meant to be caught by the user.
 /// `Unrecoverable` - Equivalent of `panic!` in rust.
 #[derive(Debug, Clone, CairoSerialize)]
+#[cfg_attr(feature = "starkloupe", derive(serde::Serialize))]
 pub enum TraceDataCallFailure {
     Recoverable { panic_data: Vec<Felt> },
     Unrecoverable { msg: ByteArray },
@@ -93,11 +96,15 @@ pub struct CallTrace {
     // serialize end
 
     // These also include resources used by internal calls
+    #[cfg(feature = "starkloupe")]
+    pub tracked_resource: Option<TrackedResource>,
     pub used_execution_resources: ExtendedExecutionResources,
     pub used_l1_resources: L1Resources,
     pub used_syscalls_vm_resources: SyscallUsageMap,
     pub used_syscalls_sierra_gas: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    #[cfg(feature = "starkloupe")]
+    pub vm_memory: Option<Vec<Option<Felt>>>,
     pub gas_consumed: u64,
     pub events: Vec<OrderedEvent>,
     pub signature: Vec<Felt>,
@@ -143,6 +150,18 @@ impl TraceData {
     pub fn set_vm_trace_for_current_call(&mut self, vm_trace: Vec<RelocatedTraceEntry>) {
         let current_call = self.current_call_stack.top();
         current_call.borrow_mut().vm_trace = Some(vm_trace);
+    }
+
+    #[cfg(feature = "starkloupe")]
+    pub fn set_vm_memory_for_current_call(&mut self, vm_memory: Vec<Option<Felt>>) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().vm_memory = Some(vm_memory);
+    }
+
+    #[cfg(feature = "starkloupe")]
+    pub fn set_tracked_resource_for_current_call(&mut self, tracked_resource: TrackedResource) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().tracked_resource = Some(tracked_resource);
     }
 
     pub fn update_current_call_result(&mut self, result: TraceDataCallResult) {
@@ -249,6 +268,8 @@ impl CallTrace {
     pub(crate) fn default_successful_call() -> Self {
         Self {
             entry_point: CallEntryPoint::default(),
+            #[cfg(feature = "starkloupe")]
+            tracked_resource: None,
             used_execution_resources: ExtendedExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
             used_syscalls_vm_resources: SyscallUsageMap::default(),
@@ -256,6 +277,8 @@ impl CallTrace {
             nested_calls: vec![],
             result: Ok(CallSuccess { ret_data: vec![] }),
             vm_trace: None,
+            #[cfg(feature = "starkloupe")]
+            vm_memory: None,
             gas_consumed: u64::default(),
             events: vec![],
             signature: vec![],

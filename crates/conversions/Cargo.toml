@@ -5,6 +5,7 @@ edition.workspace = true
 
 [features]
 testing = []
+starkloupe = []
 
 [lints]
 workspace = true

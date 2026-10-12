@@ -1,0 +1,49 @@
+---
+source: crates/sncast/tests/e2e/get/tx_trace.rs
+expression: output.as_stdout()
+---
+Success: Transaction trace retrieved
+
+Type:                          INVOKE
+Execute Invocation
+  Call Type:                   CALL
+  Calldata:                    0x7
+  Caller Address:              0x0000000000000000000000000000000000000000000000000000000000000000
+  Class Hash:                  0x0000000000000000000000000000000000000000000000000000000000000456
+  Contract Address:            0x0000000000000000000000000000000000000000000000000000000000000123
+  Entry Point Selector:        set_value
+  Entry Point Type:            EXTERNAL
+  Events:                      []
+  Execution Resources
+    L1 Gas:                    0
+    L2 Gas:                    0
+  Is Reverted:                 false
+  Messages:                    []
+  Result:                      success: 0x9
+  Calls:                       []
+Execution Resources
+  L1 Data Gas:                 0
+  L1 Gas:                      0
+  L2 Gas:                      0
+State Diff
+  Declared Classes
+    Class Hash:                0x0000000000000000000000000000000000000000000000000000000000000005
+    Compiled Class Hash:       0x0000000000000000000000000000000000000000000000000000000000000006
+  Deployed Contracts
+    Address:                   0x0000000000000000000000000000000000000000000000000000000000000009
+    Class Hash:                0x000000000000000000000000000000000000000000000000000000000000000a
+  Deprecated Declared Classes: [0x4]
+  Migrated Compiled Classes
+    Class Hash:                0x0000000000000000000000000000000000000000000000000000000000000007
+    Compiled Class Hash:       0x0000000000000000000000000000000000000000000000000000000000000008
+  Nonces
+    Contract Address:          0x000000000000000000000000000000000000000000000000000000000000000d
+    Nonce:                     0xe
+  Replaced Classes
+    Class Hash:                0x000000000000000000000000000000000000000000000000000000000000000c
+    Contract Address:          0x000000000000000000000000000000000000000000000000000000000000000b
+  Storage Diffs
+    Address:                   0x0000000000000000000000000000000000000000000000000000000000000001
+    Storage Entries
+      Key:                     0x2
+      Value:                   0x3

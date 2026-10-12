@@ -5,6 +5,7 @@ edition.workspace = true
 
 [features]
 testing = []
+starkloupe = ["conversions/starkloupe"]
 cairo-native = [
     "dep:cairo-native",
     "dep:native-api",

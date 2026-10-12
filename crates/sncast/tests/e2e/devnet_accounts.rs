@@ -178,8 +178,9 @@ pub async fn use_devnet_account_with_network_not_being_devnet() {
 
     assert_stderr_contains(
         output,
-        format! {"Error: Node at {SEPOLIA_RPC_URL} is not responding to the Devnet health check (GET `/is_alive`). It may not be a Devnet instance or it may be down."
-        },
+        format!(
+            "Error: Node at {SEPOLIA_RPC_URL} is not responding to the Devnet health check (GET `/is_alive`). It may not be a Devnet instance or it may be down."
+        ),
     );
 }
 
@@ -208,7 +209,6 @@ pub async fn use_devnet_account_with_network_flags(network: &str) {
 
     assert_stderr_contains(
         output,
-        format! {"Error: Devnet accounts cannot be used with `--network {network}`"
-        },
+        format!("Error: Devnet accounts cannot be used with `--network {network}`"),
     );
 }

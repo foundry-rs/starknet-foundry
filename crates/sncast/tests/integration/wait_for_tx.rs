@@ -74,9 +74,9 @@ async fn test_rejected_transaction() {
 
     let resp = deployment.unwrap_err();
 
-    assert!(
-        resp.to_string()
-            .contains("InsufficientResourcesForValidate")
+    assert_eq!(
+        resp.to_string(),
+        "The transaction's resources don't cover validation or the minimal transaction fee"
     );
 }
 

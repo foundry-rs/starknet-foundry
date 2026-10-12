@@ -27,7 +27,7 @@ This argument also accepts a module tree path, for example `hello_sncast::contra
 Required.
 
 The verification provider to use for the verification. Possible values are:
-* `walnut`
+* `starkloupe`
 * `voyager`
 
 ## `--network, -n <NETWORK>`

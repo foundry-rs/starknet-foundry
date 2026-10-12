@@ -1,0 +1,17 @@
+---
+source: crates/sncast/tests/e2e/get/tx_trace.rs
+expression: output.as_stdout()
+---
+Success: Transaction trace retrieved
+
+Type:                   DECLARE
+Validate Invocation
+  Entry Point Selector: __validate_declare__
+  Contract Address:     0x06aac79bb6c90e1e41c33cd20c67c0281c4a95f01b4e15ad0c3b53fcc6010cf8
+  Calldata:             0x58e7b465e6c7651fa8697964a2d1ed93a62c0c00ba9876ddc4480dd0578d343
+  Result:               success: 0x56414c4944
+Fee Transfer Invocation
+  Entry Point Selector: transfer
+  Contract Address:     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+  Calldata:             ContractAddress(0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8), 10343418238809876_u256
+  Result:               success: true

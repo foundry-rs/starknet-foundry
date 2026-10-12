@@ -48,6 +48,7 @@ runs:
       if: ${{ inputs.setup-scarb == 'true' }}
       with:
         scarb-version: ${{ inputs.scarb-version }}
+        cache: false
 
     - uses: software-mansion/setup-universal-sierra-compiler@v1
       if: ${{ inputs.setup-usc == 'true' }}

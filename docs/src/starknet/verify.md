@@ -13,9 +13,9 @@ For detailed CLI description, see [verify command reference](../appendix/sncast/
 
 ## Verification Providers
 
-### Walnut
+### Starkloupe
 
-Walnut is a tool for step-by-step debugging of Starknet transactions. You can learn more about Walnut here [walnut.dev](https://walnut.dev). Note that Walnut requires you to specify the Starknet version in your `Scarb.toml` config file.
+Starkloupe (formerly Walnut) is a tool for step-by-step debugging of Starknet transactions. You can learn more about Starkloupe here [app.starkloupe.co](https://app.starkloupe.co). Note that Starkloupe requires you to specify the Starknet version in your `Scarb.toml` config file.
 
 ### Voyager
 
@@ -25,7 +25,7 @@ Walnut is a tool for step-by-step debugging of Starknet transactions. You can le
 
 First, ensure that you have created a `Scarb.toml` file for your contract (it should be present in the project directory or one of its parent directories). Make sure the contract has already been deployed on the network.
 
-### Using Walnut
+### Using Starkloupe
 
 <!-- TODO(#4225) -->
 <!-- { "ignored": true, "ignored_output": true, "replace_network": false } -->
@@ -34,7 +34,7 @@ $ sncast \
     verify \
     --class-hash 0x031966c9fe618bcee61d267750b9d46e3d71469e571e331f35f0ca26efe306dc \
     --contract-name SimpleBalance \
-    --verifier walnut \
+    --verifier starkloupe \
     --network sepolia
 ```
 
@@ -43,7 +43,7 @@ $ sncast \
 
 ```shell
 
-    You are about to submit the entire workspace code to the third-party verifier at walnut.
+    You are about to submit the entire workspace code to the third-party verifier at starkloupe.
 
     Important: Make sure your project does not include sensitive information like private keys.
 
