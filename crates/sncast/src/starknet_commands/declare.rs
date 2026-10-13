@@ -149,8 +149,12 @@ pub async fn declare(
             .parent()
             .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-        let network =
-            resolve_verification_network(None, config.network_params.network(), &provider).await?;
+        let network = resolve_verification_network(
+            args.rpc.network,
+            config.network_params.network(),
+            &provider,
+        )
+        .await?;
 
         let verification_result = verify_contract(
             verifier,
