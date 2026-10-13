@@ -92,7 +92,7 @@ pub async fn declare(
     ui: &UI,
 ) -> Result<ExitCode> {
     if args.verify.is_some() {
-        // Force waiting for deployment before verification
+        // Force waiting for declaration before verification
         wait_config.wait = true;
     }
 
