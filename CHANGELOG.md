@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast account delete` confirmation prompt now defaults to "No".
 
+#### Fixed
+
+- `sncast verify` confirmation prompt now correctly default to "Yes".
+
 ## [0.64.1] - 2026-10-06
 
 ### Cast
