@@ -105,7 +105,7 @@ pub async fn declare(
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
     let result = with_account!(&account, |account| declare_with_artifacts(
-        contract_definition,
+        contract_definition.clone(),
         casm_contract_definition,
         args.common,
         args.no_abi,
@@ -127,10 +127,6 @@ pub async fn declare(
         }
     };
 
-    let contract_artifacts = resolve_contract_artifacts(&args.contract_name, &artifacts)
-        .context("Failed to get contract artifacts")?;
-    let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
-        .context("Failed to parse sierra artifact")?;
     let network_flag = generate_network_flag(&args.rpc, &config);
 
     let deploy_message = DeployCommandMessage::new(
