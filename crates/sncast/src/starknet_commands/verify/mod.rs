@@ -2,7 +2,7 @@ use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
 use foundry_ui::OutputFormat;
-use promptly::prompt_opt;
+use promptly::prompt_default;
 use scarb_metadata::PackageMetadata;
 use shared::utils::contract_name_from_module_path;
 use sncast::Network;
@@ -179,20 +179,12 @@ fn display_files_and_confirm(
 
     // Ask for confirmation after showing files
     if !confirm_verification {
-        loop {
-            let prompt_text = format!(
-                "\n\tYou are about to submit the above files to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed? (Y/n)"
-            );
+        let prompt_text = format!(
+            "\n\tYou are about to submit the above files to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed?"
+        );
 
-            let input = prompt_opt(prompt_text)?
-                .and_then(|s: String| s.chars().next())
-                .map(|c| c.to_ascii_lowercase());
-
-            match input {
-                None | Some('y') => break,
-                Some('n') => bail!("Verification aborted"),
-                Some(_) => {}
-            }
+        if !prompt_default(prompt_text, true)? {
+            bail!("Verification aborted")
         }
     }
 
