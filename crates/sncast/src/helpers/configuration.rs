@@ -138,7 +138,6 @@ pub struct CastConfig {
     pub network_params: NetworkParams,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
-    pub keystore: Option<Utf8PathBuf>,
     pub wait_params: ValidatedWaitParams,
     pub block_explorer: Option<block_explorer::Service>,
     pub show_explorer_links: bool,
@@ -163,7 +162,6 @@ impl Default for CastConfig {
             network_params: NetworkParams::default(),
             account: String::default(),
             accounts_file: Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE),
-            keystore: None,
             wait_params: ValidatedWaitParams::default(),
             block_explorer: Some(block_explorer::Service::default()),
             show_explorer_links: show_explorer_links_default(),
@@ -188,8 +186,6 @@ pub struct PartialCastConfig {
         rename(serialize = "accounts-file", deserialize = "accounts-file")
     )]
     pub accounts_file: Option<Utf8PathBuf>,
-
-    pub keystore: Option<Utf8PathBuf>,
 
     #[serde(
         default,
@@ -328,7 +324,6 @@ impl Override for PartialCastConfig {
             network_params: self.network_params.override_with(other.network_params),
             account: other.account.or_else(|| self.account.clone()),
             accounts_file: other.accounts_file.or_else(|| self.accounts_file.clone()),
-            keystore: other.keystore.or_else(|| self.keystore.clone()),
             wait_params: override_optional(self.wait_params.clone(), other.wait_params),
             block_explorer: other.block_explorer.or(self.block_explorer),
             show_explorer_links: other.show_explorer_links.or(self.show_explorer_links),
@@ -423,7 +418,6 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             network_params: d.network_params.override_with(p.network_params),
             account: p.account.unwrap_or(d.account),
             accounts_file,
-            keystore: p.keystore.or(d.keystore),
             wait_params: p
                 .wait_params
                 .map_or_else(|| Ok(d.wait_params), ValidatedWaitParams::try_from)?,
