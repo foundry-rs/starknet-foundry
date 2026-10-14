@@ -55,10 +55,11 @@ async fn test_get_account_no_file() {
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, &UI::default()).await;
-    let err = account.unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("Accounts file = tests/data/accounts/nonexistentfile.json does not exist!")
+    let err = account.unwrap_err().to_string();
+
+    insta::assert_snapshot!(
+        err,
+        @"Accounts file = tests/data/accounts/nonexistentfile.json does not exist! If you do not have an account create one with `account create` command or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument."
     );
 }
 
@@ -75,11 +76,9 @@ async fn test_get_account_invalid_file() {
         network: None,
     };
     let account = get_account(&config, &provider, &rpc_args, &UI::default()).await;
-    let err = account.unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("Failed to parse field `alpha-sepolia.?` in file 'tests/data/accounts/invalid_format.json': expected `,` or `}` at line 8 column 9")
-    );
+    let err = account.unwrap_err().to_string();
+
+    insta::assert_snapshot!(err, @"invalid schema of field alpha-sepolia.? in the accounts file");
 }
 
 #[tokio::test]
@@ -135,11 +134,9 @@ async fn test_get_account_failed_to_convert_field_elements() {
         network: None,
     };
     let account1 = get_account(&config, &provider, &rpc_args, &UI::default()).await;
-    let err = account1.unwrap_err();
+    let err = account1.unwrap_err().to_string();
 
-    assert!(err.to_string().contains(
-        "Failed to parse field `alpha-sepolia.with_invalid_private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': data did not match any variant of untagged enum SignerType at line 9 column 9"
-    ));
+    insta::assert_snapshot!(err, @"invalid schema of field accounts.alpha-sepolia.with_invalid_private_key.signer in the accounts file");
 }
 
 // TODO (#1690): Move this test to the shared crate and execute it for a real node
