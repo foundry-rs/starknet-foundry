@@ -3,15 +3,14 @@ use crate::starknet_commands::account::{
     validate_private_key,
 };
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, bail};
 use bigdecimal::BigDecimal;
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::accounts::{AccountRecord, AccountRepository};
-use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::accounts::{AccountDeploymentService, AccountRecord, AccountRepository};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
@@ -25,12 +24,8 @@ use sncast::signers::credentials::LEGACY_CREATE_KEYSTORE_PASSWORD_ENV;
 use sncast::signers::{LedgerSpec, PrivateKeySpec, SignerSpec};
 use sncast::{
     AccountType, SignerSource, check_class_hash_exists, check_if_legacy_contract,
-    extract_or_generate_salt, get_keystore_password, handle_account_factory_error,
+    extract_or_generate_salt, get_keystore_password,
 };
-use starknet_rust::accounts::{
-    AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
-};
-use starknet_rust::core::types::FeeEstimate;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::signers::{LocalWallet, Signer, SigningKey};
@@ -245,29 +240,15 @@ where
 {
     let public_key = signer.get_public_key().await?.scalar();
 
-    let (address, estimated_fee) = match account_type {
-        AccountType::OpenZeppelin => {
-            let factory =
-                OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
-            get_address_and_deployment_fee(factory, salt).await
-        }
-        AccountType::Ready => {
-            let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
-            get_address_and_deployment_fee(factory, salt).await
-        }
-        AccountType::Braavos => {
-            let factory = BraavosAccountFactory::new(
-                class_hash,
-                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-                chain_id,
-                signer,
-                provider,
-            )
-            .await?;
-            get_address_and_deployment_fee(factory, salt).await
-        }
-    }?;
+    let (address, estimated_fee) = AccountDeploymentService::estimate_fee(
+        provider,
+        account_type,
+        class_hash,
+        signer,
+        salt,
+        chain_id,
+    )
+    .await?;
 
     let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
 
@@ -283,34 +264,6 @@ where
     );
 
     Ok((account, estimated_fee.overall_fee))
-}
-
-async fn get_address_and_deployment_fee<T>(
-    account_factory: T,
-    salt: Felt,
-) -> Result<(Felt, FeeEstimate)>
-where
-    T: AccountFactory + Sync,
-{
-    let deployment = account_factory.deploy_v3(salt);
-    Ok((deployment.address(), get_deployment_fee(&deployment).await?))
-}
-
-async fn get_deployment_fee<T>(
-    account_deployment: &AccountDeploymentV3<'_, T>,
-) -> Result<FeeEstimate>
-where
-    T: AccountFactory + Sync,
-{
-    let fee_estimate = account_deployment.estimate_fee().await;
-
-    match fee_estimate {
-        Ok(fee_estimate) => Ok(fee_estimate),
-        Err(err) => Err(anyhow!(
-            "Failed to estimate account deployment fee. Reason: {}",
-            handle_account_factory_error::<T>(err)
-        )),
-    }
 }
 
 fn create_to_keystore(
