@@ -11,6 +11,7 @@ use sncast::response::get::balance::BalanceResponse;
 use sncast::response::ui::UI;
 use sncast::{get_account, get_account_data_from_accounts_file, get_block_id, get_chain_id};
 use starknet_rust::{
+    accounts::Account,
     core::{types::FunctionCall, utils::get_selector_from_name},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
