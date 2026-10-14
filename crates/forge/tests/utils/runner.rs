@@ -14,6 +14,7 @@ use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_target_summary::TestTargetSummary;
 use foundry_ui::UI;
 use indoc::formatdoc;
+use regex::Regex;
 use scarb_api::metadata::metadata_for_dir;
 use scarb_api::{
     CompilationOpts, ContractData, ContractsData, StarknetContractArtifacts,
@@ -324,8 +325,14 @@ pub fn assert_case_output_contains(
     let actual_msg = any_case.msg().unwrap_or_default();
     let name = matched_test_case_name(any_case);
 
+    let asserted_regex = {
+        let escaped = regex::escape(asserted_msg);
+        let replaced = escaped.replace(r"\[\.\.\]", ".*");
+        Regex::new(&replaced).unwrap()
+    };
+
     assert!(
-        actual_msg.contains(asserted_msg),
+        asserted_regex.is_match(actual_msg),
         "Output assertion failed for test case `{name}`.\nexpected output to contain: {asserted_msg}\nactual:                     {actual_msg}"
     );
 }
@@ -556,7 +563,8 @@ fn format_available_test_cases(summaries: &[AnyTestCaseSummary]) -> String {
 mod tests {
     use crate::utils::{
         runner::{
-            assert_builtin, assert_gas, assert_passed, assert_syscall, capture_assertion_panic,
+            assert_builtin, assert_case_output_contains, assert_gas, assert_passed, assert_syscall,
+            capture_assertion_panic,
         },
         running_tests::run_test_case,
     };
@@ -822,6 +830,63 @@ mod tests {
         Builtin assertion failed for test case `test_package_integrationtest::test_case::bitwise_diagnostics` (builtin `bitwise`).
         expected: 2
         actual:   1
+        "},
+        );
+    }
+
+    #[test]
+    fn assert_case_output_contains_handles_wildcards() {
+        let test = test_case!(indoc!(
+            r"
+            #[test]
+            fn foo() {
+                assert(1 == 2, 'error: bar');
+            }
+        "
+        ));
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        assert_case_output_contains(&result, "foo", "error: [..]");
+    }
+
+    #[test]
+    fn assert_case_output_contains_allows_empty_capture() {
+        let test = test_case!(indoc!(
+            r"
+            #[test]
+            fn foo() {
+                assert(1 == 2, 'error');
+            }
+        "
+        ));
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        // Real output contains `('error')` string
+        assert_case_output_contains(&result, "foo", "('error[..]')");
+    }
+
+    #[test]
+    fn assert_case_output_contains_fails() {
+        let test = test_case!(indoc!(
+            r"
+                #[test]
+                fn foo() {
+                    assert(1 == 2, 'error');
+                }
+            "
+        ));
+        let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+        let panic_message = capture_assertion_panic(|| {
+            assert_case_output_contains(&result, "foo", "('foo[..]')");
+        });
+
+        assert_stdout_contains(
+            panic_message,
+            indoc! {r"
+            Output assertion failed for test case `test_package_integrationtest::test_case::foo`.
+            expected output to contain: ('foo[..]')
+
+            actual:                     
+                0x6572726f72 ('error')
+            note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         "},
         );
     }
