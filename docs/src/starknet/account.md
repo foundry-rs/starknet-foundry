@@ -100,6 +100,30 @@ If you created an account with `sncast account create` it by default it will be 
 `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file which we call `default accounts file` in the following
 sections.
 
+Native accounts files use a versioned schema. Version 2 stores networks below the `accounts` field and gives every account exactly one explicitly tagged signer:
+
+```json
+{
+  "version": 2,
+  "accounts": {
+    "alpha-sepolia": {
+      "alice": {
+        "public_key": "0x123",
+        "address": "0x456",
+        "deployed": true,
+        "signer": {
+          "type": "keystore",
+          "path": "keys/alice.json",
+          "password_env": "ALICE_KEYSTORE_PASSWORD"
+        }
+      }
+    }
+  }
+}
+```
+
+Supported signer types are `private_key`, `keystore`, and `ledger`. Relative keystore paths are resolved from the accounts file's directory, not the current working directory.
+
 ### [`account import`](../appendix/sncast/account/import.md)
 
 To import an account to the `default accounts file`, use the `account import` command.
@@ -167,6 +191,16 @@ $ sncast account delete \
     --name new_account \
     --network-name alpha-sepolia
 ```
+
+### [`account migrate`](../appendix/sncast/account/migrate.md)
+
+Legacy unversioned accounts files remain readable. Upgrade one explicitly with:
+
+```shell
+$ sncast --accounts-file accounts.json account migrate
+```
+
+The original V1 document is saved beside it as `accounts.json.v1.bak`. Read-only commands never rewrite a V1 file; the first successful account mutation also upgrades it automatically.
 
 ### Advanced Use Cases
 
