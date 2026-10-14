@@ -33,7 +33,6 @@ fn trace_resources_lib_call() {
     assert_vm_resources_for_test("test_lib_call", check_libcall);
 }
 
-#[cfg(feature = "scarb_since_2_19_0")]
 #[test]
 fn trace_resources_sha() {
     use cairo_annotations::trace_data::DeprecatedSyscallSelector::{
