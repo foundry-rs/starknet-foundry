@@ -25,5 +25,6 @@ fn test_simple_assertions() {
     let expected = Event { keys, data }; // Instantiate the Event
 
     spy.assert_emitted(@array![ // Assert
-    (contract_address, expected)]);
+        (contract_address, expected)
+    ]);
 }
