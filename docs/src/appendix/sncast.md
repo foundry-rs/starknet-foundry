@@ -30,6 +30,7 @@
     * [nonce](./sncast/get/nonce.md)
     * [spec-version](./sncast/get/spec-version.md)
     * [state-update](./sncast/get/state-update.md)
+    * [storage](./sncast/get/storage.md)
     * [syncing](./sncast/get/syncing.md)
     * [tx](./sncast/get/tx.md)
     * [tx-receipt](./sncast/get/tx-receipt.md)
