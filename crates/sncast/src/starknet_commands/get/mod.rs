@@ -10,6 +10,7 @@ pub mod class_hash_at;
 pub mod nonce;
 pub mod spec_version;
 pub mod state_update;
+pub mod storage;
 pub mod syncing;
 pub mod transaction;
 pub mod tx_receipt;
@@ -64,6 +65,9 @@ pub enum GetCommands {
 
     /// Get node syncing status
     Syncing(syncing::Syncing),
+
+    /// Get storage value for a slot at a contract
+    Storage(storage::Storage),
 }
 
 pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
@@ -91,5 +95,7 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::ChainId(chain_id) => chain_id::chain_id(chain_id, config, ui).await,
 
         GetCommands::Syncing(args) => syncing::syncing(args, config, ui).await,
+
+        GetCommands::Storage(args) => storage::storage(args, config, ui).await,
     }
 }
