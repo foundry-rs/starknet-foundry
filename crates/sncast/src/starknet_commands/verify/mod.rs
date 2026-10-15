@@ -73,7 +73,7 @@ pub struct ContractIdentifierArgs {
 
 #[derive(Args)]
 pub struct VerifyCommonArgs {
-    /// Block explorer to use for the verification [possible values: starkloupe, voyager]
+    /// Provider used for the verification [possible values: starkloupe, voyager]
     #[arg(short, long, value_parser = parse_verifier)]
     pub verifier: Verifier,
 
