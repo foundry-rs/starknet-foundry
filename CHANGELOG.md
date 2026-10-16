@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `get tx-trace` command to get the execution trace of a transaction.
 - `get class` command to get the contract class definition associated with the given hash.
+- `get class-at` command to get the contract class definition located at given address.
 
 ## [0.64.1] - 2026-10-06
 
