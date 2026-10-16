@@ -1260,7 +1260,15 @@ async fn test_verification_fails() {
     let output = runner(&args)
         .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
-        .assert();
+        .assert()
+        .success();
 
-    assert_stderr_contains(output, "Failed to verify the contract: Verification failed");
+    assert_stdout_contains(
+        output.as_stdout().to_string(),
+        "Success: Declaration completed",
+    );
+    assert_stderr_contains(
+        output.as_stderr().to_string(),
+        "Failed to verify the contract: Verification failed",
+    );
 }
