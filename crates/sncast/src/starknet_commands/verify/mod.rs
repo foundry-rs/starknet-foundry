@@ -1,19 +1,24 @@
 use crate::starknet_commands::utils::felt_or_id::{ClassHash, ContractAddress};
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
-use promptly::prompt;
+use foundry_ui::OutputFormat;
+use promptly::prompt_default;
 use scarb_metadata::PackageMetadata;
 use shared::utils::contract_name_from_module_path;
+use sncast::Network;
 use sncast::helpers::artifacts::resolve_contract_artifacts;
+use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
-use sncast::helpers::scarb_utils::{BuildConfig, build_and_load_artifacts};
+use sncast::helpers::scarb_utils::{
+    BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+};
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
-use sncast::{Network, response::verify::VerifyResponse};
 use sncast::{get_chain_id, get_provider};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use std::fmt;
+use std::process::ExitCode;
 use url::Url;
 
 pub mod explorer;
@@ -132,20 +137,20 @@ async fn resolve_verification_network(
 
 fn resolve_and_validate_contract_name(
     package: &PackageMetadata,
-    scarb_json: bool,
     profile: String,
     contract_name: &str,
     ui: &UI,
 ) -> Result<String> {
+    // TODO(#3959) Remove `base_ui`
+    let base_ui = ui.base_ui();
     let artifacts = build_and_load_artifacts(
         package,
         &BuildConfig {
             scarb_toml_path: package.manifest_path.clone(),
-            json: scarb_json,
+            json: base_ui.output_format() == OutputFormat::Json,
             profile,
         },
-        // TODO(#3959) Remove `base_ui`
-        ui.base_ui(),
+        base_ui,
     )
     .context("Failed to build contract")?;
 
@@ -175,25 +180,18 @@ fn display_files_and_confirm(
     // Ask for confirmation after showing files
     if !confirm_verification {
         let prompt_text = format!(
-            "\n\tYou are about to submit the above files to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed? (Y/n)"
+            "\n\tYou are about to submit the above files to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed?"
         );
-        let input: String = prompt(prompt_text)?;
 
-        if !input.is_empty() && !input.to_lowercase().starts_with('y') {
-            bail!("Verification aborted");
+        if !prompt_default(prompt_text, true)? {
+            bail!("Verification aborted")
         }
     }
 
     Ok(())
 }
 
-pub async fn verify(
-    args: Verify,
-    package: &PackageMetadata,
-    json: bool,
-    config: &CastConfig,
-    ui: &UI,
-) -> Result<VerifyResponse> {
+pub async fn verify(args: Verify, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let Verify {
         contract_identifier,
         contract_name,
@@ -204,6 +202,9 @@ pub async fn verify(
         url,
         test_files,
     } = args;
+
+    let manifest_path = assert_manifest_path_exists()?;
+    let package = get_package_metadata(&manifest_path, &scarb_package)?;
 
     let rpc_url = match url {
         Some(url) => url,
@@ -225,15 +226,14 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    let contract_identifier = contract_identifier.get_identifier(config)?;
+    let contract_identifier = contract_identifier.get_identifier(&config)?;
 
     let provider = get_provider(&rpc_url)?;
     let network =
         resolve_verification_network(network, config.network_params.network(), &provider).await?;
 
     let resolved_contract_name = resolve_and_validate_contract_name(
-        package,
-        json,
+        &package,
         config.scarb_profile.clone(),
         &contract_name,
         ui,
@@ -247,7 +247,7 @@ pub async fn verify(
     }
 
     // Create verifier instance, gather files, and perform verification
-    match verifier {
+    let result = match verifier {
         Verifier::Starkloupe => {
             let starkloupe = StarkloupeVerificationInterface::new(
                 network,
@@ -297,7 +297,9 @@ pub async fn verify(
                 )
                 .await
         }
-    }
+    };
+
+    Ok(process_command_result("verify", result, ui, None))
 }
 
 #[cfg(test)]
@@ -363,7 +365,6 @@ mod tests {
 
         let contract_name = resolve_and_validate_contract_name(
             &package,
-            false,
             "release".to_string(),
             "duplicate_contract_name::first_contract::HelloStarknet",
             &ui,
@@ -380,7 +381,6 @@ mod tests {
 
         let contract_name = resolve_and_validate_contract_name(
             &package,
-            false,
             "release".to_string(),
             "first_contract::HelloStarknet",
             &ui,
