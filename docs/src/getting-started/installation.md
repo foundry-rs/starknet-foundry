@@ -63,11 +63,13 @@ snforge --version
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.13.1
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.13.1 (recommended: >= 2.19.6, up to 2.21.x)
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
 - _(Optional for Scarb >= 2.10.0)_[^note] [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
 all installed and added to your `PATH` environment variable.
+
+You can run `snforge check-requirements` to verify that the installed versions satisfy these requirements.
 
 [^note]: Additionally, your platform must be one of the supported:
 * `aarch64-apple-darwin`
