@@ -1228,29 +1228,17 @@ async fn test_verification_not_started_when_declaration_fails() {
 }
 
 #[tokio::test]
-async fn test_verification_not_started_for_dry_run() {
-    let contract_path = duplicate_contract_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/map",
-        "put",
-        "test_verification_not_started_for_dry_run",
-    );
-    let tempdir = create_and_deploy_oz_account().await;
-    join_tempdirs(&contract_path, &tempdir);
-
-    // Verifier must not be called at all; `MockServer` checks `expect(0)` on drop.
-    let mock_server = mock_voyager_verification(200, json!({ "job_id": "unused" }), 0).await;
-
+async fn test_dry_run_forbidden_with_verification() {
     let args = declare_with_verification_args(&["--dry-run"], false);
-    let output = runner(&args)
-        .env("VERIFIER_API_URL", mock_server.uri())
-        .current_dir(tempdir.path())
-        .assert()
-        .success();
+    let output = runner(&args).assert().failure();
 
-    assert_stdout_contains(
+    assert_stderr_contains(
         output,
         indoc! {r"
-        Success: Dry run completed
+        error: the argument '--dry-run' cannot be used with:
+          --verifier <VERIFIER>
+          --test-files
+          --confirm-verification
         "},
     );
 }
