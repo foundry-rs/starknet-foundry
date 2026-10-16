@@ -2,6 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::OutputFormat;
+use scarb_metadata::PackageMetadata;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::command::process_command_result;
@@ -144,29 +145,20 @@ pub async fn declare(
         }
     };
 
-    if let Some(verifier) = args.verify {
-        let workspace_dir = package
-            .manifest_path
-            .parent()
-            .ok_or(anyhow!("Failed to obtain workspace dir"))?;
-
-        let network = resolve_verification_network(&args.rpc, &provider, &config).await?;
-
-        let verification_result = verify_contract(
-            verifier,
-            ContractIdentifier::ClassHash {
-                class_hash: response.class_hash.0.to_fixed_hex_string(),
-            },
-            contract_name_from_module_path(&args.contract_name).to_string(),
-            args.package.clone(),
+    if let Some(verify_args) = args.verify {
+        match verify_after_declare(
+            verify_args,
+            response.class_hash.0,
+            &args.contract_name,
+            args.package,
+            &package,
             &provider,
-            network,
-            workspace_dir.to_path_buf(),
+            &args.rpc,
+            &config,
             ui,
         )
-        .await;
-
-        match verification_result {
+        .await
+        {
             Ok(VerifyResponse { message }) => response.verification_message = Some(message),
             Err(e) => ui.print_error("declare", format!("Failed to verify the contract: {e}")),
         }
@@ -351,4 +343,38 @@ where
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
+}
+
+#[expect(clippy::too_many_arguments)]
+async fn verify_after_declare(
+    verify_args: VerifyCommonArgs,
+    class_hash: Felt,
+    contract_name: &str,
+    package: Option<String>,
+    package_metadata: &PackageMetadata,
+    provider: &JsonRpcClient<HttpTransport>,
+    rpc: &RpcArgs,
+    config: &CastConfig,
+    ui: &UI,
+) -> Result<VerifyResponse> {
+    let workspace_dir = package_metadata
+        .manifest_path
+        .parent()
+        .ok_or(anyhow!("Failed to obtain workspace dir"))?;
+
+    let network = resolve_verification_network(rpc, provider, config).await?;
+
+    verify_contract(
+        verify_args,
+        ContractIdentifier::ClassHash {
+            class_hash: class_hash.to_fixed_hex_string(),
+        },
+        contract_name_from_module_path(contract_name).to_string(),
+        package,
+        provider,
+        network,
+        workspace_dir.to_path_buf(),
+        ui,
+    )
+    .await
 }
