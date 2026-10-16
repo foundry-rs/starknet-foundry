@@ -2,6 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::OutputFormat;
+use scarb_metadata::PackageMetadata;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::command::process_command_result;
@@ -20,7 +21,10 @@ use sncast::response::errors::{
 };
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
-use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
+use sncast::response::verify::VerifyResponse;
+use sncast::{
+    Network, WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account,
+};
 use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};
 use starknet_rust::core::types::{
@@ -38,6 +42,12 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use universal_sierra_compiler_api::compile_contract_sierra;
 
+use crate::starknet_commands::verify::explorer::ContractIdentifier;
+use crate::starknet_commands::verify::{
+    VerifyCommonArgs, resolve_verification_network, verify_contract,
+};
+use shared::utils::contract_name_from_module_path;
+
 /// Common args shared by declare command variants.
 #[derive(Args)]
 pub struct DeclareCommonArgs {
@@ -54,6 +64,8 @@ pub struct DeclareCommonArgs {
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
+#[command(mut_arg("verifier", |arg| arg.required(false)))]
+#[command(mut_arg("dry_run", |arg| arg.conflicts_with("VerifyCommonArgs")))]
 pub struct Declare {
     /// Contract name or module tree path
     #[arg(short = 'c', long)]
@@ -72,14 +84,22 @@ pub struct Declare {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    #[command(flatten)]
+    pub verify: Option<VerifyCommonArgs>,
 }
 
 pub async fn declare(
     args: Declare,
-    wait_config: WaitForTx,
+    mut wait_config: WaitForTx,
     config: CastConfig,
     ui: &UI,
 ) -> Result<ExitCode> {
+    if args.verify.is_some() {
+        // Force waiting for declaration before verification
+        wait_config.wait = true;
+    }
+
     let provider = args.rpc.get_provider(&config, ui).await?;
     let account = get_account(&config, &provider, &args.rpc, ui).await?;
     let scarb_toml_path = assert_manifest_path_exists()?;
@@ -117,7 +137,7 @@ pub async fn declare(
     .await)
     .map_err(handle_starknet_command_error)?;
 
-    let response = match result {
+    let mut response = match result {
         DeclareResponse::Success(response) => response,
         DeclareResponse::DryRun(response) => {
             return Ok(process_command_result("declare", Ok(response), ui, None));
@@ -126,6 +146,25 @@ pub async fn declare(
             unreachable!("Argument `skip_on_already_declared` is false")
         }
     };
+
+    if let Some(verify_args) = args.verify {
+        match verify_after_declare(
+            verify_args,
+            response.class_hash.0,
+            &args.contract_name,
+            args.package,
+            &package,
+            &provider,
+            args.rpc.network,
+            &config,
+            ui,
+        )
+        .await
+        {
+            Ok(VerifyResponse { message }) => response.verification_message = Some(message),
+            Err(e) => ui.print_error("declare", format!("Failed to verify the contract: {e}")),
+        }
+    }
 
     let network_flag = generate_network_flag(&args.rpc, &config);
 
@@ -258,6 +297,7 @@ where
             DeclareResponse::Success(DeclareTransactionResponse {
                 class_hash: class_hash.into_(),
                 transaction_hash: transaction_hash.into_(),
+                verification_message: None,
             }),
             wait_config,
             ui,
@@ -305,4 +345,39 @@ where
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
+}
+
+#[expect(clippy::too_many_arguments)]
+async fn verify_after_declare(
+    verify_args: VerifyCommonArgs,
+    class_hash: Felt,
+    contract_name: &str,
+    package: Option<String>,
+    package_metadata: &PackageMetadata,
+    provider: &JsonRpcClient<HttpTransport>,
+    network: Option<Network>,
+    config: &CastConfig,
+    ui: &UI,
+) -> Result<VerifyResponse> {
+    let workspace_dir = package_metadata
+        .manifest_path
+        .parent()
+        .ok_or(anyhow!("Failed to obtain workspace dir"))?;
+
+    let network =
+        resolve_verification_network(network, config.network_params.network(), provider).await?;
+
+    verify_contract(
+        verify_args,
+        ContractIdentifier::ClassHash {
+            class_hash: class_hash.to_fixed_hex_string(),
+        },
+        contract_name_from_module_path(contract_name).to_string(),
+        package,
+        provider,
+        network,
+        workspace_dir.to_path_buf(),
+        ui,
+    )
+    .await
 }
