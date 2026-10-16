@@ -62,6 +62,7 @@ pub struct DeclareCommonArgs {
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 #[command(mut_arg("verifier", |arg| arg.required(false)))]
+#[command(mut_arg("dry_run", |arg| arg.conflicts_with("VerifyCommonArgs")))]
 pub struct Declare {
     /// Contract name or module tree path
     #[arg(short = 'c', long)]
