@@ -41,7 +41,7 @@ Overrides network from `snfoundry.toml`.
 
 Optional.
 
-Block identifier on which call should be performed.
+Block identifier from which storage value should be fetched.
 Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string), and block number (u64).
 `pre_confirmed` is used as a default value.
 
