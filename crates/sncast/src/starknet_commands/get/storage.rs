@@ -19,7 +19,7 @@ pub struct Storage {
     #[command(flatten)]
     pub rpc: RpcArgs,
 
-    /// Address of the called contract (hex, decimal, or @alias from snfoundry.toml)
+    /// Address of the contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
     pub contract_address: ContractAddress,
 
