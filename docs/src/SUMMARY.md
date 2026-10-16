@@ -174,6 +174,7 @@
         * [block](appendix/sncast/get/block.md)
         * [chain-id](appendix/sncast/get/chain-id.md)
         * [class](appendix/sncast/get/class.md)
+        * [class-at](appendix/sncast/get/class-at.md)
         * [class-hash-at](appendix/sncast/get/class_hash_at.md)
         * [nonce](appendix/sncast/get/nonce.md)
         * [spec-version](appendix/sncast/get/spec-version.md)

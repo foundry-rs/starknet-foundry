@@ -6,6 +6,7 @@ It has the following subcommands:
 * [`block`](./block.md)
 * [`chain-id`](./chain-id.md)
 * [`class`](./class.md)
+* [`class-at`](./class-at.md)
 * [`class-hash-at`](./class_hash_at.md)
 * [`nonce`](./nonce.md)
 * [`spec-version`](./spec-version.md)
