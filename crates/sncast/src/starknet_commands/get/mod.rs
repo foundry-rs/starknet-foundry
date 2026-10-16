@@ -7,6 +7,7 @@ pub mod balance;
 pub mod block;
 pub mod chain_id;
 pub mod class;
+pub mod class_at;
 pub mod class_hash_at;
 pub mod nonce;
 pub mod spec_version;
@@ -51,6 +52,9 @@ pub enum GetCommands {
     /// Get class of a contract by its hash
     Class(class::Class),
 
+    /// Get class of a contract at an address
+    ClassAt(class_at::ClassAt),
+
     /// Get class hash of a contract at a given address
     ClassHashAt(class_hash_at::ClassHashAt),
 
@@ -85,6 +89,8 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::Nonce(nonce) => nonce::nonce(nonce, config, ui).await,
 
         GetCommands::Class(args) => class::class(args, config, ui).await,
+
+        GetCommands::ClassAt(args) => class_at::class_at(args, config, ui).await,
 
         GetCommands::ClassHashAt(args) => class_hash_at::class_hash_at(args, config, ui).await,
 
