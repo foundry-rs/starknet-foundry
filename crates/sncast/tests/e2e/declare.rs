@@ -1103,7 +1103,26 @@ async fn mock_voyager_verification(
     mock_server
 }
 
-fn declare_with_verification_args<'a>(extra: &[&'a str], json: bool) -> Vec<&'a str> {
+async fn mock_starkloupe_verification(
+    status: u16,
+    body: serde_json::Value,
+    expected_calls: u64,
+) -> MockServer {
+    let mock_server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path_regex(r"^/?v1/sn_sepolia/verify$"))
+        .respond_with(ResponseTemplate::new(status).set_body_json(body))
+        .expect(expected_calls)
+        .mount(&mock_server)
+        .await;
+    mock_server
+}
+
+fn declare_with_verification_args<'a>(
+    verifier: &'a str,
+    extra: &[&'a str],
+    json: bool,
+) -> Vec<&'a str> {
     let mut args = vec![];
     if json {
         args.push("--json");
@@ -1119,33 +1138,47 @@ fn declare_with_verification_args<'a>(extra: &[&'a str], json: bool) -> Vec<&'a 
         "--contract-name",
         "Map",
         "--verifier",
-        "voyager",
+        verifier,
         "--confirm-verification",
     ]);
     args.extend(extra);
     args
 }
 
+#[test_case("voyager")]
+#[test_case("starkloupe")]
 #[tokio::test]
-async fn test_happy_case_with_verification() {
+async fn test_happy_case_with_verification(verifier: &str) {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "test_happy_case_with_verification",
+        &format!("test_happy_case_with_verification_{verifier}"),
     );
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
-    let mock_server = mock_voyager_verification(200, json!({ "job_id": job_id }), 1).await;
+    let mock_server = match verifier {
+        "voyager" => mock_voyager_verification(200, json!({ "job_id": job_id }), 1).await,
+        "starkloupe" => mock_starkloupe_verification(200, json!({ "job_id": job_id }), 1).await,
+        _ => unreachable!("unsupported verifier: {verifier}"),
+    };
 
-    let args = declare_with_verification_args(&[], false);
+    let args = declare_with_verification_args(verifier, &[], false);
     let output = runner(&args)
         .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
         .assert()
         .success();
 
+    let expected_verification_message = match verifier {
+        "voyager" => format!(
+            "Map submitted for verification, you can query the status at: {}/class-verify/job/{job_id}",
+            mock_server.uri()
+        ),
+        "starkloupe" => json!({ "job_id": job_id }).to_string(),
+        _ => unreachable!("unsupported verifier: {verifier}"),
+    };
     assert_stdout_contains(
         output,
         formatdoc! {r"
@@ -1154,10 +1187,8 @@ async fn test_happy_case_with_verification() {
         Class Hash:       0x[..]
         Transaction Hash: 0x[..]
 
-        Map submitted for verification, you can query the status at: {}/class-verify/job/{job_id}
-        ",
-        mock_server.uri(),
-        },
+        {expected_verification_message}
+        "},
     );
 }
 
@@ -1174,7 +1205,7 @@ async fn test_happy_case_with_verification_json_output() {
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
     let mock_server = mock_voyager_verification(200, json!({ "job_id": job_id }), 1).await;
 
-    let args = declare_with_verification_args(&[], true);
+    let args = declare_with_verification_args("voyager", &[], true);
     let output = runner(&args)
         .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
@@ -1211,7 +1242,7 @@ async fn test_verification_not_started_when_declaration_fails() {
     // Verifier must not be called at all; `MockServer` checks `expect(0)` on drop
     let mock_server = mock_voyager_verification(200, json!({ "job_id": "unused" }), 0).await;
 
-    let args = declare_with_verification_args(&["--nonce", "12345"], false);
+    let args = declare_with_verification_args("voyager", &["--nonce", "12345"], false);
     let output = runner(&args)
         .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
@@ -1229,7 +1260,7 @@ async fn test_verification_not_started_when_declaration_fails() {
 
 #[tokio::test]
 async fn test_dry_run_forbidden_with_verification() {
-    let args = declare_with_verification_args(&["--dry-run"], false);
+    let args = declare_with_verification_args("voyager", &["--dry-run"], false);
     let output = runner(&args).assert().failure();
 
     assert_stderr_contains(
@@ -1256,7 +1287,7 @@ async fn test_verification_fails() {
     let mock_server =
         mock_voyager_verification(400, json!({ "error": "Verification failed" }), 1).await;
 
-    let args = declare_with_verification_args(&[], false);
+    let args = declare_with_verification_args("voyager", &[], false);
     let output = runner(&args)
         .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
