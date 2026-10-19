@@ -35,10 +35,10 @@ impl CairoU384 {
     pub fn to_be_bytes(&self) -> [u8; 48] {
         let mut result = [0; 48];
 
-        result[36..48].copy_from_slice(&self.limb_0.to_be_bytes());
-        result[24..36].copy_from_slice(&self.limb_1.to_be_bytes());
-        result[12..24].copy_from_slice(&self.limb_2.to_be_bytes());
-        result[0..12].copy_from_slice(&self.limb_3.to_be_bytes());
+        result[36..48].copy_from_slice(&self.limb_0.to_be_bytes()[4..]);
+        result[24..36].copy_from_slice(&self.limb_1.to_be_bytes()[4..]);
+        result[12..24].copy_from_slice(&self.limb_2.to_be_bytes()[4..]);
+        result[0..12].copy_from_slice(&self.limb_3.to_be_bytes()[4..]);
 
         result
     }

@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `get tx-trace` command to get the execution trace of a transaction.
 
+#### Fixed
+
+- Decoding a `u384` value (for example, in `call` output or transaction traces) no longer panics.
+
 ## [0.64.1] - 2026-10-06
 
 ### Cast
