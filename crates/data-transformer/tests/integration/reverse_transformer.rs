@@ -418,3 +418,27 @@ fn test_reverse_transformation_uses_entry_point_type() {
     .unwrap();
     assert_eq!(l1_handler, "1_u16");
 }
+
+#[test]
+fn test_u384() {
+    let name = "u384_fn";
+    let selector = get_selector_from_name(name).unwrap();
+    let abi = vec![AbiEntry::Function(AbiFunction {
+        name: name.to_string(),
+        inputs: vec![AbiNamedMember {
+            name: "a".to_string(),
+            r#type: "core::circuit::u384".to_string(),
+        }],
+        outputs: vec![],
+        state_mutability: StateMutability::View,
+    })];
+
+    // limb0 = 2, limb1 = 1, limb2 = 0, limb3 = 0 encodes 2 + 2^96
+    let result = reverse_transform_input(
+        &[Felt::from(2_u8), Felt::ONE, Felt::ZERO, Felt::ZERO],
+        &abi,
+        &selector,
+    )
+    .unwrap();
+    assert_eq!(result, "79228162514264337593543950338_u384");
+}
