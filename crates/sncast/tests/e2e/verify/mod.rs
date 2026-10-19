@@ -6,7 +6,7 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use test_case::test_case;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -108,5 +108,12 @@ async fn test_verification_confirmation_reprompts_on_other_input(input: &str) {
         .assert()
         .success();
 
-    assert_stdout_contains(output, "Success: Verification completed");
+    assert_stdout_contains(
+        output.as_stdout().to_string(),
+        "Success: Verification completed",
+    );
+    assert_stderr_contains(
+        output.as_stderr().to_string(),
+        format!("Could not parse {input} as bool."),
+    );
 }
