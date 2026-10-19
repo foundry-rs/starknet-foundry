@@ -7,6 +7,7 @@ use crate::helpers::constants::{
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use test_case::test_case;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -56,51 +57,56 @@ async fn test_verification_confirmation_accepts_empty_input() {
     assert_stdout_contains(output, "Success: Verification completed");
 }
 
+#[test_case("Y")]
+#[test_case("y")]
+#[test_case("Yes")]
+#[test_case("yes")]
 #[tokio::test]
-async fn test_verification_confirmation_accepts_common_inputs() {
-    for input in ["Y", "y", "Yes", "yes"] {
-        let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-        let mock_server = setup_mock_server().await;
+async fn test_verification_confirmation_accepts_common_inputs(input: &str) {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let mock_server = setup_mock_server().await;
 
-        let output = runner(VERIFY_ARGS)
-            .env("VERIFIER_API_URL", mock_server.uri())
-            .current_dir(contract_path.path())
-            .stdin(format!("{input}\n"))
-            .assert()
-            .success();
+    let output = runner(VERIFY_ARGS)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .stdin(format!("{input}\n"))
+        .assert()
+        .success();
 
-        assert_stdout_contains(output, "Success: Verification completed");
-    }
+    assert_stdout_contains(output, "Success: Verification completed");
 }
 
+#[test_case("N")]
+#[test_case("n")]
+#[test_case("No")]
+#[test_case("no")]
 #[tokio::test]
-async fn test_verification_confirmation_rejects_common_inputs() {
-    for input in ["N", "n", "No", "no"] {
-        let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+async fn test_verification_confirmation_rejects_common_inputs(input: &str) {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-        let output = runner(VERIFY_ARGS)
-            .current_dir(contract_path.path())
-            .stdin(format!("{input}\n"))
-            .assert()
-            .failure();
+    let output = runner(VERIFY_ARGS)
+        .current_dir(contract_path.path())
+        .stdin(format!("{input}\n"))
+        .assert()
+        .failure();
 
-        assert_stderr_contains(output, "Error: Verification aborted");
-    }
+    assert_stderr_contains(output, "Error: Verification aborted");
 }
 
+#[test_case("yay")]
+#[test_case("nay")]
+#[test_case("maybe")]
 #[tokio::test]
-async fn test_verification_confirmation_reprompts_on_other_input() {
-    for input in ["yay", "nay", "maybe"] {
-        let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-        let mock_server = setup_mock_server().await;
+async fn test_verification_confirmation_reprompts_on_other_input(input: &str) {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let mock_server = setup_mock_server().await;
 
-        let output = runner(VERIFY_ARGS)
-            .env("VERIFIER_API_URL", mock_server.uri())
-            .current_dir(contract_path.path())
-            .stdin(format!("{input}\ny\n"))
-            .assert()
-            .success();
+    let output = runner(VERIFY_ARGS)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .stdin(format!("{input}\ny\n"))
+        .assert()
+        .success();
 
-        assert_stdout_contains(output, "Success: Verification completed");
-    }
+    assert_stdout_contains(output, "Success: Verification completed");
 }
