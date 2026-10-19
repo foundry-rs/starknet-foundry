@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- `sncast verify` confirmation prompt now correctly default to "Yes".
+- `sncast verify` confirmation prompt now correctly defaults to "Yes".
 
 ## [0.64.1] - 2026-10-06
 

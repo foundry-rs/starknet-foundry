@@ -57,44 +57,50 @@ async fn test_verification_confirmation_accepts_empty_input() {
 }
 
 #[tokio::test]
-async fn test_verification_confirmation_aborts_on_n() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+async fn test_verification_confirmation_accepts_common_inputs() {
+    for input in ["Y", "y", "Yes", "yes"] {
+        let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+        let mock_server = setup_mock_server().await;
 
-    let output = runner(VERIFY_ARGS)
-        .current_dir(contract_path.path())
-        .stdin("n\n")
-        .assert()
-        .failure();
+        let output = runner(VERIFY_ARGS)
+            .env("VERIFIER_API_URL", mock_server.uri())
+            .current_dir(contract_path.path())
+            .stdin(format!("{input}\n"))
+            .assert()
+            .success();
 
-    assert_stderr_contains(output, "Error: Verification aborted");
+        assert_stdout_contains(output, "Success: Verification completed");
+    }
 }
 
 #[tokio::test]
-async fn test_verification_confirmation_accepts_y() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-    let mock_server = setup_mock_server().await;
+async fn test_verification_confirmation_rejects_common_inputs() {
+    for input in ["N", "n", "No", "no"] {
+        let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let output = runner(VERIFY_ARGS)
-        .env("VERIFIER_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("y\n")
-        .assert()
-        .success();
+        let output = runner(VERIFY_ARGS)
+            .current_dir(contract_path.path())
+            .stdin(format!("{input}\n"))
+            .assert()
+            .failure();
 
-    assert_stdout_contains(output, "Success: Verification completed");
+        assert_stderr_contains(output, "Error: Verification aborted");
+    }
 }
 
 #[tokio::test]
 async fn test_verification_confirmation_reprompts_on_other_input() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-    let mock_server = setup_mock_server().await;
+    for input in ["yay", "nay", "maybe"] {
+        let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+        let mock_server = setup_mock_server().await;
 
-    let output = runner(VERIFY_ARGS)
-        .env("VERIFIER_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("maybe\ny\n")
-        .assert()
-        .success();
+        let output = runner(VERIFY_ARGS)
+            .env("VERIFIER_API_URL", mock_server.uri())
+            .current_dir(contract_path.path())
+            .stdin(format!("{input}\ny\n"))
+            .assert()
+            .success();
 
-    assert_stdout_contains(output, "Success: Verification completed");
+        assert_stdout_contains(output, "Success: Verification completed");
+    }
 }
