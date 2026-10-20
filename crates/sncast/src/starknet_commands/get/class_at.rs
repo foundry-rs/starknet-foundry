@@ -1,12 +1,20 @@
 use clap::Args;
-use starknet_rust::providers::Provider;
+use starknet_rust::{
+    core::types::BlockId,
+    providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
+};
+use starknet_rust_crypto::Felt;
 use std::process::ExitCode;
 
 use anyhow::Result;
 use sncast::{
     get_block_id,
     helpers::{command::process_command_result, configuration::CastConfig, rpc::RpcArgs},
-    response::{get::class::ClassResponse, ui::UI},
+    response::{
+        errors::{StarknetCommandError, handle_starknet_command_error},
+        get::class::ClassResponse,
+        ui::UI,
+    },
 };
 
 use crate::starknet_commands::utils::felt_or_id::ContractAddress;
@@ -31,12 +39,22 @@ pub async fn class_at(args: ClassAt, config: CastConfig, ui: &UI) -> Result<Exit
     let contract_address = args.contract_address.try_into_felt()?;
     let provider = args.rpc.get_provider(&config, ui).await?;
 
-    let class = provider.get_class_at(block_id, contract_address).await?;
+    let result = get_class_at(&provider, contract_address, block_id)
+        .await
+        .map_err(handle_starknet_command_error);
 
-    Ok(process_command_result(
-        "get class-at",
-        Ok(ClassResponse(class)),
-        ui,
-        None,
-    ))
+    Ok(process_command_result("get class-at", result, ui, None))
+}
+
+#[expect(clippy::result_large_err)]
+async fn get_class_at(
+    provider: &JsonRpcClient<HttpTransport>,
+    contract_address: Felt,
+    block_id: BlockId,
+) -> Result<ClassResponse, StarknetCommandError> {
+    provider
+        .get_class_at(block_id, contract_address)
+        .await
+        .map(ClassResponse)
+        .map_err(|err| StarknetCommandError::ProviderError(err.into()))
 }
