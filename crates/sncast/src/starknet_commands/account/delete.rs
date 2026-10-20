@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
-use promptly::prompt;
+use promptly::prompt_default;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
@@ -50,11 +50,10 @@ pub fn delete(
     // Let's ask confirmation
     if !yes {
         let prompt_text = format!(
-            "Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)"
+            "Do you want to remove the account {name} deployed to network {network_name} from local file {path}?"
         );
-        let input: String = prompt(prompt_text)?;
 
-        if !input.starts_with('Y') {
+        if !prompt_default(prompt_text, false)? {
             bail!("Delete aborted");
         }
     }
