@@ -1,64 +1,22 @@
+use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
-use serde_json::json;
-use wiremock::matchers::{body_partial_json, method};
-use wiremock::{Mock, MockServer, ResponseTemplate};
+use serde::Deserialize;
+use starknet_rust::core::types::ContractClass;
 
-async fn mock_server() -> MockServer {
-    let mock_server = MockServer::start().await;
+use test_case::test_case;
 
-    Mock::given(method("POST"))
-        .and(body_partial_json(json!({"method": "starknet_specVersion"})))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "id": 1,
-            "jsonrpc": "2.0",
-            "result": "0.10.0"
-        })))
-        .mount(&mock_server)
-        .await;
+use super::class::ContractVariant;
 
-    Mock::given(method("POST"))
-        .and(body_partial_json(json!({"method": "starknet_getClassAt"})))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "id": 1,
-            "jsonrpc": "2.0",
-            "result": {
-                "sierra_program": ["0x1"],
-                "contract_class_version": "0.1.0",
-                "entry_points_by_type": {
-                    "CONSTRUCTOR": [],
-                    "EXTERNAL": [],
-                    "L1_HANDLER": []
-                },
-                "abi": "[]"
-            }
-        })))
-        .mount(&mock_server)
-        .await;
-
-    mock_server
-}
-
+#[test_case(ContractVariant::Sierra)]
+#[test_case(ContractVariant::Legacy)]
 #[tokio::test]
-async fn test_pretty_output() {
-    let mock_server = mock_server().await;
-    let url = mock_server.uri();
-    let args = vec!["get", "class-at", "0x1", "--url", &url];
+async fn test_pretty_output(variant: ContractVariant) {
+    let args = vec!["get", "class-at", variant.class_address(), "--url", URL];
 
     let output = runner(&args).assert().success();
 
-    let res: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
-    let expected = json!({
-        "sierra_program": ["0x1"],
-        "contract_class_version": "0.1.0",
-        "entry_points_by_type": {
-            "CONSTRUCTOR": [],
-            "EXTERNAL": [],
-            "L1_HANDLER": []
-        },
-        "abi": "[]"
-    });
-
-    assert_eq!(res, expected);
+    let res: ContractClass = serde_json::from_slice(&output.get_output().stdout)
+        .expect("Failed to parse as ContractClass");
 
     let output = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
@@ -66,29 +24,47 @@ async fn test_pretty_output() {
         output.lines().count() > 1,
         "Expected result to be pretty-printed"
     );
+
+    match (variant, res) {
+        (ContractVariant::Sierra, ContractClass::Sierra(_))
+        | (ContractVariant::Legacy, ContractClass::Legacy(_)) => {}
+        _ => panic!("Expected {variant:?}"),
+    }
 }
 
+#[test_case(ContractVariant::Sierra)]
+#[test_case(ContractVariant::Legacy)]
 #[tokio::test]
-async fn test_json_output() {
-    let mock_server = mock_server().await;
-    let url = mock_server.uri();
-    let args = vec!["--json", "get", "class-at", "0x1", "--url", &url];
+async fn test_json_output(variant: ContractVariant) {
+    #[derive(Deserialize)]
+    struct Response {
+        #[serde(flatten)]
+        contract: ContractClass,
+        command: String,
+        #[serde(rename = "type")]
+        res_type: String,
+    }
+
+    let args = vec![
+        "--json",
+        "get",
+        "class-at",
+        variant.class_address(),
+        "--url",
+        URL,
+    ];
 
     let output = runner(&args).assert().success();
 
-    let res: serde_json::Value = serde_json::from_slice(&output.get_output().stdout).unwrap();
-    let expected = json!({
-        "type": "response",
-        "command": "get class-at",
-        "sierra_program": ["0x1"],
-        "contract_class_version": "0.1.0",
-        "entry_points_by_type": {
-            "CONSTRUCTOR": [],
-            "EXTERNAL": [],
-            "L1_HANDLER": []
-        },
-        "abi": "[]"
-    });
+    let res: Response = serde_json::from_slice(&output.get_output().stdout)
+        .expect("Failed to parse as ContractClass with additional data");
 
-    assert_eq!(res, expected);
+    assert_eq!(&res.res_type, "response");
+    assert_eq!(&res.command, "get class-at");
+
+    match (variant, res.contract) {
+        (ContractVariant::Sierra, ContractClass::Sierra(_))
+        | (ContractVariant::Legacy, ContractClass::Legacy(_)) => {}
+        _ => panic!("Expected {variant:?}"),
+    }
 }

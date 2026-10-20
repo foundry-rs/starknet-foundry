@@ -4,23 +4,31 @@ use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use starknet_rust::core::types::ContractClass;
 
 use crate::helpers::constants::{
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    DEVNET_OZ_ADDRESS_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA,
+    MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::runner::runner;
 
 use test_case::test_case;
 
 #[derive(Copy, Clone, Debug)]
-enum ContractVariant {
+pub enum ContractVariant {
     Sierra,
     Legacy,
 }
 
 impl ContractVariant {
-    fn class_hash(self) -> &'static str {
+    pub fn class_hash(self) -> &'static str {
         match self {
             ContractVariant::Sierra => MAP_CONTRACT_CLASS_HASH_SEPOLIA,
             ContractVariant::Legacy => DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        }
+    }
+
+    pub fn class_address(self) -> &'static str {
+        match self {
+            ContractVariant::Sierra => MAP_CONTRACT_ADDRESS_SEPOLIA,
+            ContractVariant::Legacy => DEVNET_OZ_ADDRESS_CAIRO_0,
         }
     }
 }

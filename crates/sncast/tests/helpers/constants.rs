@@ -19,6 +19,8 @@ pub const MULTICALL_CONFIGS_DIR: &str = "crates/sncast/tests/data/multicall_conf
 
 pub const DEVNET_OZ_CLASS_HASH_CAIRO_0: &str =
     "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f";
+pub const DEVNET_OZ_ADDRESS_CAIRO_0: &str =
+    "0x5c8fb90cc7249383cbc83c682565720a6d3df92840c02424a6c230e26464c4c";
 pub const DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS: &str =
     "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce";
 
