@@ -6,20 +6,19 @@ use promptly::prompt_default;
 use scarb_metadata::PackageMetadata;
 use shared::utils::contract_name_from_module_path;
 use sncast::Network;
+use sncast::get_chain_id;
 use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::rpc::FreeProvider;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UI;
-use sncast::{get_chain_id, get_provider};
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use std::fmt;
 use std::process::ExitCode;
-use url::Url;
 
 pub mod explorer;
 pub mod starkloupe;
@@ -37,6 +36,9 @@ pub struct Verify {
     #[command(flatten)]
     pub contract_identifier: ContractIdentifierArgs,
 
+    #[command(flatten)]
+    pub rpc: RpcArgs,
+
     /// Name of the contract or module tree path suffix
     #[arg(short, long)]
     pub contract_name: String,
@@ -45,10 +47,6 @@ pub struct Verify {
     #[arg(short, long, value_parser = parse_verifier)]
     pub verifier: Verifier,
 
-    /// The network on which block explorer will do the verification
-    #[arg(short, long, value_enum)]
-    pub network: Option<Network>,
-
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[arg(long, default_value = "false")]
     pub confirm_verification: bool,
@@ -56,10 +54,6 @@ pub struct Verify {
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
-
-    /// RPC provider url address; overrides url from snfoundry.toml. Will use public provider if not set.
-    #[arg(long)]
-    pub url: Option<Url>,
 
     /// Include test files under src/ for verification (only applies to voyager)
     #[arg(long, default_value = "false")]
@@ -118,11 +112,16 @@ fn parse_verifier(value: &str) -> Result<Verifier, String> {
 }
 
 async fn resolve_verification_network(
-    cli_network: Option<Network>,
-    config_network: Option<Network>,
+    rpc: &RpcArgs,
     provider: &JsonRpcClient<HttpTransport>,
+    config: &CastConfig,
 ) -> Result<Network> {
-    if let Some(network) = cli_network.or(config_network) {
+    let network = rpc
+        .get_network_params(config)
+        .ok()
+        .and_then(|p| p.network());
+
+    if let Some(network) = network {
         return Ok(network);
     }
 
@@ -194,32 +193,18 @@ fn display_files_and_confirm(
 pub async fn verify(args: Verify, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let Verify {
         contract_identifier,
+        rpc,
         contract_name,
         verifier,
-        network,
         confirm_verification,
         package: scarb_package,
-        url,
         test_files,
     } = args;
 
     let manifest_path = assert_manifest_path_exists()?;
     let package = get_package_metadata(&manifest_path, &scarb_package)?;
 
-    let rpc_url = match url {
-        Some(url) => url,
-        None => {
-            if let Some(config_url) = config.network_params.url() {
-                config_url.clone()
-            } else if let Some(network) = config.network_params.network() {
-                network.url(&FreeProvider::semi_random()).await?
-            } else {
-                let network =
-                    network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;
-                network.url(&FreeProvider::semi_random()).await?
-            }
-        }
-    };
+    let provider = rpc.get_provider(&config, ui).await?;
 
     let workspace_dir = package
         .manifest_path
@@ -228,9 +213,7 @@ pub async fn verify(args: Verify, config: CastConfig, ui: &UI) -> Result<ExitCod
 
     let contract_identifier = contract_identifier.get_identifier(&config)?;
 
-    let provider = get_provider(&rpc_url)?;
-    let network =
-        resolve_verification_network(network, config.network_params.network(), &provider).await?;
+    let network = resolve_verification_network(&rpc, &provider, &config).await?;
 
     let resolved_contract_name = resolve_and_validate_contract_name(
         &package,
@@ -310,18 +293,14 @@ mod tests {
     use serde_json::json;
     use sncast::Network;
     use sncast::get_provider;
+    use sncast::helpers::configuration::CastConfig;
+    use sncast::helpers::rpc::RpcArgs;
     use sncast::helpers::scarb_utils::get_package_metadata;
     use sncast::response::ui::UI;
     use starknet_types_core::felt::Felt;
     use url::Url;
     use wiremock::matchers::{body_partial_json, method};
     use wiremock::{Mock, MockServer, ResponseTemplate};
-
-    fn unused_provider() -> starknet_rust::providers::jsonrpc::JsonRpcClient<
-        starknet_rust::providers::jsonrpc::HttpTransport,
-    > {
-        get_provider(&Url::parse("http://127.0.0.1:1").unwrap()).unwrap()
-    }
 
     fn package_metadata_for_test_contract(contract_dir: &str) -> PackageMetadata {
         let manifest_path = Utf8PathBuf::from(format!(
@@ -391,10 +370,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn uses_cli_network_when_provided() {
-        let provider = unused_provider();
+    async fn infers_mainnet_from_chain_id_when_no_network_is_configured() {
+        let (provider, _mock_rpc) = mock_provider_for_chain_id(sncast::MAINNET).await;
         let network =
-            resolve_verification_network(Some(Network::Mainnet), Some(Network::Sepolia), &provider)
+            resolve_verification_network(&RpcArgs::default(), &provider, &CastConfig::default())
                 .await
                 .unwrap();
 
@@ -402,31 +381,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn uses_config_network_when_cli_network_is_missing() {
-        let provider = unused_provider();
-        let network = resolve_verification_network(None, Some(Network::Mainnet), &provider)
-            .await
-            .unwrap();
-
-        assert_eq!(network, Network::Mainnet);
-    }
-
-    #[tokio::test]
-    async fn infers_mainnet_from_chain_id_when_no_network_is_configured() {
-        let (provider, _mock_rpc) = mock_provider_for_chain_id(sncast::MAINNET).await;
-        let network = resolve_verification_network(None, None, &provider)
-            .await
-            .unwrap();
-
-        assert_eq!(network, Network::Mainnet);
-    }
-
-    #[tokio::test]
     async fn infers_sepolia_from_chain_id_when_no_network_is_configured() {
         let (provider, _mock_rpc) = mock_provider_for_chain_id(sncast::SEPOLIA).await;
-        let network = resolve_verification_network(None, None, &provider)
-            .await
-            .unwrap();
+        let network =
+            resolve_verification_network(&RpcArgs::default(), &provider, &CastConfig::default())
+                .await
+                .unwrap();
 
         assert_eq!(network, Network::Sepolia);
     }
@@ -435,9 +395,10 @@ mod tests {
     async fn errors_when_network_cannot_be_resolved() {
         let (provider, _mock_rpc) =
             mock_provider_for_chain_id(Felt::from_hex_unchecked("0x1234")).await;
-        let error = resolve_verification_network(None, None, &provider)
-            .await
-            .unwrap_err();
+        let error =
+            resolve_verification_network(&RpcArgs::default(), &provider, &CastConfig::default())
+                .await
+                .unwrap_err();
 
         assert!(
             error
