@@ -1,4 +1,6 @@
+use indoc::indoc;
 use serde::Deserialize;
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use starknet_rust::core::types::ContractClass;
 
 use crate::helpers::constants::{
@@ -36,10 +38,7 @@ async fn test_pretty_output(variant: ContractVariant) {
 
     let output = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
-    assert!(
-        output.lines().count() > 1,
-        "Expected result to be pretty-printed"
-    );
+    insta::assert_snapshot!(output);
 
     match (variant, res) {
         (ContractVariant::Sierra, ContractClass::Sierra(_))
@@ -76,4 +75,35 @@ async fn test_json_output(variant: ContractVariant) {
         | (ContractVariant::Legacy, ContractClass::Legacy(_)) => {}
         _ => panic!("Expected {variant:?}"),
     }
+}
+
+#[tokio::test]
+async fn test_missing_class_hash() {
+    let args = vec!["get", "class", "0x43", "--url", URL];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: get class
+        Error: Provided class hash does not exist
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_missing_class_hash_json() {
+    let args = vec!["--json", "get", "class", "0x43", "--url", URL];
+
+    let output = runner(&args).assert().failure();
+
+    let res: serde_json::Value = serde_json::from_str(output.as_stderr()).unwrap();
+    let expected = serde_json::json!({
+        "command": "get class",
+        "type": "error",
+        "error": "Provided class hash does not exist"
+    });
+
+    assert_eq!(res, expected);
 }
