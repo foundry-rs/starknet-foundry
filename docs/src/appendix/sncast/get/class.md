@@ -2,7 +2,7 @@
 
 Get the contract class definition by its hash.
 
-## `<HASH>`
+## `<CLASS-HASH>`
 
 Required.
 
