@@ -1,8 +1,7 @@
 use anyhow::{Result, bail};
-use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
 use promptly::prompt;
-use sncast::helpers::account::load_accounts;
+use sncast::accounts::AccountRepository;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::delete::AccountDeleteResponse;
@@ -34,23 +33,23 @@ pub struct Delete {
 
 pub fn delete(
     name: &str,
-    path: &Utf8PathBuf,
+    repository: &AccountRepository,
     network_name: &str,
     yes: bool,
 ) -> Result<AccountDeleteResponse> {
-    let mut items = load_accounts(path)?;
-
-    if items[&network_name].is_null() {
+    let registry = repository.load()?.registry;
+    let Some(accounts) = registry.networks().get(network_name) else {
         bail!("No accounts defined for network = {network_name}");
-    }
-    if items[&network_name][&name].is_null() {
-        bail!("Account with name {name} does not exist")
+    };
+    if !accounts.contains_key(name) {
+        bail!("Account with name {name} does not exist");
     }
 
     // Let's ask confirmation
     if !yes {
         let prompt_text = format!(
-            "Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)"
+            "Do you want to remove the account {name} deployed to network {network_name} from local file {}? (Y/n)",
+            repository.path()
         );
         let input: String = prompt(prompt_text)?;
 
@@ -59,17 +58,9 @@ pub fn delete(
         }
     }
 
-    // get to the nested object "nested"
-    let nested = items
-        .get_mut(network_name)
-        .expect("Failed to find network")
-        .as_object_mut()
-        .expect("Failed to convert network");
-
-    // now remove the child from there
-    nested.remove(name);
-
-    std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
+    repository
+        .remove(network_name, name)
+        .map_err(|error| anyhow::anyhow!(error))?;
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse { result })
 }
