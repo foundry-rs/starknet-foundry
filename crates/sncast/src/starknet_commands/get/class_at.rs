@@ -36,7 +36,7 @@ pub struct ClassAt {
 
 pub async fn class_at(args: ClassAt, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let block_id = get_block_id(&args.block_id)?;
-    let contract_address = args.contract_address.try_into_felt()?;
+    let contract_address = args.contract_address.resolve(&config)?;
     let provider = args.rpc.get_provider(&config, ui).await?;
 
     let result = get_class_at(&provider, contract_address, block_id)

@@ -1,5 +1,6 @@
 use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use serde::Deserialize;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
@@ -137,6 +138,36 @@ async fn test_invalid_block_id() {
         indoc! {r"
         Command: get class-at
         Error: Incorrect value passed for block_id = invalid_block. Possible values are `pre_confirmed`, `latest`, block hash (hex) and block number (u64)
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_with_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec!["get", "class-at", "@map", "--url", URL];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().success();
+
+    let _: ContractClass = serde_json::from_slice(&output.get_output().stdout)
+        .expect("Failed to parse as ContractClass");
+}
+
+#[tokio::test]
+async fn test_with_unknown_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec!["get", "class-at", "@unknown", "--url", URL];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            Command: get class-at
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in config
         "},
     );
 }
