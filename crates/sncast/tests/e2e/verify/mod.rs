@@ -2,7 +2,7 @@ mod starkloupe;
 mod voyager;
 
 use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
@@ -21,8 +21,8 @@ const VERIFY_ARGS: &[&str] = &[
     "Map",
     "--verifier",
     "starkloupe",
-    "--network",
-    "sepolia",
+    "--url",
+    URL,
 ];
 
 async fn setup_mock_server() -> MockServer {
