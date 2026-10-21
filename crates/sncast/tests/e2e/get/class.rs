@@ -107,3 +107,44 @@ async fn test_missing_class_hash_json() {
 
     assert_eq!(res, expected);
 }
+
+#[tokio::test]
+async fn test_with_block_id() {
+    let args = vec![
+        "get",
+        "class",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--block-id",
+        "latest",
+        "--url",
+        URL,
+    ];
+
+    let output = runner(&args).assert().success();
+
+    let _: ContractClass = serde_json::from_slice(&output.get_output().stdout)
+        .expect("Failed to parse as ContractClass");
+}
+
+#[tokio::test]
+async fn test_invalid_block_id() {
+    let args = vec![
+        "get",
+        "class",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--block-id",
+        "invalid_block",
+        "--url",
+        URL,
+    ];
+    let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: get class
+        Error: Incorrect value passed for block_id = invalid_block. Possible values are `pre_confirmed`, `latest`, block hash (hex) and block number (u64)
+        "},
+    );
+}
