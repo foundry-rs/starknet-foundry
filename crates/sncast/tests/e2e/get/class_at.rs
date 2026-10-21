@@ -3,6 +3,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde::Deserialize;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use sncast::helpers::constants::MAP_CONTRACT_ADDRESS_SEPOLIA;
 use starknet_rust::core::types::ContractClass;
 
 use test_case::test_case;
@@ -97,4 +98,45 @@ async fn test_non_existent_address_json() {
     });
 
     assert_eq!(res, expected);
+}
+
+#[tokio::test]
+async fn test_with_block_id() {
+    let args = vec![
+        "get",
+        "class-at",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--block-id",
+        "latest",
+        "--url",
+        URL,
+    ];
+
+    let output = runner(&args).assert().success();
+
+    let _: ContractClass = serde_json::from_slice(&output.get_output().stdout)
+        .expect("Failed to parse as ContractClass");
+}
+
+#[tokio::test]
+async fn test_invalid_block_id() {
+    let args = vec![
+        "get",
+        "class-at",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--block-id",
+        "invalid_block",
+        "--url",
+        URL,
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Command: get class-at
+        Error: Incorrect value passed for block_id = invalid_block. Possible values are `pre_confirmed`, `latest`, block hash (hex) and block number (u64)
+        "},
+    );
 }
