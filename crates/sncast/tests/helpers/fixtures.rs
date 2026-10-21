@@ -5,7 +5,7 @@ use conversions::string::IntoHexStr;
 use core::str;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
@@ -14,13 +14,12 @@ use sncast::helpers::constants::{
 use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::ui::UI;
-use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
+use sncast::{AccountType, apply_optional_fields, get_chain_id};
 use sncast::{get_account, get_provider};
 use starknet_rust::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
 };
 use starknet_rust::core::types::{Call, InvokeTransactionResult, Transaction, TransactionReceipt};
-use starknet_rust::core::utils::get_contract_address;
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_rust::providers::JsonRpcClient;
 use starknet_rust::providers::jsonrpc::HttpTransport;
@@ -410,52 +409,6 @@ pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
     temp_dir
 }
 
-pub fn get_address_from_keystore(
-    keystore_path: impl AsRef<std::path::Path>,
-    account_path: impl AsRef<std::path::Path>,
-    password: &str,
-    account_type: &AccountType,
-) -> Felt {
-    let contents = std::fs::read_to_string(account_path).unwrap();
-    let items: Map<String, serde_json::Value> = serde_json::from_str(&contents).unwrap();
-    let deployment = items.get("deployment").unwrap();
-
-    let private_key = SigningKey::from_keystore(
-        keystore_path,
-        get_keystore_password(password).unwrap().as_str(),
-    )
-    .unwrap();
-    let salt = Felt::from_hex(
-        deployment
-            .get("salt")
-            .and_then(serde_json::Value::as_str)
-            .unwrap(),
-    )
-    .unwrap();
-    let class_hash = match account_type {
-        AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        AccountType::OpenZeppelin | AccountType::Ready => Felt::from_hex(
-            deployment
-                .get("class_hash")
-                .and_then(serde_json::Value::as_str)
-                .unwrap(),
-        )
-        .unwrap(),
-    };
-
-    let calldata = match account_type {
-        AccountType::OpenZeppelin | AccountType::Braavos => {
-            vec![private_key.verifying_key().scalar()]
-        }
-        // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Ready account code
-        // One stands for `None` for the guardian argument
-        AccountType::Ready => {
-            vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE]
-        }
-    };
-
-    get_contract_address(salt, class_hash, &calldata, Felt::ZERO)
-}
 #[must_use]
 pub fn get_accounts_path(relative_path_from_cargo_toml: impl AsRef<Path>) -> String {
     use std::path::PathBuf;
@@ -466,17 +419,6 @@ pub fn get_accounts_path(relative_path_from_cargo_toml: impl AsRef<Path>) -> Str
         .expect("Failed to convert path to string")
         .to_string()
 }
-#[must_use]
-pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
-    use std::path::PathBuf;
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
-    let binding = PathBuf::from(manifest_dir).join(relative_path_from_cargo_toml);
-    binding
-        .to_str()
-        .expect("Failed to convert path to string")
-        .to_string()
-}
-
 pub async fn create_and_deploy_oz_account() -> TempDir {
     create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await
 }

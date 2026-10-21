@@ -97,19 +97,13 @@ struct Cli {
     #[arg(short, long)]
     profile: Option<String>,
 
-    /// Account to be used for contract declaration;
-    /// When using keystore (`--keystore`), this should be a path to account file
-    /// When using accounts file, this should be an account name
+    /// Account name to use
     #[arg(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
     #[arg(short = 'f', long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
-
-    /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[arg(short, long)]
-    keystore: Option<Utf8PathBuf>,
 
     /// Scarb profile for building contracts (e.g. release, dev)
     #[arg(long)]
@@ -140,7 +134,6 @@ impl Cli {
     pub fn to_partial_config(&self) -> Result<PartialCastConfig> {
         let config = PartialCastConfig {
             account: self.account.clone(),
-            keystore: self.keystore.clone(),
             accounts_file: self.accounts_file_path.clone(),
             wait_params: Some(PartialWaitParams {
                 timeout: self.wait_timeout,
@@ -438,7 +431,6 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                     response,
                     &config.account,
                     &config.accounts_file,
-                    config.keystore.as_ref(),
                     network_flag,
                 ))
             } else {
