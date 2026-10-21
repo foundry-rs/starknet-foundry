@@ -74,7 +74,6 @@ pub fn test_happy_case() {
         "--yes",
     ];
 
-    // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
@@ -157,7 +156,6 @@ fn test_empty_input_defaults_to_no() {
         "custom-network",
     ];
 
-    // Run test with a negative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("\n");
 
     let output = snapbox.assert().failure();
@@ -257,7 +255,6 @@ fn test_reprompt(input: &str) {
         "custom-network",
     ];
 
-    // Run test with a negative user input
     let snapbox = runner(&args)
         .current_dir(temp_dir.path())
         .stdin(format!("{input}\n\n"));

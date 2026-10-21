@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.19.6` (updated from `2.18.0`).
-- `sncast account delete` confirmation prompt now defaults to "No".
 
 ### Cast
 
@@ -33,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Invalid Cairo-like calldata now reports missing and unexpected positional arguments, alongside the provided arguments and expected argument names and types.
 - Error message for a struct constructor invocation whose fields do not match the ABI now lists the expected fields (with their types) along with the provided fields.
+- `sncast account delete` confirmation prompt now defaults to "No".
 
 #### Fixed
 
