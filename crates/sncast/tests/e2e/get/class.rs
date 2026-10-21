@@ -38,13 +38,13 @@ async fn test_pretty_output(variant: ContractVariant) {
 
     let output = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
-    insta::assert_snapshot!(output);
-
     match (variant, res) {
         (ContractVariant::Sierra, ContractClass::Sierra(_))
         | (ContractVariant::Legacy, ContractClass::Legacy(_)) => {}
         _ => panic!("Expected {variant:?}"),
     }
+
+    insta::assert_snapshot!(format!("get-class-pretty-{variant:?}"), output);
 }
 
 #[test_case(ContractVariant::Sierra)]
