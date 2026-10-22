@@ -2,16 +2,22 @@ use std::process::ExitCode;
 
 use anyhow::Result;
 use clap::Args;
+use conversions::padded_felt::PaddedFelt;
 use sncast::{
     get_block_id,
-    helpers::{command::process_command_result, configuration::CastConfig, rpc::RpcArgs},
+    helpers::{
+        block_explorer::LinkProvider, command::process_command_result, configuration::CastConfig,
+        rpc::RpcArgs,
+    },
     response::{
         errors::{StarknetCommandError, handle_starknet_command_error},
+        explorer_link::{OutputLink, block_explorer_link_if_allowed},
         get::class::ClassResponse,
         ui::UI,
     },
 };
 use starknet_rust::providers::Provider;
+use starknet_rust_crypto::Felt;
 
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
 
@@ -42,5 +48,27 @@ pub async fn class(args: Class, config: CastConfig, ui: &UI) -> Result<ExitCode>
         .map_err(|err| StarknetCommandError::ProviderError(err.into()))
         .map_err(handle_starknet_command_error);
 
-    Ok(process_command_result("get class", result, ui, None))
+    let chain_id = provider.chain_id().await?;
+
+    let class_hash_link = args.hash.resolve(&config).map(ClassHashLink);
+    let block_explorer_link =
+        block_explorer_link_if_allowed(&class_hash_link, chain_id, &config).await;
+
+    Ok(process_command_result(
+        "get class",
+        result,
+        ui,
+        block_explorer_link,
+    ))
+}
+
+#[derive(Clone)]
+struct ClassHashLink(Felt);
+
+impl OutputLink for ClassHashLink {
+    const TITLE: &str = "class";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        format!("class: {}", provider.class(PaddedFelt(self.0)))
+    }
 }

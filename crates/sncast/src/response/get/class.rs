@@ -4,7 +4,7 @@ use starknet_rust::core::types::ContractClass;
 
 use crate::response::cast_message::SncastCommandMessage;
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct ClassResponse(pub ContractClass);
 
 impl SncastCommandMessage for ClassResponse {
