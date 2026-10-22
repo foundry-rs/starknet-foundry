@@ -38,11 +38,14 @@ async fn test_pretty_output(variant: ContractVariant) {
 
     let output = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
-    match (variant, res) {
-        (ContractVariant::Sierra, ContractClass::Sierra(_))
-        | (ContractVariant::Legacy, ContractClass::Legacy(_)) => {}
-        _ => panic!("Expected {variant:?}"),
-    }
+    assert!(
+        matches!(
+            (variant, res),
+            (ContractVariant::Sierra, ContractClass::Sierra(_))
+                | (ContractVariant::Legacy, ContractClass::Legacy(_))
+        ),
+        "Expected {variant:?}"
+    );
 
     insta::assert_snapshot!(format!("get-class-pretty-{variant:?}"), output);
 }
@@ -70,15 +73,18 @@ async fn test_json_output(variant: ContractVariant) {
     assert_eq!(&res.res_type, "response");
     assert_eq!(&res.command, "get class");
 
-    match (variant, res.contract) {
-        (ContractVariant::Sierra, ContractClass::Sierra(_))
-        | (ContractVariant::Legacy, ContractClass::Legacy(_)) => {}
-        _ => panic!("Expected {variant:?}"),
-    }
+    assert!(
+        matches!(
+            (variant, res.contract),
+            (ContractVariant::Sierra, ContractClass::Sierra(_))
+                | (ContractVariant::Legacy, ContractClass::Legacy(_))
+        ),
+        "Expected {variant:?}"
+    );
 }
 
 #[tokio::test]
-async fn test_missing_class_hash() {
+async fn test_nonexistent_class_hash() {
     let args = vec!["get", "class", "0x43", "--url", URL];
 
     let output = runner(&args).assert().failure();
@@ -93,7 +99,7 @@ async fn test_missing_class_hash() {
 }
 
 #[tokio::test]
-async fn test_missing_class_hash_json() {
+async fn test_nonexistent_class_hash_json() {
     let args = vec!["--json", "get", "class", "0x43", "--url", URL];
 
     let output = runner(&args).assert().failure();
