@@ -832,16 +832,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
             Ok(process_command_result("show-config", result, ui, None))
         }
 
-        Commands::Verify(verify) => {
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
-            let result =
-                starknet_commands::verify::verify(verify, &package_metadata, cli.json, &config, ui)
-                    .await;
-
-            Ok(process_command_result("verify", result, ui, None))
-        }
-
+        Commands::Verify(args) => starknet_commands::verify::verify(args, config, ui).await,
         Commands::Ledger(ledger) => {
             let result = ledger::ledger(&ledger, ui).await;
             Ok(process_command_result("ledger", result, ui, None))
