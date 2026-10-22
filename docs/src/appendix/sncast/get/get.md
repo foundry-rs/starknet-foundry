@@ -9,6 +9,7 @@ It has the following subcommands:
 * [`nonce`](./nonce.md)
 * [`spec-version`](./spec-version.md)
 * [`state-update`](./state-update.md)
+* [`storage`](./storage.md)
 * [`syncing`](./syncing.md)
 * [`tx`](./tx.md) (alias: `transaction`)
 * [`tx-receipt`](./tx-receipt.md) (alias: `transaction-receipt`)
