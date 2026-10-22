@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast verify` confirmation prompt now correctly defaults to "Yes".
 
+#### Fixed
+
+- Decoding a `u384` value (for example, in `call` output or transaction traces) no longer panics.
+
 ## [0.64.1] - 2026-10-06
 
 ### Cast

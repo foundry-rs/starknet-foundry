@@ -1,17 +1,41 @@
 use super::helpers::{ParseRadixError, RadixInput};
-use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
+use cairo_serde_macros::CairoSerialize;
+use conversions::serde::deserialize::{
+    BufferReadError, BufferReadResult, BufferReader, CairoDeserialize,
+};
 use num_bigint::BigUint;
 use std::fmt;
 use std::fmt::Display;
 use std::str::FromStr;
 
 #[expect(clippy::struct_field_names)]
-#[derive(CairoDeserialize, CairoSerialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(CairoSerialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CairoU384 {
     limb_0: u128,
     limb_1: u128,
     limb_2: u128,
     limb_3: u128,
+}
+
+const LIMB_MAX: u128 = (1 << 96) - 1;
+
+impl CairoDeserialize for CairoU384 {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let mut read_limb = || {
+            let limb: u128 = reader.read()?;
+            if limb > LIMB_MAX {
+                return Err(BufferReadError::ParseFailed);
+            }
+            Ok(limb)
+        };
+
+        Ok(Self {
+            limb_0: read_limb()?,
+            limb_1: read_limb()?,
+            limb_2: read_limb()?,
+            limb_3: read_limb()?,
+        })
+    }
 }
 
 impl CairoU384 {
@@ -35,10 +59,10 @@ impl CairoU384 {
     pub fn to_be_bytes(&self) -> [u8; 48] {
         let mut result = [0; 48];
 
-        result[36..48].copy_from_slice(&self.limb_0.to_be_bytes());
-        result[24..36].copy_from_slice(&self.limb_1.to_be_bytes());
-        result[12..24].copy_from_slice(&self.limb_2.to_be_bytes());
-        result[0..12].copy_from_slice(&self.limb_3.to_be_bytes());
+        result[36..48].copy_from_slice(&self.limb_0.to_be_bytes()[4..]);
+        result[24..36].copy_from_slice(&self.limb_1.to_be_bytes()[4..]);
+        result[12..24].copy_from_slice(&self.limb_2.to_be_bytes()[4..]);
+        result[0..12].copy_from_slice(&self.limb_3.to_be_bytes()[4..]);
 
         result
     }
