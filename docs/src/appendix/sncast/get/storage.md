@@ -8,7 +8,7 @@ Required.
 
 Storage key. It can be either:
 - Felt in hex (prefixed with `0x`) or decimal representation.
-- Plaintext.
+- String.
 
 
 ## `--contract-address, -d <CONTRACT_ADDRESS>`
