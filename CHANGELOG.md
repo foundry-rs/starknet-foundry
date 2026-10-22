@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Fixed
+
+- `sncast` now performs all configured transaction status checks and waits asynchronously for the configured retry interval.
+
 #### Added
 
 - `get tx-trace` command to get the execution trace of a transaction.
