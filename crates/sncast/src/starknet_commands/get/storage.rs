@@ -39,7 +39,7 @@ pub struct Storage {
 
 pub async fn storage(storage: Storage, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let flags = get_flags(&storage);
-    let contract_address = storage.contract_address.try_into_felt()?;
+    let contract_address = storage.contract_address.resolve(&config)?;
     let key = get_key(&storage.key)?;
     let block_id = get_block_id(&storage.block_id)?;
 

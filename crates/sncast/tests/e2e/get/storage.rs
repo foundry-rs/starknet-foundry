@@ -4,6 +4,7 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
+use configuration::test_utils::copy_config_to_tempdir;
 use indoc::indoc;
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -225,4 +226,55 @@ fn missing_plaintext_key_returns_zero() {
         Key:   missing
         Value: 0x0
     "});
+}
+
+#[test]
+fn test_with_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "get",
+        "storage",
+        "--contract-address",
+        "@map",
+        "foo",
+        "--url",
+        URL,
+    ];
+
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .success()
+        .stdout_eq(indoc! {r"
+        Success: Value retrieved
+
+        Key:   foo
+        Value: 0x0
+    "});
+}
+
+#[test]
+fn test_with_unknown_alias() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/snfoundry_aliases.toml", None);
+    let args = vec![
+        "get",
+        "storage",
+        "--contract-address",
+        "@unknown",
+        "foo",
+        "--url",
+        URL,
+    ];
+
+    runner(&args)
+        .current_dir(tempdir.path())
+        .assert()
+        .failure()
+        .stderr_eq(indoc! {r"
+            Command: get storage
+            Error: Invalid contract address
+
+            Caused by:
+                Alias `unknown` not found in config
+        "});
 }
