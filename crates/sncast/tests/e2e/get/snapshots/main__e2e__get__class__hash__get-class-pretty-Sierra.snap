@@ -1,6 +1,7 @@
 ---
 source: crates/sncast/tests/e2e/get/class.rs
-expression: output
+assertion_line: 71
+expression: stdout
 ---
 {
   "sierra_program": [
