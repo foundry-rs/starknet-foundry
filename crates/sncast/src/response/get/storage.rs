@@ -8,6 +8,7 @@ use crate::response::cast_message::SncastCommandMessage;
 #[derive(Serialize)]
 pub struct StorageResponse {
     pub key: String,
+    pub storage_address: Felt,
     pub value: Felt,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_update_block: Option<u64>,
@@ -19,6 +20,7 @@ impl SncastCommandMessage for StorageResponse {
             .success_message("Value retrieved")
             .blank_line()
             .field("Key", &self.key)
+            .felt_field("Storage address", &self.storage_address)
             .felt_field("Value", &self.value)
             .if_some(self.last_update_block.as_ref(), |builder, block| {
                 builder.field("Last update block", &block.to_string())
@@ -29,15 +31,17 @@ impl SncastCommandMessage for StorageResponse {
 
 impl StorageResponse {
     #[must_use]
-    pub fn new(key: String, result: GetStorageAtResult) -> Self {
+    pub fn new(key: String, storage_address: Felt, result: GetStorageAtResult) -> Self {
         match result {
             GetStorageAtResult::Value(value) => Self {
                 key,
+                storage_address,
                 value,
                 last_update_block: None,
             },
             GetStorageAtResult::ValueWithMetadata(res) => Self {
                 key,
+                storage_address,
                 value: res.value,
                 last_update_block: Some(res.last_update_block),
             },

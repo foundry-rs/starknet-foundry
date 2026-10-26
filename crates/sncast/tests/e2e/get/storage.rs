@@ -9,12 +9,12 @@ use indoc::indoc;
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use sncast::helpers::fee::FeeSettings;
-use starknet_rust::core::utils::get_storage_var_address;
+use starknet_rust::core::utils::{get_selector_from_name, get_storage_var_address};
 
 fn map_storage_key(key: &str) -> String {
     get_storage_var_address("storage", &[key.parse().unwrap()])
         .unwrap()
-        .to_string()
+        .to_hex_string()
 }
 
 async fn store_map_value(account: &str) {
@@ -74,6 +74,7 @@ async fn happy_case_raw_with_last_update_block() {
         "storage",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--felt-key",
         &key,
         "--url",
         URL,
@@ -93,6 +94,7 @@ async fn happy_case_raw() {
         "storage",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--felt-key",
         &key,
         "--url",
         URL,
@@ -101,8 +103,9 @@ async fn happy_case_raw() {
     runner(&args).assert().success().stdout_eq(indoc! {r"
         Success: Value retrieved
 
-        Key:   [..]
-        Value: 0x2a
+        Key:             [..]
+        Storage address: [..]
+        Value:           0x2a
     "});
 }
 
@@ -115,6 +118,7 @@ async fn happy_case_json_raw() {
         "storage",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--felt-key",
         &key,
         "--url",
         URL,
@@ -130,6 +134,7 @@ async fn happy_case_json_raw() {
         json!({
             "command": "get storage",
             "key": key,
+            "storage_address": key,
             "type": "response",
             "value": "0x2a",
         })
@@ -144,6 +149,7 @@ async fn missing_key_returns_zero_raw() {
         "storage",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--felt-key",
         &key,
         "--url",
         URL,
@@ -152,8 +158,9 @@ async fn missing_key_returns_zero_raw() {
     runner(&args).assert().success().stdout_eq(indoc! {r"
         Success: Value retrieved
 
-        Key:   [..]
-        Value: 0x0
+        Key:             [..]
+        Storage address: [..]
+        Value:           0x0
     "});
 }
 
@@ -165,6 +172,7 @@ fn happy_case_plaintext_key() {
         "storage",
         "--contract-address",
         &contract_address,
+        "--key",
         "value1",
         "--url",
         URL,
@@ -173,8 +181,9 @@ fn happy_case_plaintext_key() {
     runner(&args).assert().success().stdout_eq(indoc! {r"
         Success: Value retrieved
 
-        Key:   value1
-        Value: 0x859
+        Key:             value1
+        Storage address: [..]
+        Value:           0x859
     "});
 }
 
@@ -186,6 +195,7 @@ fn happy_case_json_plaintext_key() {
         "storage",
         "--contract-address",
         &contract_address,
+        "--key",
         "value1",
         "--url",
         URL,
@@ -195,12 +205,14 @@ fn happy_case_json_plaintext_key() {
     let output = runner(&args).assert().success();
     let stdout = output.get_output().stdout.clone();
     let res: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
+    let storage_address = get_selector_from_name("value1").unwrap().to_hex_string();
 
     assert_eq!(
         res,
         json!({
             "command": "get storage",
             "key": "value1",
+            "storage_address": storage_address,
             "type": "response",
             "value": "0x859",
         })
@@ -215,6 +227,7 @@ fn missing_plaintext_key_returns_zero() {
         "storage",
         "--contract-address",
         &contract_address,
+        "--key",
         "missing",
         "--url",
         URL,
@@ -223,8 +236,9 @@ fn missing_plaintext_key_returns_zero() {
     runner(&args).assert().success().stdout_eq(indoc! {r"
         Success: Value retrieved
 
-        Key:   missing
-        Value: 0x0
+        Key:             missing
+        Storage address: [..]
+        Value:           0x0
     "});
 }
 
@@ -236,6 +250,7 @@ fn test_with_alias() {
         "storage",
         "--contract-address",
         "@map",
+        "--key",
         "foo",
         "--url",
         URL,
@@ -248,8 +263,9 @@ fn test_with_alias() {
         .stdout_eq(indoc! {r"
         Success: Value retrieved
 
-        Key:   foo
-        Value: 0x0
+        Key:             foo
+        Storage address: [..]
+        Value:           0x0
     "});
 }
 
@@ -261,6 +277,7 @@ fn test_with_unknown_alias() {
         "storage",
         "--contract-address",
         "@unknown",
+        "--key",
         "foo",
         "--url",
         URL,
