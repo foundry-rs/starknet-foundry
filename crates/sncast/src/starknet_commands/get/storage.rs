@@ -1,4 +1,4 @@
-use std::{process::ExitCode, str::FromStr};
+use std::process::ExitCode;
 
 use crate::starknet_commands::utils::felt_or_id::ContractAddress;
 use anyhow::{Context, Result};
@@ -19,6 +19,9 @@ pub struct Storage {
     #[command(flatten)]
     pub rpc: RpcArgs,
 
+    #[command(flatten)]
+    pub key: Key,
+
     /// Address of the contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
     pub contract_address: ContractAddress,
@@ -29,18 +32,49 @@ pub struct Storage {
     #[arg(short, long, default_value = "pre_confirmed")]
     pub block_id: String,
 
-    /// Storage key. Either a Felt252 (hex, decimal) or a plaintext
-    pub key: String,
-
     /// Fetch last block that modified slot under `key`
     #[arg(short = 'l', long)]
     pub include_last_block: bool,
 }
 
+#[derive(Args, Clone, Debug)]
+#[group(required = true, multiple = false)]
+pub struct Key {
+    /// Storage key as a Felt in hexadecimal (0x-prefixed) or decimal representation.
+    #[arg(short, long)]
+    pub felt_key: Option<Felt>,
+
+    /// Storage key as a string. Its selector is used as the storage address.
+    #[arg(short, long)]
+    pub key: Option<String>,
+}
+
+impl Key {
+    fn resolve(self) -> Result<Felt> {
+        if let Some(felt) = self.felt_key {
+            Ok(felt)
+        } else {
+            let key = self.key.expect("Either `felt` or `key` is `Some`");
+
+            get_selector_from_name(&key).context("failed to calculate selector from short string")
+        }
+    }
+
+    fn key(self) -> String {
+        if let Some(key) = self.key {
+            key
+        } else {
+            let felt = self.felt_key.expect("Either `felt` or `key` is `Some`");
+
+            felt.to_hex_string()
+        }
+    }
+}
+
 pub async fn storage(storage: Storage, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let flags = get_flags(&storage);
     let contract_address = storage.contract_address.resolve(&config)?;
-    let key = get_key(&storage.key)?;
+    let key = storage.key.clone().resolve()?;
     let block_id = get_block_id(&storage.block_id)?;
 
     let provider = storage.rpc.get_provider(&config, ui).await?;
@@ -51,7 +85,7 @@ pub async fn storage(storage: Storage, config: CastConfig, ui: &UI) -> Result<Ex
 
     Ok(process_command_result(
         "get storage",
-        Ok(StorageResponse::new(storage.key, res)),
+        Ok(StorageResponse::new(storage.key.key(), key, res)),
         ui,
         None,
     ))
@@ -65,12 +99,4 @@ fn get_flags(storage: &Storage) -> Vec<StorageResponseFlag> {
     }
 
     res
-}
-
-fn get_key(key: &str) -> Result<Felt> {
-    if let Ok(key) = Felt::from_str(key) {
-        return Ok(key);
-    }
-
-    get_selector_from_name(key).context("failed to calculate selector from short string")
 }

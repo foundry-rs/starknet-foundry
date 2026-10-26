@@ -1,14 +1,14 @@
 # `get storage`
 
-Get storage value for a slot at a contract.
+Get storage value for a slot at a contract. One of `--felt-key` and `--key` is required.
 
-## `<KEY>`
+## `--felt-key, -f <FELT>`
 
-Required.
+Storage key in hex (prefixed with `0x`) or decimal representation.
 
-Storage key. It can be either:
-- Felt in hex (prefixed with `0x`) or decimal representation.
-- String.
+## `--key, -k <KEY>`
+
+Storage key as a string.
 
 
 ## `--contract-address, -d <CONTRACT_ADDRESS>`
