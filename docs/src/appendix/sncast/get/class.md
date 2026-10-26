@@ -1,12 +1,18 @@
 # `get class`
 
-Get the contract class definition by its hash.
+Get the contract class definition. One of `--hash` and `--address` flag is required.
 
-## `<CLASS-HASH>`
+## `--hash, -g <CLASS-HASH>`
 
-Required.
+Class hash of a contract. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
-Class hash of a contract.
+## `--address, -d <CONTRACT-ADDRESS>`
+
+Address of a contract. It can be either:
+- Felt in hex (prefixed with `0x`) or decimal representation.
+- `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
 ## `--url, -u <RPC_URL>`
 

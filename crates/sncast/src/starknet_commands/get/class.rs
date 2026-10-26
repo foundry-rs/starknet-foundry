@@ -42,7 +42,7 @@ pub struct Class {
 #[derive(Args, Debug)]
 #[group(required = true, multiple = false)]
 pub struct ClassSelector {
-    /// Class hash of a contract
+    /// Class hash of a contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'g', long)]
     pub hash: Option<ClassHash>,
 
