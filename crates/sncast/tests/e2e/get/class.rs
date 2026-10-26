@@ -98,7 +98,10 @@ mod hash {
     async fn test_pretty_output(variant: ContractVariant) {
         let args = vec!["get", "class", "-g", variant.class_hash(), "--url", URL];
 
-        let output = runner(&args).assert().success();
+        let output = runner(&args)
+            .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+            .assert()
+            .success();
 
         let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
         assert_stdout_contains(
@@ -155,7 +158,10 @@ mod hash {
             URL,
         ];
 
-        let output = runner(&args).assert().success();
+        let output = runner(&args)
+            .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+            .assert()
+            .success();
         let mut lines = output.as_stdout().lines();
         let response = lines.next().unwrap();
         let link = lines.next().unwrap();
@@ -260,7 +266,10 @@ mod address {
     async fn test_pretty_output(variant: ContractVariant) {
         let args = vec!["get", "class", "-d", variant.class_address(), "--url", URL];
 
-        let output = runner(&args).assert().success();
+        let output = runner(&args)
+            .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+            .assert()
+            .success();
         let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
         assert_stdout_contains(
             output,
@@ -313,7 +322,10 @@ mod address {
             URL,
         ];
 
-        let output = runner(&args).assert().success();
+        let output = runner(&args)
+            .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+            .assert()
+            .success();
 
         let mut lines = output.as_stdout().lines();
         let response = lines.next().unwrap();
