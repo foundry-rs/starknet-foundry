@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal recommended `Scarb` version is now `2.19.6` (updated from `2.18.0`).
 
+#### Fixed
+
+- `read_txt` and the `var` cheatcode now return a parse error instead of panicking when a value is a lone `'` or `"`.
+
 ### Cast
 
 #### Added
