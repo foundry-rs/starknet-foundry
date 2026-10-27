@@ -44,7 +44,7 @@ pub struct ClassIdentifier {
 
     /// Address of the contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
-    pub address: Option<ContractAddress>,
+    pub contract_address: Option<ContractAddress>,
 }
 
 impl ClassIdentifier {
@@ -54,7 +54,7 @@ impl ClassIdentifier {
         provider: &JsonRpcClient<HttpTransport>,
         config: &CastConfig,
     ) -> Result<ClassResponse> {
-        match (self.class_hash.as_ref(), self.address.as_ref()) {
+        match (self.class_hash.as_ref(), self.contract_address.as_ref()) {
             (Some(hash), None) => {
                 let hash = hash.resolve(config)?;
                 let response = provider

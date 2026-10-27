@@ -8,7 +8,7 @@ Class hash of a contract. It can be either:
 - Felt in hex (prefixed with `0x`) or decimal representation.
 - `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../../starknet/aliases.md).
 
-## `--address, -d <CONTRACT-ADDRESS>`
+## `--contract-address, -d <CONTRACT-ADDRESS>`
 
 Address of a contract. It can be either:
 - Felt in hex (prefixed with `0x`) or decimal representation.
