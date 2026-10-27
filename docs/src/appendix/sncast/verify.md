@@ -17,7 +17,7 @@ The address of the contract that is to be verified. It can be either:
 - Felt in hex (prefixed with `0x`) or decimal representation.
 - `@alias` defined in `[sncast.<profile>.aliases]` in `snfoundry.toml`. See [aliases](../../starknet/aliases.md).
 
-## `--contract-name <CONTRACT_NAME>`
+## `--contract-name, -c <CONTRACT_NAME>`
 Required.
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
@@ -30,14 +30,14 @@ The verification provider to use for the verification. Possible values are:
 * `starkloupe`
 * `voyager`
 
-## `--network, -n <NETWORK>`
+## `--network <NETWORK>`
 Optional.
 
 The network on which block explorer will perform the verification. Possible values are:
 * `mainnet`
 * `sepolia`
 
-## `--url <RPC_URL>`
+## `--url, -u <RPC_URL>`
 Optional.
 
 Starknet RPC node url address. Will use public provider if not set.

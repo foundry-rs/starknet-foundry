@@ -1,10 +1,12 @@
 mod sierra_abi;
 
-use crate::shared::extraction::extract_function_from_selector;
+use crate::shared::extraction::find_function_or_constructor_by_selector;
+use crate::shared::formatting::{ArgumentListKind, format_abi_members, format_passed_vs_expected};
 use crate::shared::parsing::parse_expression;
 use crate::transformer::sierra_abi::build_representation;
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_syntax::node::ast::Expr;
 use conversions::serde::serialize::SerializeToFeltVec;
 use itertools::Itertools;
@@ -13,7 +15,7 @@ use starknet_types_core::felt::Felt;
 
 /// Interpret `calldata` as a comma-separated series of expressions in Cairo syntax and serialize it
 pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> Result<Vec<Felt>> {
-    let function = extract_function_from_selector(abi, *function_selector).with_context(|| {
+    let function = find_function_or_constructor_by_selector(abi, *function_selector).with_context(|| {
         format!(
             r#"Function with selector "{function_selector:#x}" not found in ABI of the contract"#
         )
@@ -49,10 +51,9 @@ fn process(
     let n_inputs = function.inputs.len();
     let n_arguments = calldata.len();
 
-    ensure!(
-        n_inputs == n_arguments,
-        "Invalid number of arguments: passed {n_arguments}, expected {n_inputs}",
-    );
+    if n_arguments != n_inputs {
+        bail!(format_invalid_args_error(&calldata, function, db));
+    }
 
     function
         .inputs
@@ -64,6 +65,62 @@ fn process(
         })
         .flatten_ok()
         .collect::<Result<_>>()
+}
+
+fn format_invalid_args_error(
+    calldata: &[Expr],
+    function: &AbiFunction,
+    db: &SimpleParserDatabase,
+) -> String {
+    let n_inputs = function.inputs.len();
+    let n_arguments = calldata.len();
+    let passed = calldata
+        .iter()
+        .map(|expr| {
+            expr.as_syntax_node()
+                .get_text_without_trivia(db)
+                .to_string(db)
+        })
+        .collect::<Vec<_>>();
+    let expected = format_abi_members(&function.inputs);
+    let diagnostics = format_positional_argument_diagnostics(function, n_arguments);
+    let headline = format!(
+        "Invalid arguments for function `{}`: passed {n_arguments}, expected {n_inputs}",
+        function.name
+    );
+
+    format_passed_vs_expected(
+        &headline,
+        &diagnostics,
+        &passed,
+        &expected,
+        ArgumentListKind::Positional,
+    )
+}
+
+fn format_positional_argument_diagnostics(
+    function: &AbiFunction,
+    n_arguments: usize,
+) -> Vec<String> {
+    if n_arguments < function.inputs.len() {
+        function
+            .inputs
+            .iter()
+            .enumerate()
+            .skip(n_arguments)
+            .map(|(position, argument)| {
+                format!(
+                    "missing argument `{}` at position {}",
+                    argument.name,
+                    position + 1
+                )
+            })
+            .collect()
+    } else {
+        (function.inputs.len()..n_arguments)
+            .map(|position| format!("unexpected argument at position {}", position + 1))
+            .collect()
+    }
 }
 
 fn convert_to_tuple(calldata: &str) -> String {

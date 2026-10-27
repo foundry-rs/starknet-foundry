@@ -1,24 +1,17 @@
 pub mod cheatcodes;
 
-pub use cheatcodes::CheatSpan;
-
-pub use cheatcodes::block_hash::cheat_block_hash;
 pub use cheatcodes::block_hash::{
-    start_cheat_block_hash, start_cheat_block_hash_global, stop_cheat_block_hash,
+    cheat_block_hash, start_cheat_block_hash, start_cheat_block_hash_global, stop_cheat_block_hash,
     stop_cheat_block_hash_global,
 };
 pub use cheatcodes::contract_class::{
-    ContractClass, ContractClassTrait, DeclareResult, DeclareResultTrait, get_class_hash,
+    ContractClass, ContractClassTrait, DeclareResult, DeclareResultTrait, declare,
+    declare_from_file, get_class_hash,
 };
-
-pub use cheatcodes::contract_class::{declare, declare_from_file};
-
-pub use cheatcodes::erc20::set_balance;
-pub use cheatcodes::erc20::{CustomToken, Token, TokenImpl, TokenTrait};
-
-pub use cheatcodes::events::Event;
+pub use cheatcodes::erc20::{CustomToken, Token, TokenImpl, TokenTrait, set_balance};
 pub use cheatcodes::events::{
-    EventSpy, EventSpyAssertionsTrait, EventSpyTrait, EventsFilterTrait, IsEmitted, spy_events,
+    Event, EventSpy, EventSpyAssertionsTrait, EventSpyTrait, EventsFilterTrait, IsEmitted,
+    spy_events,
 };
 pub use cheatcodes::execution_info::account_contract_address::{
     cheat_account_contract_address, start_cheat_account_contract_address,
@@ -38,11 +31,9 @@ pub use cheatcodes::execution_info::block_timestamp::{
     cheat_block_timestamp, start_cheat_block_timestamp, start_cheat_block_timestamp_global,
     stop_cheat_block_timestamp, stop_cheat_block_timestamp_global,
 };
-
-pub use cheatcodes::execution_info::caller_address::cheat_caller_address;
 pub use cheatcodes::execution_info::caller_address::{
-    start_cheat_caller_address, start_cheat_caller_address_global, stop_cheat_caller_address,
-    stop_cheat_caller_address_global,
+    cheat_caller_address, start_cheat_caller_address, start_cheat_caller_address_global,
+    stop_cheat_caller_address, stop_cheat_caller_address_global,
 };
 pub use cheatcodes::execution_info::chain_id::{
     cheat_chain_id, start_cheat_chain_id, start_cheat_chain_id_global, stop_cheat_chain_id,
@@ -98,21 +89,15 @@ pub use cheatcodes::execution_info::version::{
     start_cheat_transaction_version_global, stop_cheat_transaction_version,
     stop_cheat_transaction_version_global,
 };
-
 pub use cheatcodes::generate_random_felt::generate_random_felt;
-
-pub use cheatcodes::l1_handler::L1Handler;
-pub use cheatcodes::l1_handler::L1HandlerTrait;
-
+pub use cheatcodes::l1_handler::{L1Handler, L1HandlerTrait};
 pub use cheatcodes::message_to_l1::{
     MessageToL1, MessageToL1FilterTrait, MessageToL1Spy, MessageToL1SpyAssertionsTrait,
     MessageToL1SpyTrait, spy_messages_to_l1,
 };
-
-pub use cheatcodes::storage::store;
-pub use cheatcodes::storage::{interact_with_state, load, map_entry_address};
+pub use cheatcodes::storage::{interact_with_state, load, map_entry_address, store};
 pub use cheatcodes::{
-    ReplaceBytecodeError, mock_call, replace_bytecode, start_mock_call, stop_mock_call,
+    CheatSpan, ReplaceBytecodeError, mock_call, replace_bytecode, start_mock_call, stop_mock_call,
     test_address, test_selector,
 };
 
@@ -138,7 +123,6 @@ pub mod trace;
 pub mod _internals {
     pub use cheatcode::{is_config_run, save_fuzzer_arg};
     use super::cheatcode;
-
     pub use super::config_types;
 
     pub fn assert_path_type<T>() {}

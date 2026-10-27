@@ -5,13 +5,16 @@ use std::process::ExitCode;
 
 pub mod balance;
 pub mod block;
+pub mod chain_id;
 pub mod class_hash_at;
 pub mod nonce;
 pub mod spec_version;
 pub mod state_update;
+pub mod syncing;
 pub mod transaction;
 pub mod tx_receipt;
 pub mod tx_status;
+pub mod tx_trace;
 
 #[derive(Args)]
 #[command(about = "Commands for querying Starknet state")]
@@ -34,6 +37,10 @@ pub enum GetCommands {
     #[command(alias = "transaction")]
     Tx(transaction::Transaction),
 
+    /// Get the execution trace of a transaction
+    #[command(alias = "transaction-trace")]
+    TxTrace(tx_trace::TxTrace),
+
     /// Fetch balance of the account for specified token
     Balance(balance::Balance),
 
@@ -51,6 +58,12 @@ pub enum GetCommands {
 
     /// Get the state update for the given block
     StateUpdate(state_update::StateUpdate),
+
+    /// Get Starknet network ID
+    ChainId(chain_id::ChainId),
+
+    /// Get node syncing status
+    Syncing(syncing::Syncing),
 }
 
 pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCode> {
@@ -58,6 +71,8 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::TxStatus(status) => tx_status::tx_status(status, config, ui).await,
 
         GetCommands::Tx(tx) => transaction::transaction(tx, config, ui).await,
+
+        GetCommands::TxTrace(tx_trace) => tx_trace::tx_trace(tx_trace, config, ui).await,
 
         GetCommands::TxReceipt(tx) => tx_receipt::tx_receipt(tx, config, ui).await,
 
@@ -72,5 +87,9 @@ pub async fn get(get: Get, config: CastConfig, ui: &UI) -> anyhow::Result<ExitCo
         GetCommands::Block(args) => block::block(args, config, ui).await,
 
         GetCommands::StateUpdate(args) => state_update::state_update(args, config, ui).await,
+
+        GetCommands::ChainId(chain_id) => chain_id::chain_id(chain_id, config, ui).await,
+
+        GetCommands::Syncing(args) => syncing::syncing(args, config, ui).await,
     }
 }

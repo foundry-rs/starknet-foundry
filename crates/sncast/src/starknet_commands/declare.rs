@@ -1,23 +1,34 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use foundry_ui::OutputFormat;
+use scarb_metadata::PackageMetadata;
 use shared::rpc::get_starknet_version;
-use sncast::helpers::artifacts::{ContractArtifactsMap, resolve_contract_artifacts};
+use sncast::helpers::artifacts::resolve_contract_artifacts;
+use sncast::helpers::command::process_command_result;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
-use sncast::helpers::rpc::RpcArgs;
-use sncast::response::declare::{
-    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
+use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
+use sncast::helpers::scarb_utils::{
+    BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
+use sncast::response::declare::{
+    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
+};
+use sncast::response::errors::{
+    SNCastProviderError, SNCastStarknetError, StarknetCommandError, handle_starknet_command_error,
+};
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::ui::UI;
-use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
+use sncast::response::verify::VerifyResponse;
+use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
 use starknet_rust::accounts::AccountError::Provider;
 use starknet_rust::accounts::{ConnectedAccount, DeclarationV3};
 use starknet_rust::core::types::{
     ContractExecutionError, DeclareTransactionResult, StarknetError, TransactionExecutionErrorData,
 };
-use starknet_rust::providers::ProviderError;
+use starknet_rust::providers::{Provider as _, ProviderError};
 use starknet_rust::{
     accounts::{Account, SingleOwnerAccount},
     core::types::contract::{CompiledClass, SierraClass},
@@ -25,8 +36,15 @@ use starknet_rust::{
     signers::Signer,
 };
 use starknet_types_core::felt::Felt;
+use std::process::ExitCode;
 use std::sync::Arc;
 use universal_sierra_compiler_api::compile_contract_sierra;
+
+use crate::starknet_commands::verify::explorer::ContractIdentifier;
+use crate::starknet_commands::verify::{
+    VerifyCommonArgs, resolve_verification_network, verify_contract,
+};
+use shared::utils::contract_name_from_module_path;
 
 /// Common args shared by declare command variants.
 #[derive(Args)]
@@ -40,13 +58,12 @@ pub struct DeclareCommonArgs {
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
-
-    #[command(flatten)]
-    pub rpc: RpcArgs,
 }
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
+#[command(mut_arg("verifier", |arg| arg.required(false)))]
+#[command(mut_arg("dry_run", |arg| arg.conflicts_with("VerifyCommonArgs")))]
 pub struct Declare {
     /// Contract name or module tree path
     #[arg(short = 'c', long)]
@@ -62,46 +79,113 @@ pub struct Declare {
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
+
+    #[command(flatten)]
+    pub rpc: RpcArgs,
+
+    #[command(flatten)]
+    pub verify: Option<VerifyCommonArgs>,
 }
 
-// TODO(#3785)
-#[expect(clippy::too_many_arguments)]
-#[expect(clippy::result_large_err)]
-pub async fn declare<S>(
-    contract_name: String,
-    fee_args: FeeArgs,
-    dry_run_args: DryRunArgs,
-    nonce: Option<Felt>,
-    no_abi: bool,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
-    artifacts: &ContractArtifactsMap,
-    wait_config: WaitForTx,
-    skip_on_already_declared: bool,
+pub async fn declare(
+    args: Declare,
+    mut wait_config: WaitForTx,
+    config: CastConfig,
     ui: &UI,
-) -> Result<DeclareResponse, StarknetCommandError>
-where
-    S: Signer + Sync + Send,
-{
-    let contract_artifacts = resolve_contract_artifacts(&contract_name, artifacts)?;
+) -> Result<ExitCode> {
+    if args.verify.is_some() {
+        // Force waiting for declaration before verification
+        wait_config.wait = true;
+    }
+
+    let provider = args.rpc.get_provider(&config, ui).await?;
+    let account = get_account(&config, &provider, &args.rpc, ui).await?;
+    let scarb_toml_path = assert_manifest_path_exists()?;
+    let package = get_package_metadata(&scarb_toml_path, &args.package)?;
+    let base_ui = ui.base_ui();
+
+    let artifacts = build_and_load_artifacts(
+        &package,
+        &BuildConfig {
+            scarb_toml_path,
+            json: base_ui.output_format() == OutputFormat::Json,
+            profile: config.scarb_profile.clone(),
+        },
+        base_ui,
+    )
+    .context("Failed to build contract")?;
+
+    let contract_artifacts = resolve_contract_artifacts(&args.contract_name, &artifacts)?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;
     let casm_contract_definition: CompiledClass =
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
-    declare_with_artifacts(
-        contract_definition,
+    let result = with_account!(&account, |account| declare_with_artifacts(
+        contract_definition.clone(),
         casm_contract_definition,
-        &fee_args,
-        &dry_run_args,
-        nonce,
-        no_abi,
+        args.common,
+        args.no_abi,
         account,
         wait_config,
-        skip_on_already_declared,
+        false,
         ui,
     )
-    .await
+    .await)
+    .map_err(handle_starknet_command_error)?;
+
+    let mut response = match result {
+        DeclareResponse::Success(response) => response,
+        DeclareResponse::DryRun(response) => {
+            return Ok(process_command_result("declare", Ok(response), ui, None));
+        }
+        DeclareResponse::AlreadyDeclared(_) => {
+            unreachable!("Argument `skip_on_already_declared` is false")
+        }
+    };
+
+    if let Some(verify_args) = args.verify {
+        match verify_after_declare(
+            verify_args,
+            response.class_hash.0,
+            &args.contract_name,
+            args.package,
+            &package,
+            &provider,
+            &args.rpc,
+            &config,
+            ui,
+        )
+        .await
+        {
+            Ok(VerifyResponse { message }) => response.verification_message = Some(message),
+            Err(e) => ui.print_error("declare", format!("Failed to verify the contract: {e}")),
+        }
+    }
+
+    let network_flag = generate_network_flag(&args.rpc, &config);
+
+    let deploy_message = DeployCommandMessage::new(
+        &contract_definition.abi,
+        args.no_abi,
+        &response,
+        &config.account,
+        &config.accounts_file,
+        config.keystore.as_ref(),
+        network_flag,
+    );
+
+    let response = Ok(response);
+
+    let block_explorer_link =
+        block_explorer_link_if_allowed(&response, provider.chain_id().await?, &config).await;
+
+    let res = process_command_result("declare", response, ui, block_explorer_link);
+
+    ui.print_notification(deploy_message?);
+
+    Ok(res)
 }
 
 #[expect(clippy::result_large_err)]
@@ -128,9 +212,7 @@ pub fn compile_sierra_to_casm(
 pub async fn declare_with_artifacts<S>(
     mut sierra_class: SierraClass,
     compiled_casm: CompiledClass,
-    fee_args: &FeeArgs,
-    dry_run_args: &DryRunArgs,
-    nonce: Option<Felt>,
+    common: DeclareCommonArgs,
     no_abi: bool,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, S>,
     wait_config: WaitForTx,
@@ -158,8 +240,9 @@ where
         casm_class_hash,
     );
 
-    if dry_run_args.dry_run {
-        return dry_run_args
+    if common.dry_run_args.dry_run {
+        return common
+            .dry_run_args
             .estimate(|| declaration.estimate_fee())
             .await
             .map(DeclareResponse::DryRun)
@@ -168,14 +251,14 @@ where
             });
     }
 
-    let fee_settings = if fee_args.max_fee.is_some() {
+    let fee_settings = if common.fee_args.max_fee.is_some() {
         let fee_estimate = declaration
             .estimate_fee()
             .await
             .map_err(|error| anyhow!("Failed to estimate fee: {error}"))?;
-        fee_args.try_into_fee_settings(Some(&fee_estimate))
+        common.fee_args.try_into_fee_settings(Some(&fee_estimate))
     } else {
-        fee_args.try_into_fee_settings(None)
+        common.fee_args.try_into_fee_settings(None)
     };
 
     let FeeSettings {
@@ -197,7 +280,7 @@ where
         l1_data_gas => DeclarationV3::l1_data_gas,
         l1_data_gas_price => DeclarationV3::l1_data_gas_price,
         tip => DeclarationV3::tip,
-        nonce => DeclarationV3::nonce
+        common.nonce => DeclarationV3::nonce
     );
 
     let declared = declaration.send().await;
@@ -212,6 +295,7 @@ where
             DeclareResponse::Success(DeclareTransactionResponse {
                 class_hash: class_hash.into_(),
                 transaction_hash: transaction_hash.into_(),
+                verification_message: None,
             }),
             wait_config,
             ui,
@@ -259,4 +343,38 @@ where
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
+}
+
+#[expect(clippy::too_many_arguments)]
+async fn verify_after_declare(
+    verify_args: VerifyCommonArgs,
+    class_hash: Felt,
+    contract_name: &str,
+    package: Option<String>,
+    package_metadata: &PackageMetadata,
+    provider: &JsonRpcClient<HttpTransport>,
+    rpc: &RpcArgs,
+    config: &CastConfig,
+    ui: &UI,
+) -> Result<VerifyResponse> {
+    let workspace_dir = package_metadata
+        .manifest_path
+        .parent()
+        .ok_or(anyhow!("Failed to obtain workspace dir"))?;
+
+    let network = resolve_verification_network(rpc, provider, config).await?;
+
+    verify_contract(
+        verify_args,
+        ContractIdentifier::ClassHash {
+            class_hash: class_hash.to_fixed_hex_string(),
+        },
+        contract_name_from_module_path(contract_name).to_string(),
+        package,
+        provider,
+        network,
+        workspace_dir.to_path_buf(),
+        ui,
+    )
+    .await
 }

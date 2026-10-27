@@ -34,6 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: software-mansion/setup-scarb@v1
+        with:
+          cache: false
 
       - name: Setup rust
         run: |

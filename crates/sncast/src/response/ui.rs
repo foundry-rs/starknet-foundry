@@ -191,6 +191,11 @@ impl UI {
     }
 
     #[must_use]
+    pub fn output_format(&self) -> OutputFormat {
+        self.ui.output_format()
+    }
+
+    #[must_use]
     pub fn base_ui(&self) -> &BaseUI {
         &self.ui
     }

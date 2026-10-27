@@ -25,6 +25,19 @@ async fn mock_chain_id(mock_rpc: &MockServer, chain_id: Felt) {
         .await;
 }
 
+async fn mock_rpc_spec_version(mock_rpc: &MockServer) {
+    Mock::given(method("POST"))
+        .and(body_partial_json(json!({"method": "starknet_specVersion"})))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": 1,
+            "jsonrpc": "2.0",
+            "result": "0.10.0"
+        })))
+        .expect(1)
+        .mount(mock_rpc)
+        .await;
+}
+
 async fn mock_sepolia_chain_id(mock_rpc: &MockServer) {
     mock_chain_id(mock_rpc, SEPOLIA).await;
 }
@@ -42,6 +55,8 @@ async fn test_happy_case_contract_address() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
@@ -73,8 +88,6 @@ async fn test_happy_case_contract_address() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
     ];
@@ -105,6 +118,8 @@ async fn test_happy_case_class_hash() {
     let mock_server = MockServer::start().await;
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // For class hash tests, no RPC calls are made since we already have the class hash
     // No need to mock any RPC calls
@@ -129,8 +144,6 @@ async fn test_happy_case_class_hash() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
     ];
@@ -151,6 +164,8 @@ async fn test_accepts_full_module_path_contract_name() {
     let mock_server = MockServer::start().await;
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     let job_id = "full-module-path-job-id";
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
@@ -176,8 +191,6 @@ async fn test_accepts_full_module_path_contract_name() {
         "duplicate_contract_name::first_contract::HelloStarknet",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--confirm-verification",
         "--url",
         &mock_rpc_uri,
@@ -214,6 +227,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
 
     // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
@@ -259,7 +273,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
 }
 
 #[tokio::test]
-async fn test_happy_case_uses_network_from_config() {
+async fn test_happy_case_url_overrides_network_from_config() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
     fs::write(
         contract_path.path().join("snfoundry.toml"),
@@ -276,6 +290,7 @@ async fn test_happy_case_uses_network_from_config() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
 
     Mock::given(method("POST"))
         .and(body_partial_json(
@@ -286,12 +301,7 @@ async fn test_happy_case_uses_network_from_config() {
         .mount(&mock_rpc)
         .await;
 
-    Mock::given(method("POST"))
-        .and(body_partial_json(json!({"method": "starknet_chainId"})))
-        .respond_with(ResponseTemplate::new(200))
-        .expect(0)
-        .mount(&mock_rpc)
-        .await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     let job_id = "config-network-job-id";
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
@@ -326,6 +336,51 @@ async fn test_happy_case_uses_network_from_config() {
 }
 
 #[tokio::test]
+async fn test_url_overrides_url_from_config() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    fs::write(
+        contract_path.path().join("snfoundry.toml"),
+        "[sncast.default]\nurl = \"http://127.0.0.1:1/rpc\"\n",
+    )
+    .unwrap();
+
+    let mock_server = MockServer::start().await;
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
+
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#066x}")))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": "url-wins" })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--confirm-verification",
+        "--url",
+        &mock_rpc_uri,
+    ];
+
+    runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .assert()
+        .success();
+}
+
+#[tokio::test]
 async fn test_failed_verification_contract_address() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
@@ -338,6 +393,8 @@ async fn test_failed_verification_contract_address() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
@@ -369,8 +426,6 @@ async fn test_failed_verification_contract_address() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
     ];
@@ -400,6 +455,8 @@ async fn test_failed_verification_class_hash() {
     let mock_server = MockServer::start().await;
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // For class hash tests, no RPC calls are made since we already have the class hash
     // No need to mock any RPC calls
@@ -424,8 +481,6 @@ async fn test_failed_verification_class_hash() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
     ];
@@ -464,6 +519,8 @@ async fn test_failed_class_hash_lookup() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // Mock the getClassHashAt call to return contract not found
     Mock::given(method("POST"))
@@ -495,8 +552,6 @@ async fn test_failed_class_hash_lookup() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
     ];
@@ -512,7 +567,7 @@ async fn test_failed_class_hash_lookup() {
         output,
         formatdoc! {"
         Command: verify
-        Error: ContractNotFound
+        Error: Contract not found
         ",
         },
     );
@@ -531,6 +586,8 @@ async fn test_virtual_workspaces() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
@@ -564,8 +621,6 @@ async fn test_virtual_workspaces() {
         "cast_fibonacci",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
     ];
@@ -585,6 +640,8 @@ async fn test_contract_name_not_found() {
     let mock_server = MockServer::start().await;
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // For this test, the error happens before any RPC calls are made (contract name not found)
     // So no RPC mocks needed
@@ -618,8 +675,6 @@ async fn test_contract_name_not_found() {
         "cast_fibonacci",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
     ];
@@ -646,6 +701,11 @@ async fn test_errors_on_ambiguous_contract_name() {
     let contract_path =
         copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/duplicate_contract_name");
 
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
+
     let args = vec![
         "verify",
         "--contract-address",
@@ -654,10 +714,8 @@ async fn test_errors_on_ambiguous_contract_name() {
         "HelloStarknet",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
-        "http://127.0.0.1:1/rpc",
+        &mock_rpc_uri,
     ];
 
     let output = runner(&args)
@@ -701,7 +759,7 @@ async fn test_error_when_neither_network_nor_url_provided() {
         output,
         formatdoc! {"
         Command: verify
-        Error: Either --network or --url must be provided
+        Error: Either `--network` or `--url` must be provided.
         ",
         },
     );
@@ -715,6 +773,7 @@ async fn test_error_when_chain_id_is_unrecognized_and_network_is_missing() {
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
 
+    mock_rpc_spec_version(&mock_rpc).await;
     mock_chain_id(&mock_rpc, Felt::from_hex_unchecked("0x1234")).await;
 
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
@@ -770,6 +829,8 @@ async fn test_test_files_flag_includes_test_files() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // Mock the getClassHashAt call
     Mock::given(method("POST"))
@@ -818,8 +879,6 @@ async fn test_test_files_flag_includes_test_files() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
         "--test-files",
@@ -846,6 +905,8 @@ async fn test_without_test_files_flag_excludes_test_files() {
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+    mock_rpc_spec_version(&mock_rpc).await;
+    mock_sepolia_chain_id(&mock_rpc).await;
 
     // Mock the getClassHashAt call
     Mock::given(method("POST"))
@@ -894,8 +955,6 @@ async fn test_without_test_files_flag_excludes_test_files() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--url",
         &mock_rpc_uri,
         // Note: --test-files flag is NOT included
