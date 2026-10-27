@@ -32,29 +32,29 @@ pub struct Class {
     pub block_id: String,
 
     #[command(flatten)]
-    pub selector: ClassSelector,
+    pub identifier: ClassIdentifier,
 }
 
 #[derive(Args, Debug)]
 #[group(required = true, multiple = false)]
-pub struct ClassSelector {
+pub struct ClassIdentifier {
     /// Class hash of a contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'g', long)]
-    pub hash: Option<ClassHash>,
+    pub class_hash: Option<ClassHash>,
 
     /// Address of the contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
     pub address: Option<ContractAddress>,
 }
 
-impl ClassSelector {
+impl ClassIdentifier {
     async fn get_class(
         &self,
         block_id: BlockId,
         provider: &JsonRpcClient<HttpTransport>,
         config: &CastConfig,
     ) -> Result<ClassResponse> {
-        match (self.hash.as_ref(), self.address.as_ref()) {
+        match (self.class_hash.as_ref(), self.address.as_ref()) {
             (Some(hash), None) => {
                 let hash = hash.resolve(config)?;
                 let response = provider
@@ -90,14 +90,21 @@ pub async fn class(args: Class, config: CastConfig, ui: &UI) -> Result<ExitCode>
     let block_id = get_block_id(&args.block_id)?;
     let provider = args.rpc.get_provider(&config, ui).await?;
 
-    let response = args.selector.get_class(block_id, &provider, &config).await;
-    let chain_id = provider.chain_id().await?;
+    let result = args
+        .identifier
+        .get_class(block_id, &provider, &config)
+        .await;
 
-    let block_explorer_link = block_explorer_link_if_allowed(&response, chain_id, &config).await;
+    let block_explorer_link = if result.is_ok() {
+        let chain_id = provider.chain_id().await?;
+        block_explorer_link_if_allowed(&result, chain_id, &config).await
+    } else {
+        None
+    };
 
     Ok(process_command_result(
         "get class",
-        response,
+        result,
         ui,
         block_explorer_link,
     ))

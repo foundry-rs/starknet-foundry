@@ -70,9 +70,9 @@ fn test_class_hash_or_address_required() {
         output,
         indoc! {r"
         error: the following required arguments were not provided:
-          <--hash <HASH>|--address <ADDRESS>>
+          <--class-hash <CLASS_HASH>|--address <ADDRESS>>
 
-        Usage: sncast get class --url <URL> <--hash <HASH>|--address <ADDRESS>>
+        Usage: sncast get class --url <URL> <--class-hash <CLASS_HASH>|--address <ADDRESS>>
 
         For more information, try '--help'.
         "},
