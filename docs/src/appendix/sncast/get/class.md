@@ -2,7 +2,7 @@
 
 Get the contract class definition. One of `--hash` and `--address` flag is required.
 
-## `--hash, -g <CLASS-HASH>`
+## `--class-hash, -g <CLASS-HASH>`
 
 Class hash of a contract. It can be either:
 - Felt in hex (prefixed with `0x`) or decimal representation.
