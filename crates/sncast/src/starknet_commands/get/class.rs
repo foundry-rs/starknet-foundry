@@ -56,14 +56,17 @@ impl ClassIdentifier {
     ) -> Result<ClassResponse> {
         match (self.class_hash.as_ref(), self.contract_address.as_ref()) {
             (Some(hash), None) => {
-                let hash = hash.resolve(config)?;
+                let class_hash = hash.resolve(config)?;
                 let response = provider
-                    .get_class(block_id, hash)
+                    .get_class(block_id, class_hash)
                     .await
                     .map_err(|err| StarknetCommandError::ProviderError(err.into()))
                     .map_err(handle_starknet_command_error)?;
 
-                Ok(ClassResponse { response, hash })
+                Ok(ClassResponse {
+                    response,
+                    class_hash,
+                })
             }
             (None, Some(address)) => {
                 let address = address.resolve(config)?;
@@ -73,13 +76,16 @@ impl ClassIdentifier {
                     .map_err(|err| StarknetCommandError::ProviderError(err.into()))
                     .map_err(handle_starknet_command_error)?;
 
-                let hash = if let Ok(hash) = get_class_hash_from_response(&response) {
+                let class_hash = if let Ok(hash) = get_class_hash_from_response(&response) {
                     Ok(hash)
                 } else {
                     get_class_hash_by_address(provider, address).await
                 }?;
 
-                Ok(ClassResponse { response, hash })
+                Ok(ClassResponse {
+                    response,
+                    class_hash,
+                })
             }
             _ => unreachable!("Either `hash` or `address` is `Some`"),
         }

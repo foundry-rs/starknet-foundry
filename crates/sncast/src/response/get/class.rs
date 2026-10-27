@@ -11,7 +11,7 @@ pub struct ClassResponse {
     #[serde(flatten)]
     pub response: ContractClass,
     #[serde(skip)]
-    pub hash: Felt,
+    pub class_hash: Felt,
 }
 
 impl SncastCommandMessage for ClassResponse {
@@ -32,6 +32,6 @@ impl OutputLink for ClassResponse {
         &self,
         provider: Box<dyn crate::helpers::block_explorer::LinkProvider>,
     ) -> String {
-        format!("class: {}", provider.class(PaddedFelt(self.hash)))
+        format!("class: {}", provider.class(PaddedFelt(self.class_hash)))
     }
 }
