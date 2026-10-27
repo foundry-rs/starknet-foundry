@@ -76,8 +76,18 @@ fn test_docs_snippets() {
         // remove "sncast" from the args
         args.remove(0);
 
+        // Migration changes the schema, so it must not rewrite other snippets' accounts.
+        let accounts_json_path = if args.starts_with(&["account", "migrate"]) {
+            let migration_accounts_json_path = tempdir.path().join("migration-accounts.json");
+            fs::copy(&target_accounts_json_path, &migration_accounts_json_path)
+                .expect("Failed to copy accounts.json for migration");
+            migration_accounts_json_path
+        } else {
+            target_accounts_json_path.clone()
+        };
+
         args.insert(0, "--accounts-file");
-        args.insert(1, target_accounts_json_path.to_str().unwrap());
+        args.insert(1, accounts_json_path.to_str().unwrap());
 
         if snippet.config.replace_network {
             let network_pos = args.iter().position(|arg| *arg == "--network");

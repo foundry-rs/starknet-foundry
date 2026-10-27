@@ -3,3 +3,4 @@ pub mod delete;
 pub mod deploy;
 pub mod import;
 pub mod list;
+pub mod migrate;
