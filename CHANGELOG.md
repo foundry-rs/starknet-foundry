@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - `read_txt` and the `var` cheatcode now return a parse error instead of panicking when a value is a lone `'` or `"`.
+- Failed library call no longer replaces the calling contract's class hash with the library's class hash in reverted calls.
 
 ### Cast
 
