@@ -276,3 +276,46 @@ fn storage_is_reverted_in_library_call() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
     assert_passed(&result);
 }
+
+#[test]
+fn library_revert_preserves_host_class_hash() {
+    let test = test_case!(
+        indoc! {
+            r#"
+        use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
+        use starknet::{ClassHash, syscalls::get_class_hash_at_syscall};
+
+        #[starknet::interface]
+        trait IHost<T> {
+            fn attempt(ref self: T, library: ClassHash) -> bool;
+            fn host_value(self: @T) -> felt252;
+        }
+
+        #[test]
+        fn rejected_library_call_keeps_host_class_and_storage() {
+            let library = declare("Contract").unwrap().contract_class();
+            let host = declare("LibraryRevertHost").unwrap().contract_class();
+            let (contract_address, _) = host.deploy(@array![]).unwrap();
+            let dispatcher = IHostDispatcher { contract_address };
+
+            assert!(!dispatcher.attempt(*library.class_hash));
+            assert_eq!(get_class_hash_at_syscall(contract_address).unwrap(), *host.class_hash);
+            assert_eq!(dispatcher.host_value(), 7);
+        }
+            "#
+        },
+        Contract::from_code_path(
+            "contract::LibraryRevertHost",
+            "tests/data/contracts/library_revert_host.cairo"
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "contract::Contract",
+            "tests/data/contracts/reverts_contract.cairo"
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+    assert_passed(&result);
+}
