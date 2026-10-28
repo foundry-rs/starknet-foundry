@@ -403,7 +403,13 @@ async fn test_contract_does_not_exist() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]",
+        indoc! {r"
+        Command: invoke
+        Error: Couldn't retrieve class hash of a contract with address 0x1
+
+        Caused by:
+            There is no contract at the specified address
+        "},
     );
 }
 
@@ -430,7 +436,13 @@ async fn test_contract_does_not_exist_with_calldata() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]",
+        indoc! {r"
+        Command: invoke
+        Error: Couldn't retrieve class hash of a contract with address 0x1
+
+        Caused by:
+            There is no contract at the specified address
+        "},
     );
 }
 
