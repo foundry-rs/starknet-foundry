@@ -1,41 +1,17 @@
 use super::helpers::{ParseRadixError, RadixInput};
-use cairo_serde_macros::CairoSerialize;
-use conversions::serde::deserialize::{
-    BufferReadError, BufferReadResult, BufferReader, CairoDeserialize,
-};
+use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use num_bigint::BigUint;
 use std::fmt;
 use std::fmt::Display;
 use std::str::FromStr;
 
 #[expect(clippy::struct_field_names)]
-#[derive(CairoSerialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(CairoDeserialize, CairoSerialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CairoU384 {
     limb_0: u128,
     limb_1: u128,
     limb_2: u128,
     limb_3: u128,
-}
-
-const LIMB_MAX: u128 = (1 << 96) - 1;
-
-impl CairoDeserialize for CairoU384 {
-    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let mut read_limb = || {
-            let limb: u128 = reader.read()?;
-            if limb > LIMB_MAX {
-                return Err(BufferReadError::ParseFailed);
-            }
-            Ok(limb)
-        };
-
-        Ok(Self {
-            limb_0: read_limb()?,
-            limb_1: read_limb()?,
-            limb_2: read_limb()?,
-            limb_3: read_limb()?,
-        })
-    }
 }
 
 impl CairoU384 {
@@ -99,5 +75,41 @@ impl FromStr for CairoU384 {
         result[start..].copy_from_slice(&bytes);
 
         Ok(CairoU384::from_bytes(&result))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CairoU384;
+    use test_case::test_case;
+
+    const LIMB_MAX: u128 = (1 << 96) - 1;
+
+    #[test_case([0, 0, 0, 0], "0"; "zero")]
+    #[test_case([2, 1, 0, 0], "79228162514264337593543950338"; "two_limbs")]
+    #[test_case([LIMB_MAX; 4], "39402006196394479212279040100143613805079739270465446667948293404245721771497210611414266254884915640806627990306815"; "max")]
+    fn test_display(limbs: [u128; 4], expected: &str) {
+        let number = CairoU384 {
+            limb_0: limbs[0],
+            limb_1: limbs[1],
+            limb_2: limbs[2],
+            limb_3: limbs[3],
+        };
+
+        assert_eq!(number.to_string(), expected);
+    }
+
+    #[test_case([0, 0, 0, 0]; "zero")]
+    #[test_case([2, 1, 0, 0]; "two_limbs")]
+    #[test_case([LIMB_MAX; 4]; "max")]
+    fn test_to_be_bytes_round_trip(limbs: [u128; 4]) {
+        let number = CairoU384 {
+            limb_0: limbs[0],
+            limb_1: limbs[1],
+            limb_2: limbs[2],
+            limb_3: limbs[3],
+        };
+
+        assert_eq!(CairoU384::from_bytes(&number.to_be_bytes()), number);
     }
 }
