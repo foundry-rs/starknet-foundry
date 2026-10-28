@@ -1,0 +1,14 @@
+---
+source: crates/sncast/tests/e2e/account/list.rs
+expression: "output.as_stdout().replace(accounts_file_path.to_str().unwrap(),\n\"[ACCOUNTS_FILE]\")"
+---
+Available accounts (at [ACCOUNTS_FILE]):
+- shared:
+  network: alpha-sepolia
+  public key: 0x1
+
+- shared:
+  network: custom-network
+  public key: 0x2
+
+To show private keys too, run with --display-private-keys or -p

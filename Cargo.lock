@@ -4775,6 +4775,7 @@ dependencies = [
  "console 0.16.6",
  "once_cell",
  "regex",
+ "serde",
  "similar 2.7.0",
  "strip-ansi-escapes",
  "tempfile",

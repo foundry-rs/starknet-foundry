@@ -1,0 +1,22 @@
+---
+source: crates/sncast/tests/e2e/account/list.rs
+expression: output
+---
+{
+  "alpha-sepolia": [
+    {
+      "name": "shared",
+      "network": "alpha-sepolia",
+      "public_key": "0x1"
+    }
+  ],
+  "command": "account delete",
+  "custom-network": [
+    {
+      "name": "shared",
+      "network": "custom-network",
+      "public_key": "0x2"
+    }
+  ],
+  "type": "response"
+}

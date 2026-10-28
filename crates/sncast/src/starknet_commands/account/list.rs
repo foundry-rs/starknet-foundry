@@ -12,7 +12,7 @@ use sncast::AccountType;
 use sncast::{
     AccountData, NestedMap, SignerType, check_account_file_exists, read_and_parse_json_file,
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Write;
 
 #[derive(Args, Debug)]
@@ -29,6 +29,7 @@ pub struct List {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct AccountDataRepresentationMessage {
+    pub name: String,
     pub public_key: String,
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub signer_type: Option<SignerType>,
@@ -50,45 +51,36 @@ pub struct AccountDataRepresentationMessage {
 }
 
 impl AccountDataRepresentationMessage {
-    fn new(account: &AccountData, display_private_key: bool) -> Self {
+    fn new(account: AccountData, name: String, network: String, display_private_key: bool) -> Self {
+        let AccountData {
+            public_key,
+            address,
+            salt,
+            deployed,
+            class_hash,
+            legacy,
+            account_type,
+            signer_type,
+        } = account;
+
+        let signer_type = match signer_type {
+            SignerType::Local { .. } if !display_private_key => None,
+            signer_type => Some(signer_type),
+        };
+
         Self {
-            signer_type: match &account.signer_type {
-                SignerType::Local { .. } if !display_private_key => None,
-                other => Some(other.clone()),
-            },
-            public_key: account.public_key.into_hex_string(),
-            network: None,
-            address: account.address.map(IntoHexStr::into_hex_string),
-            salt: account.salt.map(IntoHexStr::into_hex_string),
-            deployed: account.deployed,
-            class_hash: account.class_hash.map(IntoHexStr::into_hex_string),
-            legacy: account.legacy,
-            account_type: account.account_type,
+            name,
+            signer_type,
+            public_key: public_key.into_hex_string(),
+            network: Some(network),
+            address: address.map(IntoHexStr::into_hex_string),
+            salt: salt.map(IntoHexStr::into_hex_string),
+            deployed,
+            class_hash: class_hash.map(IntoHexStr::into_hex_string),
+            legacy,
+            account_type,
         }
     }
-
-    fn set_network(&mut self, network: &str) {
-        self.network = Some(network.to_owned());
-    }
-}
-
-fn read_and_flatten(
-    accounts_file: &Utf8PathBuf,
-    display_private_keys: bool,
-) -> anyhow::Result<HashMap<String, AccountDataRepresentationMessage>> {
-    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
-    let mut result = HashMap::new();
-
-    for (network, accounts) in networks.iter().sorted_by_key(|(name, _)| *name) {
-        for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
-            let mut data_repr = AccountDataRepresentationMessage::new(data, display_private_keys);
-
-            data_repr.set_network(network);
-            result.insert(name.to_owned(), data_repr);
-        }
-    }
-
-    Ok(result)
 }
 
 impl Message for AccountDataRepresentationMessage {
@@ -138,26 +130,24 @@ impl Message for AccountDataRepresentationMessage {
 }
 
 pub struct AccountsListMessage {
-    accounts_file: Utf8PathBuf,
-    accounts_file_path: String,
+    accounts_file_path: Utf8PathBuf,
+    accounts: BTreeMap<String, Vec<AccountDataRepresentationMessage>>,
     display_private_keys: bool,
 }
 
 impl AccountsListMessage {
-    pub fn new(accounts_file: Utf8PathBuf, display_private_keys: bool) -> Result<Self, Error> {
-        check_account_file_exists(&accounts_file)?;
+    pub fn try_new(accounts_file: &Utf8PathBuf, display_private_keys: bool) -> Result<Self, Error> {
+        check_account_file_exists(accounts_file)?;
 
         let accounts_file_path = accounts_file
-            .canonicalize()
+            .canonicalize_utf8()
             .expect("Failed to resolve the accounts file path");
 
-        let accounts_file_path = accounts_file_path
-            .to_str()
-            .expect("Failed to resolve an absolute path to the accounts file");
+        let accounts = read_accounts(&accounts_file_path, display_private_keys)?;
 
         Ok(Self {
-            accounts_file,
-            accounts_file_path: accounts_file_path.to_string(),
+            accounts_file_path,
+            accounts,
             display_private_keys,
         })
     }
@@ -165,35 +155,57 @@ impl AccountsListMessage {
 
 impl Message for AccountsListMessage {
     fn text(&self) -> String {
-        let accounts =
-            read_and_flatten(&self.accounts_file, self.display_private_keys).unwrap_or_default();
-
-        if accounts.is_empty() {
-            format!("No accounts available at {}", self.accounts_file_path)
-        } else {
-            let mut result = format!("Available accounts (at {}):", self.accounts_file_path);
-            for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
-                let _ = writeln!(result, "\n- {}:\n{}", name, data.text());
-            }
-            if !self.display_private_keys {
-                let _ = writeln!(
-                    result,
-                    "\nTo show private keys too, run with --display-private-keys or -p"
-                );
-            }
-            result
+        if self.accounts.is_empty() {
+            return format!("No accounts available at {}", self.accounts_file_path);
         }
+
+        let mut result = format!("Available accounts (at {}):", self.accounts_file_path);
+
+        for network_accounts in self.accounts.values() {
+            for account in network_accounts {
+                let _ = writeln!(result, "\n- {}:\n{}", account.name, account.text());
+            }
+        }
+
+        if !self.display_private_keys {
+            let _ = writeln!(
+                result,
+                "\nTo show private keys too, run with --display-private-keys or -p"
+            );
+        }
+
+        result
     }
 
     fn json(&self) -> Value {
-        let accounts =
-            read_and_flatten(&self.accounts_file, self.display_private_keys).unwrap_or_default();
-
-        let mut accounts_map: HashMap<String, AccountDataRepresentationMessage> = HashMap::new();
-        for (name, data) in &accounts {
-            accounts_map.insert(name.clone(), data.clone());
-        }
-
-        json!(&accounts_map)
+        json!(&self.accounts)
     }
+}
+
+fn read_accounts(
+    accounts_file: &Utf8PathBuf,
+    display_private_keys: bool,
+) -> anyhow::Result<BTreeMap<String, Vec<AccountDataRepresentationMessage>>> {
+    let accounts_for_networks = read_and_parse_json_file::<NestedMap<AccountData>>(accounts_file)?
+        .into_iter()
+        .map(|(network_name, network_accounts)| {
+            let accounts = network_accounts
+                .into_iter()
+                .map(|(account_name, account_data)| {
+                    AccountDataRepresentationMessage::new(
+                        account_data,
+                        account_name,
+                        network_name.clone(),
+                        display_private_keys,
+                    )
+                })
+                .sorted_by(|repr1, repr2| repr1.name.cmp(&repr2.name))
+                .collect();
+
+            (network_name, accounts)
+        })
+        .sorted_by(|(network_name1, _), (network_name2, _)| network_name1.cmp(network_name2))
+        .collect();
+
+    Ok(accounts_for_networks)
 }
