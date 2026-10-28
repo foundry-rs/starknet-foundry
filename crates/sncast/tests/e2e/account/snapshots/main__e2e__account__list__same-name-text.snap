@@ -1,0 +1,23 @@
+---
+source: crates/sncast/tests/e2e/account/list.rs
+expression: "output.as_stdout().replace(accounts_file_path.to_str().unwrap(),\n\"[ACCOUNTS_FILE]\")"
+---
+Accounts File:   [ACCOUNTS_FILE]
+
+a
+  shared
+    Public Key:  0x1
+    Legacy:      true
+
+  zed
+    Public Key:  0x3
+
+b
+  alice
+    Public Key:  0x4
+    Ledger Path: m/2645'/1195502025'/355113700'/0'/0'/0
+
+  shared
+    Public Key:  0x2
+
+To show private keys too, run with --display-private-keys or -p

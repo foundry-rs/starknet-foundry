@@ -2,7 +2,7 @@ use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
-use crate::starknet_commands::account::list::{AccountsListMessage, List};
+use crate::starknet_commands::account::list::List;
 use crate::{process_command_result, starknet_commands};
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -419,11 +419,12 @@ pub async fn account(
         }
 
         Commands::List(options) => {
-            ui.print_message(
-                "account delete",
-                AccountsListMessage::new(config.accounts_file, options.display_private_keys)?,
+            let result = starknet_commands::account::list::list(
+                &config.accounts_file,
+                options.display_private_keys,
             );
-            Ok(ExitCode::SUCCESS)
+
+            Ok(process_command_result("account list", result, ui, None))
         }
     }
 }
