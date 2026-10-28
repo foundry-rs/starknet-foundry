@@ -20,7 +20,7 @@ pub struct Storage {
     pub rpc: RpcArgs,
 
     #[command(flatten)]
-    pub key: Key,
+    pub key: KeySelector,
 
     /// Address of the contract (hex, decimal, or @alias from snfoundry.toml)
     #[arg(short = 'd', long)]
@@ -37,9 +37,9 @@ pub struct Storage {
     pub include_last_block: bool,
 }
 
-#[derive(Args, Clone, Debug)]
+#[derive(Args, Debug)]
 #[group(required = true, multiple = false)]
-pub struct Key {
+pub struct KeySelector {
     /// Storage key as a Felt in hexadecimal (0x-prefixed) or decimal representation.
     #[arg(short, long)]
     pub felt_key: Option<Felt>,
@@ -49,24 +49,21 @@ pub struct Key {
     pub key: Option<String>,
 }
 
-impl Key {
-    fn resolve(self) -> Result<Felt> {
-        if let Some(felt) = self.felt_key {
-            Ok(felt)
-        } else {
-            let key = self.key.expect("Either `felt` or `key` is `Some`");
-
-            get_selector_from_name(&key).context("failed to calculate selector from short string")
+impl KeySelector {
+    fn resolve(&self) -> Result<Felt> {
+        match (&self.key, &self.felt_key) {
+            (Some(key), None) => get_selector_from_name(key)
+                .context("failed to calculate selector from short string"),
+            (None, Some(felt)) => Ok(*felt),
+            _ => unreachable!("Either `felt` or `key` is `Some`"),
         }
     }
 
     fn key(self) -> String {
-        if let Some(key) = self.key {
-            key
-        } else {
-            let felt = self.felt_key.expect("Either `felt` or `key` is `Some`");
-
-            felt.to_hex_string()
+        match (self.key, self.felt_key) {
+            (Some(key), None) => key,
+            (None, Some(felt)) => felt.to_hex_string(),
+            _ => unreachable!("Either `felt` or `key` is `Some`"),
         }
     }
 }
@@ -74,7 +71,7 @@ impl Key {
 pub async fn storage(storage: Storage, config: CastConfig, ui: &UI) -> Result<ExitCode> {
     let flags = get_flags(&storage);
     let contract_address = storage.contract_address.resolve(&config)?;
-    let key = storage.key.clone().resolve()?;
+    let key = storage.key.resolve()?;
     let block_id = get_block_id(&storage.block_id)?;
 
     let provider = storage.rpc.get_provider(&config, ui).await?;
