@@ -5,6 +5,7 @@ It has the following subcommands:
 * [`balance`](./balance.md)
 * [`block`](./block.md)
 * [`chain-id`](./chain-id.md)
+* [`class`](./class.md)
 * [`class-hash-at`](./class_hash_at.md)
 * [`nonce`](./nonce.md)
 * [`spec-version`](./spec-version.md)
