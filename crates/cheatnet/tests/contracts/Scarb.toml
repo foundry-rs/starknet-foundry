@@ -1,7 +1,7 @@
 [package]
 name = "cheatnet_testing_contracts"
 version = "0.1.0"
-# TODO(#4091): Add edition once Scarb version in .tool-versions is at least 2.17
+edition = "2024_07"
 
 [[target.starknet-contract]]
 

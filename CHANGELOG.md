@@ -13,11 +13,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal recommended `Scarb` version is now `2.19.6` (updated from `2.18.0`).
 
+#### Fixed
+
+- `read_txt` and the `var` cheatcode now return a parse error instead of panicking when a value is a lone `'` or `"`.
+- Failed library call no longer replaces the calling contract's class hash with the library's class hash in reverted calls.
+
 ### Cast
 
 #### Added
 
 - `get tx-trace` command to get the execution trace of a transaction.
+- `--verifier` flag for `sncast declare` to verify the contract after declaration. It can be combined with `--test-files` and `--confirm-verification` in the same way as in `sncast verify`
+- `get class` command to get the contract class definition associated with the given class hash or class address.
+
+#### Changed
+
+- `sncast account delete` confirmation prompt now defaults to "No".
+- *BREAKING*: `sncast verify` no longer accepts both `--url` and `--network` flags.
+
+#### Fixed
+
+- `sncast verify` confirmation prompt now correctly defaults to "Yes".
 
 ## [0.64.1] - 2026-10-06
 
