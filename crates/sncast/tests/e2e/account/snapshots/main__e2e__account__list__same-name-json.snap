@@ -1,0 +1,33 @@
+---
+source: crates/sncast/tests/e2e/account/list.rs
+expression: output
+---
+{
+  "accounts": [
+    {
+      "legacy": true,
+      "name": "shared",
+      "network": "a",
+      "public_key": "0x1"
+    },
+    {
+      "name": "zed",
+      "network": "a",
+      "public_key": "0x3"
+    },
+    {
+      "ledger_path": "m/2645'/1195502025'/355113700'/0'/0'/0",
+      "name": "alice",
+      "network": "b",
+      "public_key": "0x4"
+    },
+    {
+      "name": "shared",
+      "network": "b",
+      "public_key": "0x2"
+    }
+  ],
+  "accounts_file": "[ACCOUNTS_FILE]",
+  "command": "account list",
+  "type": "response"
+}
