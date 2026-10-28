@@ -1,4 +1,4 @@
-use super::common::runner::{runner, setup_package, test_runner};
+use super::common::runner::{runner, setup_hello_workspace, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use scarb_api::metadata::{MetadataOpts, metadata_with_opts};
@@ -281,6 +281,40 @@ fn test_clean_all_with_custom_cache_dir() {
 }
 
 #[test]
+#[cfg_attr(feature = "cairo-native", ignore = "Native doesn't support trace yet")]
+fn test_clean_trace_in_workspace() {
+    let temp_dir = setup_hello_workspace();
+
+    test_runner(&temp_dir)
+        .args(["--workspace", "--save-trace-data"])
+        .assert()
+        .code(1);
+
+    let trace_dirs = [
+        temp_dir.path().join(TRACE_DIR),
+        temp_dir.path().join("crates/addition").join(TRACE_DIR),
+        temp_dir.path().join("crates/fibonacci").join(TRACE_DIR),
+    ];
+    for trace_dir in &trace_dirs {
+        assert!(trace_dir.exists(), "{} should exist", trace_dir.display());
+    }
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("trace")
+        .assert()
+        .success();
+
+    for trace_dir in &trace_dirs {
+        assert!(
+            !trace_dir.exists(),
+            "{} should be removed",
+            trace_dir.display()
+        );
+    }
+}
+
+#[test]
 fn test_clean_all_and_component() {
     let temp_dir = setup_package("coverage_project");
 
@@ -373,7 +407,7 @@ fn check_clean_components_state(path: &Path) -> CleanComponentsState {
         coverage: dirs_exist(&packages_root, COVERAGE_DIR),
         profile: dirs_exist(&packages_root, PROFILE_DIR),
         cache: dir_exists(&workspace_root, DEFAULT_CACHE_DIR),
-        trace: dir_exists(&workspace_root, TRACE_DIR),
+        trace: dirs_exist(&packages_root, TRACE_DIR),
     }
 }
 
