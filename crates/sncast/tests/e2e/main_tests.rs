@@ -31,7 +31,13 @@ async fn test_happy_case_from_sncast_config() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
+        indoc! {r"
+        Command: call
+        Error: Couldn't retrieve class hash of a contract with address 0x0
+
+        Caused by:
+            There is no contract at the specified address
+        "},
     );
 }
 
@@ -57,7 +63,13 @@ async fn test_happy_case_predefined_network() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
+        indoc! {r"
+        Command: call
+        Error: Couldn't retrieve class hash of a contract with address 0x0
+
+        Caused by:
+            There is no contract at the specified address
+        "},
     );
 }
 
@@ -110,7 +122,13 @@ async fn test_happy_case_from_cli_no_scarb() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
+        indoc! {r"
+        Command: call
+        Error: Couldn't retrieve class hash of a contract with address 0x0
+
+        Caused by:
+            There is no contract at the specified address
+        "},
     );
 }
 
