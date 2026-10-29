@@ -81,129 +81,149 @@ fn append_state_diff(builder: OutputBuilder, state_diff: &StateDiff) -> OutputBu
 }
 
 fn append_storage_diffs(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     storage_diffs: &[ContractStorageDiffItem],
 ) -> OutputBuilder {
     if storage_diffs.is_empty() {
         return builder;
     }
-    builder = builder.blank_line().text_field("Storage Diffs");
-    for ContractStorageDiffItem {
-        address,
-        storage_entries,
-    } in storage_diffs
-    {
-        builder = builder
-            .with_indent(2)
-            .padded_felt_field("Contract Address", address);
-        for entry in storage_entries {
-            builder = builder
-                .with_indent(4)
-                .padded_felt_field("Key", &entry.key)
-                .padded_felt_field("Value", &entry.value);
-        }
-    }
-    builder.with_indent(0)
+    builder
+        .blank_line()
+        .heading("Storage Diffs")
+        .indented(2, |mut builder| {
+            for ContractStorageDiffItem {
+                address,
+                storage_entries,
+            } in storage_diffs
+            {
+                builder = builder
+                    .padded_felt_field("Contract Address", address)
+                    .indented(2, |mut builder| {
+                        for entry in storage_entries {
+                            builder = builder
+                                .padded_felt_field("Key", &entry.key)
+                                .padded_felt_field("Value", &entry.value);
+                        }
+                        builder
+                    });
+            }
+            builder
+        })
 }
 
-fn append_nonces(mut builder: OutputBuilder, nonces: &[NonceUpdate]) -> OutputBuilder {
+fn append_nonces(builder: OutputBuilder, nonces: &[NonceUpdate]) -> OutputBuilder {
     if nonces.is_empty() {
         return builder;
     }
-    builder = builder.blank_line().text_field("Nonces");
-    for NonceUpdate {
-        contract_address,
-        nonce,
-    } in nonces
-    {
-        builder = builder
-            .with_indent(2)
-            .padded_felt_field("Contract Address", contract_address)
-            .felt_field("Nonce", nonce);
-    }
-    builder.with_indent(0)
+    builder
+        .blank_line()
+        .heading("Nonces")
+        .indented(2, |mut builder| {
+            for NonceUpdate {
+                contract_address,
+                nonce,
+            } in nonces
+            {
+                builder = builder
+                    .padded_felt_field("Contract Address", contract_address)
+                    .felt_field("Nonce", nonce);
+            }
+            builder
+        })
 }
 
 fn append_deployed_contracts(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     deployed_contracts: &[DeployedContractItem],
 ) -> OutputBuilder {
     if deployed_contracts.is_empty() {
         return builder;
     }
-    builder = builder.blank_line().text_field("Deployed Contracts");
-    for DeployedContractItem {
-        address,
-        class_hash,
-    } in deployed_contracts
-    {
-        builder = builder
-            .with_indent(2)
-            .padded_felt_field("Address", address)
-            .padded_felt_field("Class Hash", class_hash);
-    }
-    builder.with_indent(0)
+    builder
+        .blank_line()
+        .heading("Deployed Contracts")
+        .indented(2, |mut builder| {
+            for DeployedContractItem {
+                address,
+                class_hash,
+            } in deployed_contracts
+            {
+                builder = builder
+                    .padded_felt_field("Address", address)
+                    .padded_felt_field("Class Hash", class_hash);
+            }
+            builder
+        })
 }
 
 fn append_declared_classes(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     declared_classes: &[DeclaredClassItem],
 ) -> OutputBuilder {
     if declared_classes.is_empty() {
         return builder;
     }
-    builder = builder.blank_line().text_field("Declared Classes");
-    for DeclaredClassItem {
-        class_hash,
-        compiled_class_hash,
-    } in declared_classes
-    {
-        builder = builder
-            .with_indent(2)
-            .padded_felt_field("Class Hash", class_hash)
-            .padded_felt_field("Compiled Class Hash", compiled_class_hash);
-    }
-    builder.with_indent(0)
+    builder
+        .blank_line()
+        .heading("Declared Classes")
+        .indented(2, |mut builder| {
+            for DeclaredClassItem {
+                class_hash,
+                compiled_class_hash,
+            } in declared_classes
+            {
+                builder = builder
+                    .padded_felt_field("Class Hash", class_hash)
+                    .padded_felt_field("Compiled Class Hash", compiled_class_hash);
+            }
+            builder
+        })
 }
 
 fn append_migrated_compiled_classes(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     migrated_compiled_classes: &[MigratedCompiledClassItem],
 ) -> OutputBuilder {
     if migrated_compiled_classes.is_empty() {
         return builder;
     }
-    builder = builder.blank_line().text_field("Migrated Compiled Classes");
-    for MigratedCompiledClassItem {
-        class_hash,
-        compiled_class_hash,
-    } in migrated_compiled_classes
-    {
-        builder = builder
-            .with_indent(2)
-            .padded_felt_field("Class Hash", class_hash)
-            .padded_felt_field("Compiled Class Hash", compiled_class_hash);
-    }
-    builder.with_indent(0)
+    builder
+        .blank_line()
+        .heading("Migrated Compiled Classes")
+        .indented(2, |mut builder| {
+            for MigratedCompiledClassItem {
+                class_hash,
+                compiled_class_hash,
+            } in migrated_compiled_classes
+            {
+                builder = builder
+                    .padded_felt_field("Class Hash", class_hash)
+                    .padded_felt_field("Compiled Class Hash", compiled_class_hash);
+            }
+            builder
+        })
 }
 
 fn append_replaced_classes(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     replaced_classes: &[ReplacedClassItem],
 ) -> OutputBuilder {
     if replaced_classes.is_empty() {
         return builder;
     }
-    builder = builder.blank_line().text_field("Replaced Classes");
-    for ReplacedClassItem {
-        contract_address,
-        class_hash,
-    } in replaced_classes
-    {
-        builder = builder
-            .with_indent(2)
-            .padded_felt_field("Contract Address", contract_address)
-            .padded_felt_field("Class Hash", class_hash);
-    }
-    builder.with_indent(0)
+    builder
+        .blank_line()
+        .heading("Replaced Classes")
+        .indented(2, |mut builder| {
+            for ReplacedClassItem {
+                contract_address,
+                class_hash,
+            } in replaced_classes
+            {
+                builder = builder
+                    .padded_felt_field("Contract Address", contract_address)
+                    .padded_felt_field("Class Hash", class_hash);
+            }
+            builder
+        })
 }
