@@ -35,10 +35,10 @@ impl CairoU384 {
     pub fn to_be_bytes(&self) -> [u8; 48] {
         let mut result = [0; 48];
 
-        result[36..48].copy_from_slice(&self.limb_0.to_be_bytes());
-        result[24..36].copy_from_slice(&self.limb_1.to_be_bytes());
-        result[12..24].copy_from_slice(&self.limb_2.to_be_bytes());
-        result[0..12].copy_from_slice(&self.limb_3.to_be_bytes());
+        result[36..48].copy_from_slice(&self.limb_0.to_be_bytes()[4..]);
+        result[24..36].copy_from_slice(&self.limb_1.to_be_bytes()[4..]);
+        result[12..24].copy_from_slice(&self.limb_2.to_be_bytes()[4..]);
+        result[0..12].copy_from_slice(&self.limb_3.to_be_bytes()[4..]);
 
         result
     }
@@ -75,5 +75,41 @@ impl FromStr for CairoU384 {
         result[start..].copy_from_slice(&bytes);
 
         Ok(CairoU384::from_bytes(&result))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CairoU384;
+    use test_case::test_case;
+
+    const LIMB_MAX: u128 = (1 << 96) - 1;
+
+    #[test_case([0, 0, 0, 0], "0"; "zero")]
+    #[test_case([2, 1, 0, 0], "79228162514264337593543950338"; "two_limbs")]
+    #[test_case([LIMB_MAX; 4], "39402006196394479212279040100143613805079739270465446667948293404245721771497210611414266254884915640806627990306815"; "max")]
+    fn test_display(limbs: [u128; 4], expected: &str) {
+        let number = CairoU384 {
+            limb_0: limbs[0],
+            limb_1: limbs[1],
+            limb_2: limbs[2],
+            limb_3: limbs[3],
+        };
+
+        assert_eq!(number.to_string(), expected);
+    }
+
+    #[test_case([0, 0, 0, 0]; "zero")]
+    #[test_case([2, 1, 0, 0]; "two_limbs")]
+    #[test_case([LIMB_MAX; 4]; "max")]
+    fn test_to_be_bytes_round_trip(limbs: [u128; 4]) {
+        let number = CairoU384 {
+            limb_0: limbs[0],
+            limb_1: limbs[1],
+            limb_2: limbs[2],
+            limb_3: limbs[3],
+        };
+
+        assert_eq!(CairoU384::from_bytes(&number.to_be_bytes()), number);
     }
 }
