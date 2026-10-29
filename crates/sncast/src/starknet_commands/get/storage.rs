@@ -6,7 +6,11 @@ use clap::Args;
 use sncast::{
     get_block_id,
     helpers::{command::process_command_result, configuration::CastConfig, rpc::RpcArgs},
-    response::{get::storage::StorageResponse, ui::UI},
+    response::{
+        errors::{StarknetCommandError, handle_starknet_command_error},
+        get::storage::StorageResponse,
+        ui::UI,
+    },
 };
 use starknet_rust::{
     core::{types::StorageResponseFlag, utils::get_selector_from_name},
@@ -76,16 +80,14 @@ pub async fn storage(storage: Storage, config: CastConfig, ui: &UI) -> Result<Ex
 
     let provider = storage.rpc.get_provider(&config, ui).await?;
 
-    let res = provider
+    let result = provider
         .get_storage_at(contract_address, key, block_id, Some(&flags))
-        .await?;
+        .await
+        .map(|res| StorageResponse::new(storage.key.key(), key, res))
+        .map_err(|e| StarknetCommandError::ProviderError(e.into()))
+        .map_err(handle_starknet_command_error);
 
-    Ok(process_command_result(
-        "get storage",
-        Ok(StorageResponse::new(storage.key.key(), key, res)),
-        ui,
-        None,
-    ))
+    Ok(process_command_result("get storage", result, ui, None))
 }
 
 fn get_flags(storage: &Storage) -> Vec<StorageResponseFlag> {
