@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get tx-trace` command to get the execution trace of a transaction.
 - `--verifier` flag for `sncast declare` to verify the contract after declaration. It can be combined with `--test-files` and `--confirm-verification` in the same way as in `sncast verify`
 - `get class` command to get the contract class definition associated with the given class hash or class address.
+- `alias add` command to create aliases.
 
 #### Changed
 
