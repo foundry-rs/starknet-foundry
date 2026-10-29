@@ -12,7 +12,7 @@ use crate::starknet_commands::{
     declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     show_config::ShowConfig,
 };
-use crate::starknet_commands::{get, multicall};
+use crate::starknet_commands::{alias, get, multicall};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
@@ -678,7 +678,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
 
-        Commands::Alias(alias) => starknet_commands::alias::alias(&alias, &config, ui),
+        Commands::Alias(alias) => alias::alias(alias, &config, ui),
 
         Commands::ShowConfig(show) => {
             let provider = match show.rpc.get_provider(&config, ui).await {
