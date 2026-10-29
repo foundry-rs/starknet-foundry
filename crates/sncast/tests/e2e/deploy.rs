@@ -452,7 +452,13 @@ async fn test_contract_not_declared() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Class with hash[..]is not declared[..]",
+        indoc! {r"
+        Command: deploy
+        Error: Couldn't retrieve contract class with hash 0x1
+
+        Caused by:
+            Provided class hash does not exist
+        "},
     );
 }
 
