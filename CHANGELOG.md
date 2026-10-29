@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast account delete` confirmation prompt now defaults to "No".
 - *BREAKING*: `sncast verify` no longer accepts both `--url` and `--network` flags.
+- Cosmetic improvement: section headings in `get tx-trace`, `get state-update`, `get block` and `ledger sign-hash` output are now bold, and `ledger sign-hash` prints `Hash signature` without a trailing colon.
 
 #### Fixed
 

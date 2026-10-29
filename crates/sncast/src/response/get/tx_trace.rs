@@ -516,8 +516,8 @@ fn append_invoke(
     let builder = append_fee_transfer(builder, context);
 
     if full {
-        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
+        let builder = append_execution_resources(builder, &trace.execution_resources);
+        append_optional_state_diff(builder, trace.state_diff.as_ref())
     } else {
         builder
     }
@@ -553,8 +553,8 @@ fn append_declare(
     let builder = append_fee_transfer(builder, context);
 
     if full {
-        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
+        let builder = append_execution_resources(builder, &trace.execution_resources);
+        append_optional_state_diff(builder, trace.state_diff.as_ref())
     } else {
         builder
     }
@@ -600,8 +600,8 @@ fn append_deploy_account(
     let builder = append_fee_transfer(builder, context);
 
     if full {
-        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
+        let builder = append_execution_resources(builder, &trace.execution_resources);
+        append_optional_state_diff(builder, trace.state_diff.as_ref())
     } else {
         builder
     }
@@ -627,8 +627,8 @@ fn append_l1_handler(
     let builder = append_function(builder, context);
 
     if full {
-        let builder = append_execution_resources(builder, &trace.execution_resources, 0);
-        append_optional_state_diff(builder, trace.state_diff.as_ref(), 0)
+        let builder = append_execution_resources(builder, &trace.execution_resources);
+        append_optional_state_diff(builder, trace.state_diff.as_ref())
     } else {
         builder
     }
@@ -657,9 +657,9 @@ fn append_execute_invocation(
         ExecuteInvocation::Success(invocation) => {
             append_invocation_section(builder, label, invocation, context, full)
         }
-        ExecuteInvocation::Reverted(reverted) => append_section(builder, label, 0)
-            .with_indent(2)
-            .field("Revert Reason", &reverted.revert_reason),
+        ExecuteInvocation::Reverted(reverted) => builder.heading(label).indented(2, |builder| {
+            builder.field("Revert Reason", &reverted.revert_reason)
+        }),
     }
 }
 
@@ -670,45 +670,43 @@ fn append_invocation_section(
     context: &mut TraceDecodingContext<'_>,
     full: bool,
 ) -> OutputBuilder {
-    let builder = append_section(builder, label, 0);
-    if full {
-        append_full_invocation(builder, invocation, context, 2)
-    } else {
-        append_compact_invocation(builder, invocation, context, 2)
-    }
+    builder.heading(label).indented(2, |builder| {
+        if full {
+            append_full_invocation(builder, invocation, context)
+        } else {
+            append_compact_invocation(builder, invocation, context)
+        }
+    })
 }
 
 fn append_compact_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
     context: &mut TraceDecodingContext<'_>,
-    indent: usize,
 ) -> OutputBuilder {
-    let mut builder = builder
-        .with_indent(indent)
+    let builder = builder
         .field("Entry Point Selector", &context.selector(invocation))
         .contract_address(&invocation.contract_address)
         .field("Calldata", &context.calldata(invocation))
         .field("Result", &context.result(invocation));
 
-    if !invocation.calls.is_empty() {
-        builder = append_section(builder, "Calls", indent);
-        for nested_call in &invocation.calls {
-            builder = append_compact_invocation(builder, nested_call, context, indent + 2);
-        }
+    if invocation.calls.is_empty() {
+        return builder;
     }
 
-    builder
+    builder.heading("Calls").indented(2, |builder| {
+        invocation.calls.iter().fold(builder, |builder, call| {
+            append_compact_invocation(builder, call, context)
+        })
+    })
 }
 
 fn append_full_invocation(
     builder: OutputBuilder,
     invocation: &FunctionInvocation,
     context: &mut TraceDecodingContext<'_>,
-    indent: usize,
 ) -> OutputBuilder {
     let builder = builder
-        .with_indent(indent)
         .field("Call Type", format_call_type(invocation.call_type))
         .field("Calldata", &context.calldata(invocation))
         .padded_felt_field("Caller Address", &invocation.caller_address)
@@ -719,252 +717,210 @@ fn append_full_invocation(
             "Entry Point Type",
             format_entry_point_type(invocation.entry_point_type),
         );
-    let builder = append_events(builder, &invocation.events, indent);
+    let builder = append_events(builder, &invocation.events);
+    let builder = append_inner_execution_resources(builder, &invocation.execution_resources)
+        .field("Is Reverted", &invocation.is_reverted.to_string());
     let builder =
-        append_inner_execution_resources(builder, &invocation.execution_resources, indent)
-            .with_indent(indent)
-            .field("Is Reverted", &invocation.is_reverted.to_string());
-    let builder = append_messages(builder, &invocation.messages, indent);
-    let builder = builder
-        .with_indent(indent)
-        .field("Result", &context.result(invocation));
-    append_calls(builder, &invocation.calls, context, indent)
+        append_messages(builder, &invocation.messages).field("Result", &context.result(invocation));
+    append_calls(builder, &invocation.calls, context)
 }
 
 fn append_calls(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     calls: &[FunctionInvocation],
     context: &mut TraceDecodingContext<'_>,
-    indent: usize,
 ) -> OutputBuilder {
     if calls.is_empty() {
-        return builder.with_indent(indent).field("Calls", "[]");
+        return builder.field("Calls", "[]");
     }
 
-    builder = append_section(builder, "Calls", indent);
-    for call in calls {
-        builder = append_full_invocation(builder, call, context, indent + 2);
-    }
-    builder
+    builder.heading("Calls").indented(2, |builder| {
+        calls.iter().fold(builder, |builder, call| {
+            append_full_invocation(builder, call, context)
+        })
+    })
 }
 
-fn append_events(
-    mut builder: OutputBuilder,
-    events: &[OrderedEvent],
-    indent: usize,
-) -> OutputBuilder {
+fn append_events(builder: OutputBuilder, events: &[OrderedEvent]) -> OutputBuilder {
     if events.is_empty() {
-        return builder.with_indent(indent).field("Events", "[]");
+        return builder.field("Events", "[]");
     }
 
-    builder = append_section(builder, "Events", indent);
-    for event in events {
-        builder = builder
-            .with_indent(indent + 2)
-            .felt_list_field("Data", &event.data)
-            .felt_list_field("Keys", &event.keys)
-            .field("Order", &event.order.to_string());
-    }
-    builder
+    builder.heading("Events").indented(2, |builder| {
+        events.iter().fold(builder, |builder, event| {
+            builder
+                .felt_list_field("Data", &event.data)
+                .felt_list_field("Keys", &event.keys)
+                .field("Order", &event.order.to_string())
+        })
+    })
 }
 
-fn append_messages(
-    mut builder: OutputBuilder,
-    messages: &[OrderedMessage],
-    indent: usize,
-) -> OutputBuilder {
+fn append_messages(builder: OutputBuilder, messages: &[OrderedMessage]) -> OutputBuilder {
     if messages.is_empty() {
-        return builder.with_indent(indent).field("Messages", "[]");
+        return builder.field("Messages", "[]");
     }
 
-    builder = append_section(builder, "Messages", indent);
-    for message in messages {
-        builder = builder
-            .with_indent(indent + 2)
-            .padded_felt_field("From Address", &message.from_address)
-            .field("Order", &message.order.to_string())
-            .felt_list_field("Payload", &message.payload)
-            .felt_field("To Address", &message.to_address);
-    }
-    builder
+    builder.heading("Messages").indented(2, |builder| {
+        messages.iter().fold(builder, |builder, message| {
+            builder
+                .padded_felt_field("From Address", &message.from_address)
+                .field("Order", &message.order.to_string())
+                .felt_list_field("Payload", &message.payload)
+                .felt_field("To Address", &message.to_address)
+        })
+    })
 }
 
 fn append_execution_resources(
     builder: OutputBuilder,
     resources: &ExecutionResources,
-    indent: usize,
 ) -> OutputBuilder {
-    append_section(builder, "Execution Resources", indent)
-        .with_indent(indent + 2)
-        .field("L1 Data Gas", &resources.l1_data_gas.to_string())
-        .field("L1 Gas", &resources.l1_gas.to_string())
-        .field("L2 Gas", &resources.l2_gas.to_string())
+    builder
+        .heading("Execution Resources")
+        .indented(2, |builder| {
+            builder
+                .field("L1 Data Gas", &resources.l1_data_gas.to_string())
+                .field("L1 Gas", &resources.l1_gas.to_string())
+                .field("L2 Gas", &resources.l2_gas.to_string())
+        })
 }
 
 fn append_inner_execution_resources(
     builder: OutputBuilder,
     resources: &InnerCallExecutionResources,
-    indent: usize,
 ) -> OutputBuilder {
-    append_section(builder, "Execution Resources", indent)
-        .with_indent(indent + 2)
-        .field("L1 Gas", &resources.l1_gas.to_string())
-        .field("L2 Gas", &resources.l2_gas.to_string())
+    builder
+        .heading("Execution Resources")
+        .indented(2, |builder| {
+            builder
+                .field("L1 Gas", &resources.l1_gas.to_string())
+                .field("L2 Gas", &resources.l2_gas.to_string())
+        })
 }
 
 fn append_optional_state_diff(
     builder: OutputBuilder,
     state_diff: Option<&StateDiff>,
-    indent: usize,
 ) -> OutputBuilder {
-    builder.if_some(state_diff, |builder, state_diff| {
-        append_state_diff(builder, state_diff, indent)
+    builder.if_some(state_diff, append_state_diff)
+}
+
+fn append_state_diff(builder: OutputBuilder, state_diff: &StateDiff) -> OutputBuilder {
+    builder.heading("State Diff").indented(2, |builder| {
+        let builder = append_declared_classes(builder, &state_diff.declared_classes);
+        let builder = append_deployed_contracts(builder, &state_diff.deployed_contracts);
+        let builder = builder.felt_list_field(
+            "Deprecated Declared Classes",
+            &state_diff.deprecated_declared_classes,
+        );
+        let builder = match state_diff.migrated_compiled_classes.as_deref() {
+            Some(classes) => append_migrated_classes(builder, classes),
+            None => builder,
+        };
+        let builder = append_nonces(builder, &state_diff.nonces);
+        let builder = append_replaced_classes(builder, &state_diff.replaced_classes);
+        append_storage_diffs(builder, &state_diff.storage_diffs)
     })
 }
 
-fn append_state_diff(
-    builder: OutputBuilder,
-    state_diff: &StateDiff,
-    indent: usize,
-) -> OutputBuilder {
-    let builder = append_section(builder, "State Diff", indent);
-    let builder = append_declared_classes(builder, &state_diff.declared_classes, indent + 2);
-    let builder = append_deployed_contracts(builder, &state_diff.deployed_contracts, indent + 2);
-    let builder = builder.with_indent(indent + 2).felt_list_field(
-        "Deprecated Declared Classes",
-        &state_diff.deprecated_declared_classes,
-    );
-    let builder = match state_diff.migrated_compiled_classes.as_deref() {
-        Some(classes) => append_migrated_classes(builder, classes, indent + 2),
-        None => builder,
-    };
-    let builder = append_nonces(builder, &state_diff.nonces, indent + 2);
-    let builder = append_replaced_classes(builder, &state_diff.replaced_classes, indent + 2);
-    append_storage_diffs(builder, &state_diff.storage_diffs, indent + 2)
-}
-
-fn append_declared_classes(
-    mut builder: OutputBuilder,
-    classes: &[DeclaredClassItem],
-    indent: usize,
-) -> OutputBuilder {
+fn append_declared_classes(builder: OutputBuilder, classes: &[DeclaredClassItem]) -> OutputBuilder {
     if classes.is_empty() {
-        return builder.with_indent(indent).field("Declared Classes", "[]");
+        return builder.field("Declared Classes", "[]");
     }
-    builder = append_section(builder, "Declared Classes", indent);
-    for class in classes {
-        builder = builder
-            .with_indent(indent + 2)
-            .padded_felt_field("Class Hash", &class.class_hash)
-            .padded_felt_field("Compiled Class Hash", &class.compiled_class_hash);
-    }
-    builder
+    builder.heading("Declared Classes").indented(2, |builder| {
+        classes.iter().fold(builder, |builder, class| {
+            builder
+                .padded_felt_field("Class Hash", &class.class_hash)
+                .padded_felt_field("Compiled Class Hash", &class.compiled_class_hash)
+        })
+    })
 }
 
 fn append_deployed_contracts(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     contracts: &[DeployedContractItem],
-    indent: usize,
 ) -> OutputBuilder {
     if contracts.is_empty() {
-        return builder
-            .with_indent(indent)
-            .field("Deployed Contracts", "[]");
-    }
-    builder = append_section(builder, "Deployed Contracts", indent);
-    for contract in contracts {
-        builder = builder
-            .with_indent(indent + 2)
-            .padded_felt_field("Address", &contract.address)
-            .padded_felt_field("Class Hash", &contract.class_hash);
+        return builder.field("Deployed Contracts", "[]");
     }
     builder
+        .heading("Deployed Contracts")
+        .indented(2, |builder| {
+            contracts.iter().fold(builder, |builder, contract| {
+                builder
+                    .padded_felt_field("Address", &contract.address)
+                    .padded_felt_field("Class Hash", &contract.class_hash)
+            })
+        })
 }
 
 fn append_migrated_classes(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     classes: &[MigratedCompiledClassItem],
-    indent: usize,
 ) -> OutputBuilder {
     if classes.is_empty() {
-        return builder
-            .with_indent(indent)
-            .field("Migrated Compiled Classes", "[]");
-    }
-    builder = append_section(builder, "Migrated Compiled Classes", indent);
-    for class in classes {
-        builder = builder
-            .with_indent(indent + 2)
-            .padded_felt_field("Class Hash", &class.class_hash)
-            .padded_felt_field("Compiled Class Hash", &class.compiled_class_hash);
+        return builder.field("Migrated Compiled Classes", "[]");
     }
     builder
+        .heading("Migrated Compiled Classes")
+        .indented(2, |builder| {
+            classes.iter().fold(builder, |builder, class| {
+                builder
+                    .padded_felt_field("Class Hash", &class.class_hash)
+                    .padded_felt_field("Compiled Class Hash", &class.compiled_class_hash)
+            })
+        })
 }
 
-fn append_nonces(
-    mut builder: OutputBuilder,
-    nonces: &[NonceUpdate],
-    indent: usize,
-) -> OutputBuilder {
+fn append_nonces(builder: OutputBuilder, nonces: &[NonceUpdate]) -> OutputBuilder {
     if nonces.is_empty() {
-        return builder.with_indent(indent).field("Nonces", "[]");
+        return builder.field("Nonces", "[]");
     }
-    builder = append_section(builder, "Nonces", indent);
-    for nonce in nonces {
-        builder = builder
-            .with_indent(indent + 2)
-            .padded_felt_field("Contract Address", &nonce.contract_address)
-            .felt_field("Nonce", &nonce.nonce);
-    }
-    builder
+    builder.heading("Nonces").indented(2, |builder| {
+        nonces.iter().fold(builder, |builder, nonce| {
+            builder
+                .padded_felt_field("Contract Address", &nonce.contract_address)
+                .felt_field("Nonce", &nonce.nonce)
+        })
+    })
 }
 
-fn append_replaced_classes(
-    mut builder: OutputBuilder,
-    classes: &[ReplacedClassItem],
-    indent: usize,
-) -> OutputBuilder {
+fn append_replaced_classes(builder: OutputBuilder, classes: &[ReplacedClassItem]) -> OutputBuilder {
     if classes.is_empty() {
-        return builder.with_indent(indent).field("Replaced Classes", "[]");
+        return builder.field("Replaced Classes", "[]");
     }
-    builder = append_section(builder, "Replaced Classes", indent);
-    for class in classes {
-        builder = builder
-            .with_indent(indent + 2)
-            .padded_felt_field("Class Hash", &class.class_hash)
-            .padded_felt_field("Contract Address", &class.contract_address);
-    }
-    builder
+    builder.heading("Replaced Classes").indented(2, |builder| {
+        classes.iter().fold(builder, |builder, class| {
+            builder
+                .padded_felt_field("Class Hash", &class.class_hash)
+                .padded_felt_field("Contract Address", &class.contract_address)
+        })
+    })
 }
 
 fn append_storage_diffs(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     diffs: &[ContractStorageDiffItem],
-    indent: usize,
 ) -> OutputBuilder {
     if diffs.is_empty() {
-        return builder.with_indent(indent).field("Storage Diffs", "[]");
+        return builder.field("Storage Diffs", "[]");
     }
-    builder = append_section(builder, "Storage Diffs", indent);
-    for diff in diffs {
-        builder = builder
-            .with_indent(indent + 2)
-            .padded_felt_field("Address", &diff.address);
-        if diff.storage_entries.is_empty() {
-            builder = builder
-                .with_indent(indent + 2)
-                .field("Storage Entries", "[]");
-        } else {
-            builder = append_section(builder, "Storage Entries", indent + 2);
-            for entry in &diff.storage_entries {
-                builder = builder
-                    .with_indent(indent + 4)
-                    .felt_field("Key", &entry.key)
-                    .felt_field("Value", &entry.value);
+    builder.heading("Storage Diffs").indented(2, |builder| {
+        diffs.iter().fold(builder, |builder, diff| {
+            let builder = builder.padded_felt_field("Address", &diff.address);
+            if diff.storage_entries.is_empty() {
+                return builder.field("Storage Entries", "[]");
             }
-        }
-    }
-    builder
+            builder.heading("Storage Entries").indented(2, |builder| {
+                diff.storage_entries.iter().fold(builder, |builder, entry| {
+                    builder
+                        .felt_field("Key", &entry.key)
+                        .felt_field("Value", &entry.value)
+                })
+            })
+        })
+    })
 }
 
 fn format_call_type(call_type: CallType) -> &'static str {
@@ -981,10 +937,6 @@ fn format_entry_point_type(entry_point_type: EntryPointType) -> &'static str {
         EntryPointType::L1Handler => "L1_HANDLER",
         EntryPointType::Constructor => "CONSTRUCTOR",
     }
-}
-
-fn append_section(builder: OutputBuilder, label: &str, indent: usize) -> OutputBuilder {
-    builder.text_field(&format!("{}{label}", " ".repeat(indent)))
 }
 
 fn format_result(status: &str, result: &str) -> String {

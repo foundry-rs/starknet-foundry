@@ -79,7 +79,7 @@ async fn test_sign_hash() -> Result<(), SpeculosError> {
     .assert()
     .success();
 
-    assert_stdout_contains(output, "Hash signature:\nr: 0x[..]\ns: 0x[..]");
+    assert_stdout_contains(output, "Hash signature\nr: 0x[..]\ns: 0x[..]");
     Ok(())
 }
 
