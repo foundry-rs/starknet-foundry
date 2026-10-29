@@ -8,6 +8,7 @@
     * [delete](./sncast/account/delete.md)
     * [list](./sncast/account/list.md)
 * [alias](./sncast/alias/alias.md)
+    * [add](./sncast/alias/add.md)
     * [list](./sncast/alias/list.md)
 * [declare](./sncast/declare.md)
 * [declare-from](./sncast/declare_from.md)
