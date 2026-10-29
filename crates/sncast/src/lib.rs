@@ -39,8 +39,8 @@ use starknet_rust::{
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fmt::Display;
+use std::future::Future;
 use std::str::FromStr;
-use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
 use thiserror::Error;
@@ -760,9 +760,31 @@ pub async fn wait_for_tx(
 ) -> Result<String, WaitForTransactionError> {
     ui.inspect(|ui| ui.print_notification(format!("Transaction hash: {tx_hash:#x}")));
 
+    wait_for_tx_with(
+        || provider.get_transaction_status(tx_hash),
+        wait_params,
+        ui,
+        tokio::time::sleep,
+    )
+    .await
+}
+
+async fn wait_for_tx_with<GetStatus, GetStatusFuture, Sleep, SleepFuture>(
+    mut get_status: GetStatus,
+    wait_params: ValidatedWaitParams,
+    ui: Option<&UI>,
+    mut sleep: Sleep,
+) -> Result<String, WaitForTransactionError>
+where
+    GetStatus: FnMut() -> GetStatusFuture,
+    GetStatusFuture:
+        Future<Output = Result<starknet_rust::core::types::TransactionStatus, ProviderError>>,
+    Sleep: FnMut(Duration) -> SleepFuture,
+    SleepFuture: Future<Output = ()>,
+{
     let retries = wait_params.get_retries();
-    for i in (1..retries).rev() {
-        match provider.get_transaction_status(tx_hash).await {
+    for i in (0..retries).rev() {
+        match get_status().await {
             Ok(starknet_rust::core::types::TransactionStatus::PreConfirmed(
                 ExecutionResult::Reverted { reason },
             )) => {
@@ -817,16 +839,14 @@ pub async fn wait_for_tx(
                             .to_string(),
                     );
                 });
-                sleep(Duration::from_secs(
-                    wait_params.get_retry_interval().get().into(),
-                ));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
         }
 
         sleep(Duration::from_secs(
             wait_params.get_retry_interval().get().into(),
-        ));
+        ))
+        .await;
     }
 
     Err(WaitForTransactionError::TimedOut)
@@ -943,9 +963,9 @@ mod tests {
 
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
-        AccountType, PartialWaitParams, chain_id_to_network_name, extract_or_generate_salt,
-        get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
-        udc_uniqueness,
+        AccountType, PartialWaitParams, ValidatedWaitParams, WaitForTransactionError,
+        chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
+        get_account_data_from_keystore, get_block_id, udc_uniqueness, wait_for_tx_with,
     };
     use camino::Utf8PathBuf;
     use configuration::{Override, override_optional};
@@ -953,11 +973,15 @@ mod tests {
     use starknet_rust::core::types::{
         BlockId,
         BlockTag::{Latest, PreConfirmed},
-        Felt,
+        Felt, TransactionStatus,
     };
     use starknet_rust::core::utils::UdcUniqueSettings;
     use starknet_rust::core::utils::UdcUniqueness::{NotUnique, Unique};
+    use starknet_rust::providers::ProviderError;
+    use std::collections::VecDeque;
     use std::env;
+    use std::future::ready;
+    use std::time::Duration;
 
     #[test]
     fn test_get_block_id() {
@@ -966,6 +990,70 @@ mod tests {
 
         assert_eq!(pending_block, BlockId::Tag(PreConfirmed));
         assert_eq!(latest_block, BlockId::Tag(Latest));
+    }
+
+    #[tokio::test]
+    async fn test_wait_for_tx_rate_limited_waits_one_interval_per_attempt() {
+        let mut responses = VecDeque::from([
+            Err(ProviderError::RateLimited),
+            Err(ProviderError::RateLimited),
+        ]);
+        let mut sleep_durations = Vec::new();
+
+        let result = wait_for_tx_with(
+            || ready(responses.pop_front().unwrap()),
+            ValidatedWaitParams::new(NonZeroU8::new(1).unwrap(), NonZeroU16::new(2).unwrap())
+                .unwrap(),
+            None,
+            |duration| {
+                sleep_durations.push(duration);
+                ready(())
+            },
+        )
+        .await;
+
+        assert!(matches!(result, Err(WaitForTransactionError::TimedOut)));
+        assert_eq!(sleep_durations, [Duration::from_secs(1); 2]);
+    }
+
+    #[tokio::test]
+    async fn test_wait_for_tx_queries_once_when_timeout_equals_retry_interval() {
+        let mut query_count = 0;
+
+        let result = wait_for_tx_with(
+            || {
+                query_count += 1;
+                ready(Ok(TransactionStatus::Received))
+            },
+            ValidatedWaitParams::new(NonZeroU8::new(1).unwrap(), NonZeroU16::new(1).unwrap())
+                .unwrap(),
+            None,
+            |_| ready(()),
+        )
+        .await;
+
+        assert!(matches!(result, Err(WaitForTransactionError::TimedOut)));
+        assert_eq!(query_count, 1);
+    }
+
+    #[tokio::test]
+    async fn test_wait_for_tx_queries_each_retry_for_pending_transaction() {
+        let mut query_count = 0;
+
+        let result = wait_for_tx_with(
+            || {
+                query_count += 1;
+                ready(Ok(TransactionStatus::Received))
+            },
+            ValidatedWaitParams::new(NonZeroU8::new(1).unwrap(), NonZeroU16::new(3).unwrap())
+                .unwrap(),
+            None,
+            |_| ready(()),
+        )
+        .await;
+
+        assert!(matches!(result, Err(WaitForTransactionError::TimedOut)));
+        assert_eq!(query_count, 3);
     }
 
     #[test]
