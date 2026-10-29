@@ -54,15 +54,8 @@ impl OutputBuilder {
             .unwrap_or(0)
     }
 
-    /// Sets the indentation (in spaces) applied to fields added afterwards.
-    #[must_use]
-    pub fn with_indent(mut self, indent: usize) -> Self {
-        self.current_indent = indent;
-        self
-    }
-
     /// Runs `f` with the indentation increased by `by` spaces relative to the current one.
-    /// The previous indentation is restored afterwards, even if `f` changed it.
+    /// The previous indentation is restored afterwards.
     #[must_use]
     pub fn indented<F>(mut self, by: usize, f: F) -> Self
     where
@@ -244,23 +237,10 @@ mod tests {
     fn indented_is_relative_to_current_indent() {
         disable_colors();
         let output = OutputBuilder::new()
-            .with_indent(2)
-            .indented(2, |b| b.field("ab", "1"))
+            .indented(2, |b| b.indented(2, |b| b.field("ab", "1")))
             .build();
 
         assert_eq!(output, "    ab: 1");
-    }
-
-    #[test]
-    fn indented_restores_previous_indent_even_after_with_indent() {
-        disable_colors();
-        let output = OutputBuilder::new()
-            .with_indent(1)
-            .indented(2, |b| b.with_indent(10).field("in", "1"))
-            .field("out", "2")
-            .build();
-
-        assert_eq!(output, "          in: 1\n out:         2");
     }
 
     #[test]
@@ -281,12 +261,17 @@ mod tests {
             .heading("h0")
             .indented(2, |b| {
                 b.heading("h2")
-                    .indented(3, |b| b.heading("h5"))
+                    .indented(3, |b| b.heading("h5").field("f5", "1"))
                     .heading("h2b")
+                    .field("f2", "2")
             })
             .heading("h0b")
+            .field("f0", "3")
             .build();
 
-        assert_eq!(output, "h0\n  h2\n     h5\n  h2b\nh0b");
+        assert_eq!(
+            output,
+            "h0\n  h2\n     h5\n     f5: 1\n  h2b\n  f2:    2\nh0b\nf0:      3"
+        );
     }
 }
