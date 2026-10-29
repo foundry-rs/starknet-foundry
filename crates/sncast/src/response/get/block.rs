@@ -250,14 +250,10 @@ fn append_full_transactions(
     transactions: &[Transaction],
 ) -> OutputBuilder {
     for (index, transaction) in transactions.iter().enumerate() {
-        builder = append_transaction(
-            builder
-                .blank_line()
-                .text_field(&format!("Transaction #{}", index + 1))
-                .with_indent(2),
-            transaction,
-        )
-        .with_indent(0);
+        builder = builder
+            .blank_line()
+            .heading(&format!("Transaction #{}", index + 1))
+            .indented(2, |builder| append_transaction(builder, transaction));
     }
     builder
 }
@@ -267,14 +263,10 @@ fn append_receipts(
     transactions: &[TransactionWithReceipt],
 ) -> OutputBuilder {
     for (index, transaction) in transactions.iter().enumerate() {
-        builder = append_receipt(
-            builder
-                .blank_line()
-                .text_field(&format!("Transaction #{}", index + 1))
-                .with_indent(2),
-            &transaction.receipt,
-        )
-        .with_indent(0);
+        builder = builder
+            .blank_line()
+            .heading(&format!("Transaction #{}", index + 1))
+            .indented(2, |builder| append_receipt(builder, &transaction.receipt));
     }
     builder
 }
