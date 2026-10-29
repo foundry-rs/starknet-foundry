@@ -1,10 +1,9 @@
 use crate::helpers::configuration::AliasesConfig;
+use crate::response::cast_message::SncastCommandMessage;
 use conversions::string::IntoHexStr;
-use foundry_ui::Message;
 use foundry_ui::styling;
 use itertools::Itertools;
 use serde::Serialize;
-use serde_json::{Value, json};
 
 #[derive(Serialize, Clone)]
 pub struct AliasEntryMessage {
@@ -33,7 +32,7 @@ impl AliasesListMessage {
     }
 }
 
-impl Message for AliasesListMessage {
+impl SncastCommandMessage for AliasesListMessage {
     fn text(&self) -> String {
         let mut builder = styling::OutputBuilder::new();
 
@@ -50,9 +49,5 @@ impl Message for AliasesListMessage {
         }
 
         builder.build()
-    }
-
-    fn json(&self) -> Value {
-        json!(self)
     }
 }
