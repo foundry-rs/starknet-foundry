@@ -50,8 +50,9 @@ pub mod helpers;
 pub mod response;
 
 use crate::helpers::ledger;
-use crate::response::ui::UI;
+use crate::response::ui::UIExt;
 use conversions::byte_array::ByteArray;
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 pub use helpers::signer::{AccountVariant, SignerSource, SignerType};
 

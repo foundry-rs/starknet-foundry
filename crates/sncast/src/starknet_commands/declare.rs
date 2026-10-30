@@ -2,6 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::OutputFormat;
+use foundry_ui::UI;
 use scarb_metadata::PackageMetadata;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::resolve_contract_artifacts;
@@ -20,7 +21,7 @@ use sncast::response::errors::{
     SNCastProviderError, SNCastStarknetError, StarknetCommandError, handle_starknet_command_error,
 };
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::response::verify::VerifyResponse;
 use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
 use starknet_rust::accounts::AccountError::Provider;
@@ -102,16 +103,15 @@ pub async fn declare(
     let account = get_account(&config, &provider, &args.rpc, ui).await?;
     let scarb_toml_path = assert_manifest_path_exists()?;
     let package = get_package_metadata(&scarb_toml_path, &args.package)?;
-    let base_ui = ui.base_ui();
 
     let artifacts = build_and_load_artifacts(
         &package,
         &BuildConfig {
             scarb_toml_path,
-            json: base_ui.output_format() == OutputFormat::Json,
+            json: ui.output_format() == OutputFormat::Json,
             profile: config.scarb_profile.clone(),
         },
-        base_ui,
+        ui,
     )
     .context("Failed to build contract")?;
 

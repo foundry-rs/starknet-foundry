@@ -1,9 +1,10 @@
 use crate::ValidatedWaitParams;
 use crate::helpers::configuration::show_explorer_links_default;
 use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-use crate::response::ui::UI;
+use crate::response::ui::UIExt;
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use indoc::formatdoc;
 use std::fs::File;
@@ -60,7 +61,7 @@ fn build_default_manifest() -> String {
         # accounts-file = "{default_accounts_file}"
         # account = ""
         # keystore = ""
-        
+
         # Configure custom network addresses
         # [sncast.default.networks]
         # mainnet = "https://mainnet.your-node.com"
