@@ -13,12 +13,13 @@ use crate::starknet_commands::{
     show_config::ShowConfig,
 };
 use crate::starknet_commands::{get, multicall};
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
 use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
+use foundry_ui::OutputFormat;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::artifacts::resolve_contract_artifacts;
@@ -320,7 +321,10 @@ fn run(cli: Cli, ui: &UI) -> Result<ExitCode> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Completions(completions) = &cli.command {
-        generate_completions(completions.shell, &mut Cli::command())
+        match ui.output_format() {
+            OutputFormat::Human => generate_completions(completions.shell, &mut Cli::command()),
+            OutputFormat::Json => Err(anyhow!("`--json` flag is not supported")),
+        }
     } else if let Commands::ConfigPath(_) = &cli.command {
         let result = starknet_commands::config_path::config_path(ui);
         Ok(process_command_result("config-path", result, ui, None))
