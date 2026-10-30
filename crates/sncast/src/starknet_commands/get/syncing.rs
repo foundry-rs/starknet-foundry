@@ -1,11 +1,11 @@
 use anyhow::Result;
 use clap::Args;
+use foundry_ui::UI;
 use sncast::{
     helpers::{command::process_command_result, configuration::CastConfig, rpc::RpcArgs},
     response::{
         errors::{StarknetCommandError, handle_starknet_command_error},
         get::syncing::SyncingResponse,
-        ui::UI,
     },
 };
 use starknet_rust::{

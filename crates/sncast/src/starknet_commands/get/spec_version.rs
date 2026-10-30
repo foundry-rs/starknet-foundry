@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::Args;
+use foundry_ui::UI;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::get::spec_version::SpecVersionResponse;
-use sncast::response::ui::UI;
 use std::process::ExitCode;
 
 #[derive(Debug, Args)]

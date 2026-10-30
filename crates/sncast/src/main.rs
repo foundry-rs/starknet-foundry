@@ -19,6 +19,7 @@ use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
 use configuration::{Override, find_config_file};
 use conversions::IntoConv;
 use data_transformer::transform;
+use foundry_ui::UI;
 use mimalloc::MiMalloc;
 use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::artifacts::resolve_contract_artifacts;
@@ -39,7 +40,7 @@ use sncast::response::deploy::{DeployResponse, DeployResponseWithDeclare};
 use sncast::response::errors::{ResponseError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::transform_response;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::{
     PartialWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class, with_account,
@@ -419,8 +420,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                         json: cli.json,
                         profile: config.scarb_profile.clone(),
                     },
-                    // TODO(#3959) Remove `base_ui`
-                    ui.base_ui(),
+                    ui,
                 )
                 .context("Failed to build contract")?;
 

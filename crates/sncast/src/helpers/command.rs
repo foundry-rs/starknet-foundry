@@ -3,8 +3,8 @@ use crate::response::{errors::ResponseError, explorer_link::ExplorerLinksMessage
 use anyhow::Result;
 
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::ui::UI;
-use foundry_ui::Message;
+use crate::response::ui::UIExt;
+use foundry_ui::{Message, UI};
 use serde::Serialize;
 use std::process::ExitCode;
 

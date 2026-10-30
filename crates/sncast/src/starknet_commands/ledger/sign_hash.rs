@@ -2,9 +2,10 @@ use anyhow::{Context, Result};
 use clap::Args;
 use coins_ledger::transports::LedgerAsync;
 use conversions::string::IntoHexStr;
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use sncast::helpers::ledger::LedgerKeyLocator;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use starknet_rust::signers::ledger::LedgerStarknetApp;
 use starknet_types_core::felt::Felt;
 

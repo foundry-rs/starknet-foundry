@@ -3,6 +3,7 @@ use crate::helpers::runner::runner;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
+use foundry_ui::UI;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
@@ -14,7 +15,6 @@ use sncast::helpers::constants::{
 };
 use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::ui::UI;
 use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
 use starknet_rust::accounts::{

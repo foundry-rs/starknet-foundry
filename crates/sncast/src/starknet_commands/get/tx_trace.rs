@@ -2,6 +2,7 @@ use anyhow::{Result, bail};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::OutputFormat;
+use foundry_ui::UI;
 use futures::stream::{self, StreamExt};
 use itertools::Itertools;
 use sncast::helpers::command::process_command_result;
@@ -9,7 +10,6 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::tx_trace::{TraceDecoder, TransactionTraceResponse};
-use sncast::response::ui::UI;
 use starknet_api::core::ClassHash;
 use starknet_rust::core::types::{
     BlockId, BlockTag, ContractClass, ExecuteInvocation, FunctionInvocation, TransactionTrace,

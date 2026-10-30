@@ -2,13 +2,12 @@ use anyhow::Context;
 use clap::Args;
 use conversions::IntoConv;
 use data_transformer::transform;
+use foundry_ui::UI;
 use sncast::helpers::artifacts::ContractArtifactsMap;
 use sncast::{
     extract_or_generate_salt,
     helpers::{configuration::CastConfig, rpc::RpcArgs},
-    response::{
-        errors::StarknetCommandError, ui::UI, utils::contract_address::ContractAddressResponse,
-    },
+    response::{errors::StarknetCommandError, utils::contract_address::ContractAddressResponse},
     udc_uniqueness,
 };
 use starknet_rust::core::types::contract::AbiEntry;

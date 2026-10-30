@@ -5,10 +5,10 @@ use crate::helpers::{
     fixtures::{create_test_provider, invoke_contract},
 };
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use sncast::helpers::{
     configuration::CastConfig, constants::UDC_ADDRESS, fee::FeeSettings, rpc::RpcArgs,
 };
-use sncast::response::ui::UI;
 use url::Url;
 
 use crate::helpers::constants::{

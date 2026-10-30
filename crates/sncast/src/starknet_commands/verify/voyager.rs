@@ -1,11 +1,12 @@
 use super::explorer::{ContractIdentifier, VerificationInterface};
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use scarb_metadata::Metadata;
 use sncast::Network;
 use sncast::response::explorer_link::ExplorerError;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::{helpers::scarb_utils, response::verify::VerifyResponse};
 use starknet_rust::{
     core::types::{BlockId, BlockTag},
