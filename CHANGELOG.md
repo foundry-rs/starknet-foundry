@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast account delete` confirmation prompt now defaults to "No".
 - *BREAKING*: `sncast verify` no longer accepts both `--url` and `--network` flags.
+- `sncast completions` along with `--json` flag will result with an error.
 
 #### Fixed
 
