@@ -1,11 +1,6 @@
-use foundry_ui::{Message, OutputFormat, UI as BaseUI};
+use foundry_ui::{Message, OutputFormat, UI};
 use serde::Serialize;
 use serde_json::Value;
-
-#[derive(Default)]
-pub struct UI {
-    ui: BaseUI,
-}
 
 struct MessageWrapper<T: Message> {
     command: String,
@@ -115,23 +110,21 @@ where
     }
 }
 
-impl UI {
-    #[must_use]
-    pub fn new(output_format: OutputFormat) -> Self {
-        let base_ui = BaseUI::new(output_format);
-        Self { ui: base_ui }
-    }
+fn should_skip_empty_json(format: OutputFormat, json: &Value) -> bool {
+    format == OutputFormat::Json && *json == Value::Null
+}
 
-    fn should_skip_empty_json(&self, json: &Value) -> bool {
-        self.ui.output_format() == OutputFormat::Json && *json == Value::Null
-    }
+pub trait UIExt {
+    fn print_message<T: Message>(&self, command: &str, message: T);
+    fn print_error<T: Message>(&self, command: &str, message: T);
+    fn print_notification<T: Message>(&self, message: T);
+    fn print_warning<T: Message>(&self, message: T);
+}
 
-    pub fn print_message<T>(&self, command: &str, message: T)
-    where
-        T: Message,
-    {
+impl UIExt for UI {
+    fn print_message<T: Message>(&self, command: &str, message: T) {
         // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
+        if should_skip_empty_json(self.output_format(), &message.json()) {
             return;
         }
 
@@ -139,15 +132,12 @@ impl UI {
             command: command.to_string(),
             message,
         };
-        self.ui.println(&internal_message);
+        self.println(&internal_message);
     }
 
-    pub fn print_error<T>(&self, command: &str, message: T)
-    where
-        T: Message,
-    {
+    fn print_error<T: Message>(&self, command: &str, message: T) {
         // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
+        if should_skip_empty_json(self.output_format(), &message.json()) {
             return;
         }
 
@@ -155,48 +145,28 @@ impl UI {
             command: command.to_string(),
             error: message,
         };
-        self.ui.eprintln(&internal_message);
+        self.eprintln(&internal_message);
     }
 
-    pub fn print_notification<T>(&self, message: T)
-    where
-        T: Message,
-    {
+    fn print_notification<T: Message>(&self, message: T) {
         // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
+        if should_skip_empty_json(self.output_format(), &message.json()) {
             return;
         }
 
         let internal_message = NotificationWrapper {
             notification: message,
         };
-        self.ui.println(&internal_message);
+        self.println(&internal_message);
     }
 
-    pub fn print_warning<T>(&self, message: T)
-    where
-        T: Message,
-    {
+    fn print_warning<T: Message>(&self, message: T) {
         // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
+        if should_skip_empty_json(self.output_format(), &message.json()) {
             return;
         }
 
         let internal_message = WarningWrapper { warning: message };
-        self.ui.println(&internal_message);
-    }
-
-    pub fn print_blank_line(&self) {
-        self.ui.print_blank_line();
-    }
-
-    #[must_use]
-    pub fn output_format(&self) -> OutputFormat {
-        self.ui.output_format()
-    }
-
-    #[must_use]
-    pub fn base_ui(&self) -> &BaseUI {
-        &self.ui
+        self.println(&internal_message);
     }
 }
