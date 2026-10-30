@@ -475,8 +475,6 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                         )
                     }
                     Err(err) => {
-                        // TODO(#3960) This will return json output saying that `deploy` command was run
-                        //  even though the invoked command was declare.
                         return Ok(process_command_result::<DeclareTransactionResponse>(
                             "deploy",
                             Err(err),
