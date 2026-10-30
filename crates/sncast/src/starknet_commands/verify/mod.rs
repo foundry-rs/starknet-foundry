@@ -3,6 +3,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
 use foundry_ui::OutputFormat;
+use foundry_ui::UI;
 use promptly::prompt_default;
 use scarb_metadata::PackageMetadata;
 use shared::utils::contract_name_from_module_path;
@@ -16,7 +17,7 @@ use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::response::verify::VerifyResponse;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use std::fmt;
@@ -148,8 +149,7 @@ fn resolve_and_validate_contract_name(
     contract_name: &str,
     ui: &UI,
 ) -> Result<String> {
-    // TODO(#3959) Remove `base_ui`
-    let base_ui = ui.base_ui();
+    let base_ui = ui;
     let artifacts = build_and_load_artifacts(
         package,
         &BuildConfig {
@@ -319,6 +319,7 @@ pub async fn verify_contract(
 mod tests {
     use super::{resolve_and_validate_contract_name, resolve_verification_network};
     use camino::Utf8PathBuf;
+    use foundry_ui::UI;
     use scarb_metadata::PackageMetadata;
     use serde_json::json;
     use sncast::Network;
@@ -326,7 +327,6 @@ mod tests {
     use sncast::helpers::configuration::CastConfig;
     use sncast::helpers::rpc::RpcArgs;
     use sncast::helpers::scarb_utils::get_package_metadata;
-    use sncast::response::ui::UI;
     use starknet_types_core::felt::Felt;
     use url::Url;
     use wiremock::matchers::{body_partial_json, method};

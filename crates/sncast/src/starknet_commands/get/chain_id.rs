@@ -1,9 +1,10 @@
 use anyhow::Result;
 use clap::Args;
+use foundry_ui::UI;
 use sncast::{
     get_chain_id,
     helpers::{command::process_command_result, configuration::CastConfig, rpc::RpcArgs},
-    response::{get::chain_id::ChainIdResponse, ui::UI},
+    response::get::chain_id::ChainIdResponse,
 };
 use starknet_rust::core::utils::parse_cairo_short_string;
 use starknet_rust_crypto::Felt;

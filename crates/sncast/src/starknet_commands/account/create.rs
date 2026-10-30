@@ -9,6 +9,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use console::style;
 use conversions::IntoConv;
+use foundry_ui::UI;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
@@ -20,7 +21,6 @@ use sncast::helpers::ledger;
 use sncast::helpers::ledger::LedgerKeyLocatorAccount;
 use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::response::account::create::AccountCreateResponse;
-use sncast::response::ui::UI;
 use sncast::{
     AccountType, SignerSource, SignerType, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_keystore_password, handle_account_factory_error,

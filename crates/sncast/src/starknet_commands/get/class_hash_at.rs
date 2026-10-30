@@ -1,6 +1,7 @@
 use crate::starknet_commands::utils::felt_or_id::ContractAddress;
 use clap::Args;
 use conversions::IntoConv;
+use foundry_ui::UI;
 use sncast::get_block_id;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
@@ -8,7 +9,6 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::get::class_hash_at::ClassHashAtResponse;
-use sncast::response::ui::UI;
 use starknet_rust::core::types::BlockId;
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};

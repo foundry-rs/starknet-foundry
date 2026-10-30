@@ -1,6 +1,6 @@
 use clap::{Args, Subcommand};
+use foundry_ui::UI;
 use sncast::helpers::configuration::CastConfig;
-use sncast::response::ui::UI;
 use std::process::ExitCode;
 
 pub mod balance;

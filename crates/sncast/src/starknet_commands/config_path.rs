@@ -1,9 +1,9 @@
 use anyhow::Result;
 use clap::Args;
 use configuration::find_config_file;
+use foundry_ui::UI;
 use sncast::helpers::config::resolve_global_config_path_or_warn;
 use sncast::response::config_path::ConfigPathResponse;
-use sncast::response::ui::UI;
 
 #[derive(Args)]
 #[command(about = "Show paths to the config files contributing to the effective configuration")]
