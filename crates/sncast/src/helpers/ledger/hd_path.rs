@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
-use crate::response::ui::UI;
+use crate::response::ui::UIExt;
 use anyhow::{Result, anyhow, bail};
 use clap::{Arg, Command, Error, builder::TypedValueParser, error::ErrorKind};
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use sha2::{Digest, Sha256};
 use starknet_rust::signers::DerivationPath;

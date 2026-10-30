@@ -14,9 +14,10 @@ pub mod run;
 use crate::starknet_commands::multicall::execute::Execute;
 use crate::{process_command_result, starknet_commands};
 use foundry_ui::Message;
+use foundry_ui::UI;
 use new::New;
 use run::Run;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::with_account;
 use sncast::{
     WaitForTx, get_account,

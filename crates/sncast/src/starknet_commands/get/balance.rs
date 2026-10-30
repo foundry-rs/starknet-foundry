@@ -1,6 +1,7 @@
 use crate::starknet_commands::utils::felt_or_id::{ContractAddress, TokenAddress};
 use anyhow::{Context, Error, Result, bail};
 use clap::Args;
+use foundry_ui::UI;
 use primitive_types::U256;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
@@ -8,7 +9,6 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::token::Token;
 use sncast::response::errors::{StarknetCommandError, handle_starknet_command_error};
 use sncast::response::get::balance::BalanceResponse;
-use sncast::response::ui::UI;
 use sncast::{get_account, get_account_data_from_accounts_file, get_block_id, get_chain_id};
 use starknet_rust::{
     core::{types::FunctionCall, utils::get_selector_from_name},
