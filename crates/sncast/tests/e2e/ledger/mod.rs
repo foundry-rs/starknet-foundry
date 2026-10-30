@@ -6,6 +6,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::mint_token;
 use clap::Command;
 use clap::builder::TypedValueParser;
+use foundry_ui::UI;
 use serde_json::json;
 use sncast::AccountType;
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -13,7 +14,6 @@ use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use sncast::helpers::ledger::{DerivationPathParser, SncastLedgerTransport};
-use sncast::response::ui::UI;
 use speculos_client::SpeculosClient;
 pub(crate) use speculos_client::starknet_app::set_automation;
 use starknet_rust::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
