@@ -21,6 +21,10 @@ pub struct Add {
     /// Felt value to associate with the alias
     pub value: Felt,
 
+    /// Profile to add the alias to
+    #[arg(short, long, default_value = "default")]
+    pub profile: String,
+
     /// Add the alias to the global configuration file
     #[arg(long)]
     pub global: bool,
@@ -40,7 +44,13 @@ pub fn add(args: Add, _config: &CastConfig, ui: &UI) -> Result<ExitCode> {
     };
 
     let mut config = open_config(&config_path)?;
-    add_alias(&mut config, &args.name, args.value, args.force)?;
+    add_alias(
+        &mut config,
+        &args.name,
+        args.value,
+        &args.profile,
+        args.force,
+    )?;
     fs::write(config_path, config.to_string()).context("Failed to write to config file")?;
 
     Ok(ExitCode::SUCCESS)
@@ -53,7 +63,13 @@ fn open_config(path: &Utf8Path) -> Result<DocumentMut> {
         .context("Failed to parse TOML")
 }
 
-fn add_alias(config: &mut DocumentMut, name: &str, value: Felt, force: bool) -> Result<()> {
+fn add_alias(
+    config: &mut DocumentMut,
+    name: &str,
+    value: Felt,
+    profile: &str,
+    force: bool,
+) -> Result<()> {
     let sncast_table = config
         .entry("sncast")
         .or_insert(Item::Table(Table::new()))
@@ -61,13 +77,13 @@ fn add_alias(config: &mut DocumentMut, name: &str, value: Felt, force: bool) -> 
         .context("Failed to create or access 'sncast' table")?;
     sncast_table.set_implicit(true);
 
-    let default_profile = sncast_table
-        .entry("default")
+    let profile_table = sncast_table
+        .entry(profile)
         .or_insert(Item::Table(Table::new()))
         .as_table_mut()
-        .context("Failed to create or access default profile table")?;
+        .with_context(|| format!("Failed to create or access `{profile}` profile table"))?;
 
-    let aliases_table = default_profile
+    let aliases_table = profile_table
         .entry("aliases")
         .or_insert(Item::Table(Table::new()))
         .as_table_mut()
@@ -95,7 +111,7 @@ mod tests {
         .parse::<DocumentMut>()
         .unwrap();
 
-        add_alias(&mut config, "map", Felt::from(1), false).unwrap();
+        add_alias(&mut config, "map", Felt::from(1), "default", false).unwrap();
 
         assert_eq!(
             config.to_string(),
@@ -117,7 +133,7 @@ mod tests {
         .parse::<DocumentMut>()
         .unwrap();
 
-        add_alias(&mut config, "map", Felt::from(1), false).unwrap();
+        add_alias(&mut config, "map", Felt::from(1), "default", false).unwrap();
 
         assert_eq!(
             config.to_string(),
@@ -151,7 +167,7 @@ mod tests {
         .parse::<DocumentMut>()
         .unwrap();
 
-        add_alias(&mut config, "second", Felt::from(2), false).unwrap();
+        add_alias(&mut config, "second", Felt::from(2), "default", false).unwrap();
 
         assert_eq!(
             config.to_string(),
@@ -178,7 +194,7 @@ mod tests {
     fn adds_alias_to_empty_config() {
         let mut config = DocumentMut::new();
 
-        add_alias(&mut config, "map", Felt::from(1), false).unwrap();
+        add_alias(&mut config, "map", Felt::from(1), "default", false).unwrap();
 
         assert_eq!(
             config.to_string(),
@@ -200,7 +216,7 @@ mod tests {
         .parse::<DocumentMut>()
         .unwrap();
 
-        let error = add_alias(&mut config, "map", Felt::from(2), false).unwrap_err();
+        let error = add_alias(&mut config, "map", Felt::from(2), "default", false).unwrap_err();
 
         assert_eq!(
             error.to_string(),
@@ -224,13 +240,30 @@ mod tests {
         .parse::<DocumentMut>()
         .unwrap();
 
-        add_alias(&mut config, "map", Felt::from(2), true).unwrap();
+        add_alias(&mut config, "map", Felt::from(2), "default", true).unwrap();
 
         assert_eq!(
             config.to_string(),
             indoc! {r#"
                 [sncast.default.aliases]
                 map = "0x2"
+            "#}
+        );
+    }
+
+    #[test]
+    fn adds_alias_to_specified_profile() {
+        let mut config = DocumentMut::new();
+
+        add_alias(&mut config, "map", Felt::from(1), "development", false).unwrap();
+
+        assert_eq!(
+            config.to_string(),
+            indoc! {r#"
+                [sncast.development]
+
+                [sncast.development.aliases]
+                map = "0x1"
             "#}
         );
     }
