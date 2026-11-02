@@ -24,7 +24,7 @@ fn test_add_one_and_two(mut _data: Span<felt252>) -> Span<felt252> {
         }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-        return Default::default();
+        return core::panic_with_felt252('snforge: config run finished');
     }
     core::internal::require_implicit::<System>();
     core::internal::revoke_ap_tracking();

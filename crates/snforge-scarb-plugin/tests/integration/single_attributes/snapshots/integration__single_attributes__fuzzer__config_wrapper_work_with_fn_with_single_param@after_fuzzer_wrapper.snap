@@ -10,12 +10,12 @@ fn empty_fn__snforge_internal_fuzzer_generated() {
         }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-        empty_fn(snforge_std::fuzzable::Fuzzable::blank());
+        let _ = empty_fn(snforge_std::fuzzable::Fuzzable::blank());
         return Default::default();
     }
     let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
     snforge_std::_internals::save_fuzzer_arg(@f);
-    empty_fn(f);
+    let _ = empty_fn(f);
 }
 #[__internal_config_statement]
 fn empty_fn(f: felt252) {}

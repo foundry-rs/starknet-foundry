@@ -10,10 +10,10 @@ fn empty_fn__snforge_internal_fuzzer_generated() {
         }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-        empty_fn();
+        let _ = empty_fn();
         return Default::default();
     }
-    empty_fn();
+    let _ = empty_fn();
 }
 #[__internal_config_statement]
 fn empty_fn() {}

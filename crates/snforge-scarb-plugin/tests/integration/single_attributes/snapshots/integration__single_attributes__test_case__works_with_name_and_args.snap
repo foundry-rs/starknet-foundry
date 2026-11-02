@@ -23,7 +23,7 @@ fn test_add_one_and_two(mut _data: Span<felt252>) -> Span<felt252> {
     core::option::OptionTraitImpl::expect(
         core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
     );
-    test_add(1, 2, 3);
+    let _ = test_add(1, 2, 3);
     let mut arr = ArrayTrait::new();
     core::array::ArrayTrait::span(@arr)
 }
