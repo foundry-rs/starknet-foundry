@@ -83,17 +83,27 @@ fn add_alias(
         .as_table_mut()
         .with_context(|| format!("Failed to create or access `{profile}` profile table"))?;
 
-    let aliases_table = profile_table
+    let aliases_item = profile_table
         .entry("aliases")
-        .or_insert(Item::Table(Table::new()))
-        .as_table_mut()
-        .context("Failed to create or access aliases table")?;
+        .or_insert(Item::Table(Table::new()));
+    let value = Value::from(value.into_hex_string());
 
-    if aliases_table.contains_key(name) && !force {
-        bail!("Alias `{name}` already exists. Use --force to overwrite it.");
+    if let Some(aliases_table) = aliases_item.as_table_mut() {
+        if aliases_table.contains_key(name) && !force {
+            bail!("Alias `{name}` already exists. Use --force to overwrite it.");
+        }
+
+        aliases_table[name] = value.into();
+    } else if let Some(aliases_table) = aliases_item.as_inline_table_mut() {
+        if aliases_table.contains_key(name) && !force {
+            bail!("Alias `{name}` already exists. Use --force to overwrite it.");
+        }
+
+        aliases_table.insert(name, value);
+        aliases_table.fmt();
+    } else {
+        bail!("Failed to create or access aliases table");
     }
-
-    aliases_table[name] = Value::from(value.into_hex_string()).into();
 
     Ok(())
 }
@@ -247,6 +257,26 @@ mod tests {
             indoc! {r#"
                 [sncast.default.aliases]
                 map = "0x2"
+            "#}
+        );
+    }
+
+    #[test]
+    fn adds_alias_to_inline_aliases_table() {
+        let mut config = indoc! {r#"
+            [sncast.default]
+            aliases = { bar = "0x111" }
+        "#}
+        .parse::<DocumentMut>()
+        .unwrap();
+
+        add_alias(&mut config, "foo", Felt::from(0x222), "default", false).unwrap();
+
+        assert_eq!(
+            config.to_string(),
+            indoc! {r#"
+                [sncast.default]
+                aliases = { bar = "0x111", foo = "0x222" }
             "#}
         );
     }
