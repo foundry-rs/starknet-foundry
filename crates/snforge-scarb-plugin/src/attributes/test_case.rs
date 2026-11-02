@@ -1,6 +1,6 @@
 use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
-use crate::attributes::internal_config_statement::InternalConfigStatementCollector;
+use crate::attributes::finalize::{FinalizeCollector, config_fn_name};
 use crate::attributes::test::{TestCollector, test_func_with_attrs};
 use crate::attributes::test_case::name::test_case_name;
 use crate::attributes::{AttributeInfo, ErrorExt};
@@ -59,26 +59,29 @@ fn test_case_internal(
     let case_fn_name = format_ident!("{}", case_fn_name);
     let case_fn_name = TokenStream::new(vec![case_fn_name]);
 
+    let config_fn = config_fn_name(&func_name.text(db));
+
     let func_name = func_name.to_token_stream(db);
 
     let call_args = args_to_token_stream(&unnamed_args, args_db);
 
-    let test_func_with_attrs = test_func_with_attrs(&case_fn_name, &func_name, &call_args);
+    let test_func_with_attrs =
+        test_func_with_attrs(&case_fn_name, &func_name, &call_args, &config_fn);
 
-    // If the function has both `#[fuzzer]` and `#[test]` attributes, we do not need to add
-    // `#[__internal_config_statement]` attribute, since it will be handled by `#[test]`.
-    let skip_internal_config = has_fuzzer_attribute(db, func) && has_test_attribute(db, func);
-    let internal_config_attr = if skip_internal_config {
+    // If the function has both `#[fuzzer]` and `#[test]` attributes, `#[test]` already attached
+    // the finalize marker, so we must not attach a second one.
+    let skip_finalize = has_fuzzer_attribute(db, func) && has_test_attribute(db, func);
+    let finalize_attr = if skip_finalize {
         TokenStream::empty()
     } else {
-        let internal_config = create_single_token(InternalConfigStatementCollector::ATTR_NAME);
-        quote!(#[#internal_config])
+        let finalize = create_single_token(FinalizeCollector::ATTR_NAME);
+        quote!(#[#finalize])
     };
 
     let func_ident = quote!(
         #filtered_fn_attrs
 
-        #internal_config_attr
+        #finalize_attr
         fn #func_name #signature
         #func_body
     );
@@ -140,19 +143,18 @@ fn collect_preserved_attributes_for_test_case(
     let has_fuzzer = has_fuzzer_attribute(func_db, func);
 
     // We do not want to copy the `#[test]` attribute unless the function has `#[fuzzer]`.
-    // We also do not want to copy `#[__internal_config_statement]` because it will be added later.
+    // We also do not want to copy `#[__snforge_finalize]` because it will be added later.
     attr_list
         .elements(func_db)
         .filter(|attr| {
             let test_attr_text = format!("#[{}]", TestCollector::ATTR_NAME);
-            let internal_config_attr_text =
-                format!("#[{}]", InternalConfigStatementCollector::ATTR_NAME);
+            let finalize_attr_text = format!("#[{}]", FinalizeCollector::ATTR_NAME);
             let attr_text = attr.as_syntax_node().get_text(func_db);
             let attr_text = attr_text.trim();
             let is_test_attr = attr_text == test_attr_text;
-            let is_internal_config_attr = attr_text == internal_config_attr_text;
+            let is_finalize_attr = attr_text == finalize_attr_text;
 
-            (!is_test_attr || has_fuzzer) && !is_internal_config_attr
+            (!is_test_attr || has_fuzzer) && !is_finalize_attr
         })
         .map(|attr| attr.to_token_stream(func_db))
         .fold(TokenStream::empty(), |mut acc, token| {

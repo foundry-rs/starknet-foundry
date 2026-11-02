@@ -3,6 +3,12 @@ source: tests/integration/single_attributes/fuzzer.rs
 expression: format_output(&result)
 ---
 fn empty_fn__snforge_internal_fuzzer_generated() {
+    let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
+    snforge_std::_internals::save_fuzzer_arg(@f);
+    let _ = empty_fn(f);
+}
+#[__snforge_finalize]
+fn empty_fn(f: felt252) {
     if snforge_std::_internals::is_config_run() {
         let mut data = array![];
         snforge_std::_internals::config_types::FuzzerConfig {
@@ -10,12 +16,6 @@ fn empty_fn__snforge_internal_fuzzer_generated() {
         }
             .serialize(ref data);
         starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-        empty_fn(snforge_std::fuzzable::Fuzzable::blank());
         return Default::default();
-    }
-    let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
-    snforge_std::_internals::save_fuzzer_arg(@f);
-    empty_fn(f);
+    };
 }
-#[__internal_config_statement]
-fn empty_fn(f: felt252) {}
