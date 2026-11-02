@@ -2,7 +2,7 @@ use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigSt
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
-use crate::utils::{create_single_token, get_statements};
+use crate::utils::{config_run_return_statement, create_single_token, get_statements};
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -97,6 +97,7 @@ fn test_internal(
         let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
 
         let (statements, if_content) = get_statements(db, func);
+        let config_run_return = config_run_return_statement(db, func);
 
         Ok(quote!(
             #test_func_with_attrs
@@ -107,7 +108,7 @@ fn test_internal(
                if snforge_std::_internals::is_config_run() {
                    #if_content
 
-                   return Default::default();
+                   #config_run_return
                };
 
                #statements
@@ -167,7 +168,7 @@ pub fn test_func_with_attrs(
             core::option::OptionTraitImpl::expect(
                 core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
             );
-            #fn_name (#call_args);
+            let _ = #fn_name (#call_args);
 
             let mut arr = ArrayTrait::new();
             core::array::ArrayTrait::span(@arr)

@@ -5,7 +5,8 @@ use crate::running::setup::{
     raw_function_initial_budget,
 };
 use crate::{forge_config::ForgeTrackedResource, package_tests::TestDetails};
-use anyhow::Result;
+use anyhow::{Result, bail};
+use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
@@ -17,9 +18,37 @@ use starknet_api::block::{
     BlockInfo, BlockNumber, BlockTimestamp, GasPrice, GasPriceVector, GasPrices, NonzeroGasPrice,
     StarknetVersion,
 };
+use starknet_api::execution_utils::format_panic_data;
 use starknet_types_core::felt::Felt;
 use std::default::Default;
 use universal_sierra_compiler_api::representation::RawCasmProgram;
+
+/// Panic payload with which a config run ends when its test function declares a return type.
+///
+/// Such a config run has no meaningful value to return, so it ends by panicking instead.
+/// Keep in sync with `config_run_return_statement` in `snforge_scarb_plugin`.
+const CONFIG_RUN_FINISHED_MARKER: &str = "snforge: config run finished";
+
+/// Fails unless the config run either completed normally or ended with
+/// [`CONFIG_RUN_FINISHED_MARKER`]. Any other panic means the collected config is incomplete,
+/// which would otherwise be silently ignored.
+fn ensure_config_run_succeeded(call_info: &CallInfo) -> Result<()> {
+    if !call_info.execution.failed {
+        return Ok(());
+    }
+
+    let retdata = &call_info.execution.retdata.0;
+    let finished = Felt::from_bytes_be_slice(CONFIG_RUN_FINISHED_MARKER.as_bytes());
+
+    if retdata.as_slice() == [finished] {
+        return Ok(());
+    }
+
+    bail!(
+        "Test configuration could not be collected, the test panicked while it was being gathered: {}",
+        format_panic_data(retdata)
+    )
+}
 
 struct PhantomStateReader;
 
@@ -150,13 +179,15 @@ pub fn run_config_pass(
         program_segment_size,
     )?;
 
-    finalize_execution(
+    let call_info = finalize_execution(
         &mut runner,
         &mut forge_config_runtime.extended_runtime.hint_handler,
         n_total_args,
         program_extra_data_length,
         tracked_resource,
     )?;
+
+    ensure_config_run_succeeded(&call_info)?;
 
     Ok(config)
 }

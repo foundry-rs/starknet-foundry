@@ -118,12 +118,12 @@ fn fuzzer_wrapper_internal(
                 if snforge_std::_internals::is_config_run() {
                     #if_content
 
-                    #func_name(#blank_values_for_config_run);
+                    let _ = #func_name(#blank_values_for_config_run);
 
                     return Default::default();
                 };
                 #fuzzer_assignments
-                #func_name(#arguments_list);
+                let _ = #func_name(#arguments_list);
             }
 
             #actual_body_fn_attrs

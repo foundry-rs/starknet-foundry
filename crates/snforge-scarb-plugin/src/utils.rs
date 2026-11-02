@@ -1,7 +1,9 @@
 use cairo_lang_macro::{Diagnostic, Severity, TextSpan, Token, TokenStream, TokenTree, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::TypedSyntaxNode;
-use cairo_lang_syntax::node::ast::{Condition, Expr, FunctionWithBody, Statement};
+use cairo_lang_syntax::node::ast::{
+    Condition, Expr, FunctionWithBody, OptionReturnTypeClause, Statement,
+};
 use cairo_lang_syntax::node::helpers::GetIdentifier;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use indoc::formatdoc;
@@ -155,4 +157,24 @@ macro_rules! format_ident {
             TokenTree::Ident(Token::new(content, TextSpan::call_site()))
         }
     };
+}
+
+/// Creates the `return` statement that ends the config run of `func`.
+///
+/// A test function may declare a return type, and during the config run there is no meaningful
+/// value to return for it — nor does the type have to implement `Default`. Such a config run is
+/// therefore ended by panicking, which has type `never` and so type-checks against any return
+/// type. The payload is recognised by `ensure_config_run_succeeded` in `forge-runner`; keep both
+/// in sync.
+pub fn config_run_return_statement(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+) -> TokenStream {
+    match func.declaration(db).signature(db).ret_ty(db) {
+        OptionReturnTypeClause::Empty(_) => quote!(return Default::default();),
+        OptionReturnTypeClause::ReturnTypeClause(_) => {
+            let marker = create_single_token("'snforge: config run finished'");
+            quote!(return core::panic_with_felt252(#marker);)
+        }
+    }
 }

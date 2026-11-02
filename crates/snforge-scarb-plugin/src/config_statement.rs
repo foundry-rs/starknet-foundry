@@ -1,5 +1,5 @@
 use crate::asserts::assert_is_used_once;
-use crate::utils::{create_single_token, get_statements};
+use crate::utils::{config_run_return_statement, create_single_token, get_statements};
 use crate::{
     args::Arguments,
     attributes::AttributeCollector,
@@ -71,6 +71,7 @@ pub fn append_config_statements(
     let declaration = SyntaxNodeWithDb::new(&declaration, db);
 
     let (statements, if_content) = get_statements(db, func);
+    let config_run_return = config_run_return_statement(db, func);
 
     quote!(
         #attrs
@@ -80,7 +81,7 @@ pub fn append_config_statements(
 
                 #config_statements
 
-                return Default::default();
+                #config_run_return
             };
 
             #statements
