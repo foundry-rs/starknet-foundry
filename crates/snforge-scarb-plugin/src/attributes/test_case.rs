@@ -1,6 +1,6 @@
 use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
-use crate::attributes::finalize::{FinalizeCollector, config_fn_name};
+use crate::attributes::finalize::{FinalizeCollector, config_fn_ident};
 use crate::attributes::test::{TestCollector, test_func_with_attrs};
 use crate::attributes::test_case::name::test_case_name;
 use crate::attributes::{AttributeInfo, ErrorExt};
@@ -12,6 +12,7 @@ use crate::{create_single_token, format_ident};
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::FunctionWithBody;
+use cairo_lang_syntax::node::helpers::QueryAttrs;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 
@@ -59,7 +60,7 @@ fn test_case_internal(
     let case_fn_name = format_ident!("{}", case_fn_name);
     let case_fn_name = TokenStream::new(vec![case_fn_name]);
 
-    let config_fn = config_fn_name(&func_name.text(db));
+    let config_fn = config_fn_ident(&func_name.text(db));
 
     let func_name = func_name.to_token_stream(db);
 
@@ -68,8 +69,11 @@ fn test_case_internal(
     let test_func_with_attrs =
         test_func_with_attrs(&case_fn_name, &func_name, &call_args, &config_fn);
 
-    // If the function has both `#[fuzzer]` and `#[test]` attributes, `#[test]` already attached
-    // the finalize marker, so we must not attach a second one.
+    // Both `#[fuzzer]` and `#[test]` still being here means neither has expanded yet. `#[test]`
+    // attaches the finalize marker itself once it does, so attaching one here would make two.
+    // Note that `collect_preserved_attributes_for_test_case` drops any marker already on the
+    // function - that is safe, because a marker can only be there once `#[fuzzer]` has expanded,
+    // and then this condition is false and we re-attach it below.
     let skip_finalize = has_fuzzer_attribute(db, func) && has_test_attribute(db, func);
     let finalize_attr = if skip_finalize {
         TokenStream::empty()
@@ -142,17 +146,20 @@ fn collect_preserved_attributes_for_test_case(
     let attr_list = func.attributes(func_db);
     let has_fuzzer = has_fuzzer_attribute(func_db, func);
 
+    let test_attrs = attr_list
+        .query_attr(func_db, TestCollector::ATTR_NAME)
+        .collect::<Vec<_>>();
+    let finalize_attrs = attr_list
+        .query_attr(func_db, FinalizeCollector::ATTR_NAME)
+        .collect::<Vec<_>>();
+
     // We do not want to copy the `#[test]` attribute unless the function has `#[fuzzer]`.
     // We also do not want to copy `#[__snforge_finalize]` because it will be added later.
     attr_list
         .elements(func_db)
         .filter(|attr| {
-            let test_attr_text = format!("#[{}]", TestCollector::ATTR_NAME);
-            let finalize_attr_text = format!("#[{}]", FinalizeCollector::ATTR_NAME);
-            let attr_text = attr.as_syntax_node().get_text(func_db);
-            let attr_text = attr_text.trim();
-            let is_test_attr = attr_text == test_attr_text;
-            let is_finalize_attr = attr_text == finalize_attr_text;
+            let is_test_attr = test_attrs.contains(attr);
+            let is_finalize_attr = finalize_attrs.contains(attr);
 
             (!is_test_attr || has_fuzzer) && !is_finalize_attr
         })

@@ -1,0 +1,18 @@
+---
+source: tests/integration/return_types.rs
+expression: output
+---
+#[test]
+fn returning_fn__snforge_internal_fuzzer_generated() {
+    if snforge_std::_internals::is_config_run() {
+        returning_fn__snforge_internal_config();
+        return;
+    }
+    let a = snforge_std::fuzzable::Fuzzable::<u8>::generate();
+    snforge_std::_internals::save_fuzzer_arg(@a);
+    let _ = returning_fn(a);
+}
+#[__snforge_finalize]
+fn returning_fn(a: u8) -> Result<NonZero<u8>, u8> {
+    Result::Ok(a)
+}

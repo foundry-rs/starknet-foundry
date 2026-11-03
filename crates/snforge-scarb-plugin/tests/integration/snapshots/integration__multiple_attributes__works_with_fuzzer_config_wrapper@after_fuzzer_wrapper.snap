@@ -2,7 +2,6 @@
 source: tests/integration/multiple_attributes.rs
 expression: format_output(&result)
 ---
-#[__internal_config_statement]
 fn empty_fn__snforge_internal_fuzzer_generated() {
     let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
     snforge_std::_internals::save_fuzzer_arg(@f);

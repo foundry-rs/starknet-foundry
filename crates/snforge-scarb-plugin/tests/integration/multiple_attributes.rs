@@ -9,7 +9,11 @@ use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
 use snforge_scarb_plugin::create_single_token;
 
-fn get_function(token_stream: &TokenStream, function_name: &str, skip_args: bool) -> TokenStream {
+pub(crate) fn get_function(
+    token_stream: &TokenStream,
+    function_name: &str,
+    skip_args: bool,
+) -> TokenStream {
     let db = SimpleParserDatabase::default();
     let (parsed_node, _diagnostics) = db.parse_token_stream(token_stream);
     let syntax_file = SyntaxFile::from_syntax_node(&db, parsed_node);
@@ -153,7 +157,7 @@ fn works_with_fuzzer_before_test() {
         #item
 
         #[__fuzzer_config(runs: 123, seed: 321)]
-        #[__internal_config_statement]
+        #[__snforge_finalize]
         fn empty_fn() {}
     );
     let result = fuzzer_wrapper(TokenStream::empty(), item);
@@ -193,10 +197,9 @@ fn works_with_fuzzer_config_wrapper() {
 
     // Skip all the lines including `#[fuzzer]` that was appended previously
     let item = get_function(&result.token_stream, "empty_fn", true);
-    let internal_config_statement =
-        TokenStream::new(vec![create_single_token("__internal_config_statement")]);
+    let finalize_marker = TokenStream::new(vec![create_single_token("__snforge_finalize")]);
     let item = quote! {
-        #[#internal_config_statement]
+        #[#finalize_marker]
         #item
     };
     let args = quote!((runs: 123, seed: 321));

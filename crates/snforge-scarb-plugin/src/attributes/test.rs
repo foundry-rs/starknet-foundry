@@ -1,4 +1,7 @@
-use super::{AttributeInfo, ErrorExt, finalize::FinalizeCollector, finalize::config_fn_name};
+use super::{
+    AttributeInfo, ErrorExt,
+    finalize::{FinalizeCollector, config_fn_ident},
+};
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
@@ -88,38 +91,35 @@ fn test_internal(
     let func_name_node = func.declaration(db).name(db).as_syntax_node();
     let func_name_ident = SyntaxNodeWithDb::new(&func_name_node, db);
 
+    let body = func.body(db).as_syntax_node();
+    let body = SyntaxNodeWithDb::new(&body, db);
+    let vis = func.visibility(db).as_syntax_node();
+    let vis = SyntaxNodeWithDb::new(&vis, db);
+
+    // The test function is emitted exactly as written. `#[__snforge_finalize]` has to come after
+    // the remaining attributes, so that it expands once they have contributed their config
+    // statements, and lifts those out of the body.
+    let test_fn = quote!(
+        #attributes
+        #[#finalize_marker]
+        #vis fn #func_name_ident #signature
+        #body
+    );
+
     if should_run_test {
         let call_args = TokenStream::empty();
-        let config_fn = config_fn_name(&name);
+        let config_fn = config_fn_ident(&name);
 
         let test_func_with_attrs =
             test_func_with_attrs(&test_func, &called_func, &call_args, &config_fn);
 
-        let body = func.body(db).as_syntax_node();
-        let body = SyntaxNodeWithDb::new(&body, db);
-
         Ok(quote!(
             #test_func_with_attrs
 
-            #attributes
-            #[#finalize_marker]
-            fn #func_name_ident #signature
-            #body
+            #test_fn
         ))
     } else {
-        let body = func.body(db).as_syntax_node();
-        let body = SyntaxNodeWithDb::new(&body, db);
-        let vis = func.visibility(db).as_syntax_node();
-        let vis = SyntaxNodeWithDb::new(&vis, db);
-
-        // The marker has to come after the remaining attributes, so that it expands once they
-        // have contributed their config statements.
-        Ok(quote!(
-            #attributes
-            #[#finalize_marker]
-            #vis fn #func_name_ident #signature
-            #body
-        ))
+        Ok(test_fn)
     }
 }
 
@@ -153,12 +153,12 @@ pub fn test_func_with_attrs(
     test_fn_name: &TokenStream,
     fn_name: &TokenStream,
     call_args: &TokenStream,
-    config_fn_name: &TokenStream,
+    config_fn_ident: &TokenStream,
 ) -> TokenStream {
     let test_fn_name = test_fn_name.clone();
     let fn_name = fn_name.clone();
     let call_args = call_args.clone();
-    let config_fn_name = config_fn_name.clone();
+    let config_fn_ident = config_fn_ident.clone();
     let out_of_gas = create_single_token("'Out of gas'");
     quote!(
         #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
@@ -172,7 +172,7 @@ pub fn test_func_with_attrs(
                 core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
             );
             if snforge_std::_internals::is_config_run() {
-                #config_fn_name ();
+                #config_fn_ident ();
 
                 let mut arr = ArrayTrait::new();
                 return core::array::ArrayTrait::span(@arr);

@@ -1,7 +1,6 @@
 use crate::args::Arguments;
 use crate::attributes::AttributeInfo;
-use crate::attributes::finalize::{FinalizeCollector, config_fn_name};
-use crate::attributes::internal_config_statement::InternalConfigStatementCollector;
+use crate::attributes::finalize::{FinalizeCollector, config_fn_ident};
 use crate::attributes::test::TestCollector;
 use crate::common::{into_proc_macro_result, with_parsed_values};
 use crate::format_ident;
@@ -39,22 +38,18 @@ fn fuzzer_wrapper_internal(
 
     let attr_list = func.attributes(db);
     // `#[test]` still being here means it has not expanded yet and will run on the generated
-    // outer function. The config statements have to travel with it, so that the finalize marker
-    // it attaches ends up on the same function that holds them.
-    let test_runs_on_outer_fn = attr_list.find_attr(db, TestCollector::ATTR_NAME).is_some();
-    let test_or_executable_attrs =
-        if let Some(test_attr) = attr_list.find_attr(db, TestCollector::ATTR_NAME) {
-            vec![test_attr]
-        } else {
-            attr_list
-                .query_attr(db, InternalConfigStatementCollector::ATTR_NAME)
-                .collect::<Vec<_>>()
-        };
+    // outer function, which therefore needs a config run of its own.
+    let test_attr = attr_list.find_attr(db, TestCollector::ATTR_NAME);
+    let test_runs_on_outer_fn = test_attr.is_some();
+    let test_or_executable_attrs = test_attr.map_or_else(Vec::new, |attr| vec![attr]);
 
-    let finalize_attr_text = format!("#[{}]", FinalizeCollector::ATTR_NAME);
+    // The marker is re-attached below, so drop any copy already present.
+    let finalize_attrs = attr_list
+        .query_attr(db, FinalizeCollector::ATTR_NAME)
+        .collect::<Vec<_>>();
     let actual_body_fn_attrs = attr_list
         .elements(db)
-        .filter(|attr| attr.as_syntax_node().get_text(db).trim() != finalize_attr_text)
+        .filter(|attr| !finalize_attrs.contains(attr))
         .filter(|attr| !test_or_executable_attrs.contains(attr))
         .map(|stmt| stmt.to_token_stream(db))
         .fold(TokenStream::empty(), |mut acc, token| {
@@ -73,10 +68,8 @@ fn fuzzer_wrapper_internal(
     let vis = func.visibility(db).as_syntax_node();
     let vis = SyntaxNodeWithDb::new(&vis, db);
 
-    let name = format_ident!(
-        "{}__snforge_internal_fuzzer_generated",
-        func.declaration(db).name(db).text(db)
-    );
+    let test_fn_name_text = func.declaration(db).name(db).text(db).to_string();
+    let fuzzer_fn_name = format_ident!("{test_fn_name_text}__snforge_internal_fuzzer_generated");
 
     let signature = func.declaration(db).signature(db).as_syntax_node();
     let signature = SyntaxNodeWithDb::new(&signature, db);
@@ -106,25 +99,24 @@ fn fuzzer_wrapper_internal(
         }
     });
 
-    let func_name = func.declaration(db).name(db).as_syntax_node();
-    let func_name = SyntaxNodeWithDb::new(&func_name, db);
+    let test_fn_name = func.declaration(db).name(db).as_syntax_node();
+    let test_fn_name = SyntaxNodeWithDb::new(&test_fn_name, db);
 
     let body = func.body(db).as_syntax_node();
     let body = SyntaxNodeWithDb::new(&body, db);
 
     let finalize_marker = create_single_token(FinalizeCollector::ATTR_NAME);
-    let inner_config_fn = config_fn_name(&func.declaration(db).name(db).text(db));
+    let config_fn = config_fn_ident(&test_fn_name_text);
 
     // Config statements keep accumulating in the test function itself, and `#[__snforge_finalize]`
-    // lifts them into `#inner_config_fn`. When `#[test]` has not expanded yet it will generate the
-    // test wrapper for the outer function, so that one needs a config run of its own - it just
-    // delegates to the test function's config.
+    // lifts them into `#config_fn`. When the test wrapper is generated for the outer function, its
+    // config run just delegates there.
     let outer_config_run = if test_runs_on_outer_fn {
         quote!(
             if snforge_std::_internals::is_config_run() {
-                #inner_config_fn ();
+                #config_fn ();
 
-                return Default::default();
+                return;
             };
         )
     } else {
@@ -133,15 +125,15 @@ fn fuzzer_wrapper_internal(
 
     Ok(quote!(
             #test_or_executable_attrs
-            #vis fn #name() {
+            #vis fn #fuzzer_fn_name() {
                 #outer_config_run
                 #fuzzer_assignments
-                let _ = #func_name(#arguments_list);
+                let _ = #test_fn_name(#arguments_list);
             }
 
             #actual_body_fn_attrs
             #[#finalize_marker]
-            fn #func_name #signature
+            fn #test_fn_name #signature
             #body
     ))
 }

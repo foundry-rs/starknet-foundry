@@ -18,7 +18,7 @@ impl AttributeInfo for FinalizeCollector {
 
 /// Name of the function holding the config statements collected for `test_name`.
 #[must_use]
-pub fn config_fn_name(test_name: &str) -> TokenStream {
+pub fn config_fn_ident(test_name: &str) -> TokenStream {
     TokenStream::new(vec![format_ident!("{test_name}__snforge_internal_config")])
 }
 
@@ -47,7 +47,7 @@ fn finalize_internal(
     args.assert_is_empty::<FinalizeCollector>()?;
 
     let name = func.declaration(db).name(db).text(db).to_string();
-    let config_fn = config_fn_name(&name);
+    let config_fn = config_fn_ident(&name);
 
     let (statements, if_content) = get_statements(db, func);
 

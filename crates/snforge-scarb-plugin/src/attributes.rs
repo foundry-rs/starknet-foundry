@@ -8,7 +8,6 @@ pub mod finalize;
 pub mod fork;
 pub mod fuzzer;
 pub mod ignore;
-pub mod internal_config_statement;
 pub mod should_panic;
 pub mod test;
 pub mod test_case;

@@ -1,0 +1,6 @@
+---
+source: tests/integration/single_attributes/finalize.rs
+expression: format_output(&result)
+---
+fn empty_fn__snforge_internal_config() {}
+fn empty_fn() {}
