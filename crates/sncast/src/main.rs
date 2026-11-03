@@ -149,6 +149,7 @@ impl Cli {
                 ..Default::default()
             }),
             scarb_profile: self.scarb_profile.clone(),
+            profile: self.profile.clone(),
             ..Default::default()
         };
         config.validate()?;
