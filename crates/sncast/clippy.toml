@@ -1,0 +1,4 @@
+disallowed-methods = [
+  "foundry_ui::UI::println",
+  "foundry_ui::UI::eprintln",
+]

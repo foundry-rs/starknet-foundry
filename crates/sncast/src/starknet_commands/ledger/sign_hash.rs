@@ -3,7 +3,6 @@ use clap::Args;
 use coins_ledger::transports::LedgerAsync;
 use conversions::string::IntoHexStr;
 use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
 use sncast::helpers::ledger::LedgerKeyLocator;
 use sncast::response::ui::UIExt;
 use starknet_rust::signers::ledger::LedgerStarknetApp;
@@ -27,11 +26,11 @@ pub async fn sign_hash<T: LedgerAsync + 'static>(
 ) -> Result<LedgerResponse> {
     let path = args.key_locator.resolve(ui);
 
-    ui.print_warning(WarningMessage::new(
+    ui.print_warning(
         "Blind signing a raw hash could be dangerous. Make sure you ONLY sign hashes \
         from trusted sources. For better security, sign full transactions instead \
         of raw hashes whenever possible.",
-    ));
+    );
     ui.print_blank_line();
 
     ui.print_notification("Please confirm the signing operation on your Ledger\n");
