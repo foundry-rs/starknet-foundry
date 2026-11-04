@@ -2,7 +2,6 @@ use super::explorer::{ContractIdentifier, VerificationInterface};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
 use scarb_metadata::Metadata;
 use sncast::Network;
 use sncast::response::explorer_link::ExplorerError;
@@ -99,7 +98,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         )?;
 
         if prepared.package.manifest_metadata.license.is_none() {
-            ui.print_warning(WarningMessage::new("License not specified in Scarb.toml"));
+            ui.print_warning("License not specified in Scarb.toml");
         }
 
         let explorer_url = self.gen_explorer_url()?;

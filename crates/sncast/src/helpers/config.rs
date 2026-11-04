@@ -5,7 +5,6 @@ use crate::response::ui::UIExt;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use foundry_ui::UI;
-use foundry_ui::components::warning::WarningMessage;
 use indoc::formatdoc;
 use std::fs::File;
 use std::io::Write;
@@ -38,9 +37,9 @@ pub fn resolve_global_config_path_or_warn(ui: &UI) -> Option<Utf8PathBuf> {
     match get_or_create_global_config_path() {
         Ok(path) => Some(path),
         Err(err) => {
-            ui.print_warning(WarningMessage::new(format!(
+            ui.print_warning(format!(
                 "Could not get or create global config file: {err:?}. Proceeding without global config."
-            )));
+            ));
             None
         }
     }
