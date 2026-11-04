@@ -3,13 +3,13 @@ use std::process::ExitCode;
 use crate::starknet_commands::utils::felt_or_id::ContractAddress;
 use anyhow::{Context, Result};
 use clap::Args;
+use foundry_ui::UI;
 use sncast::{
     get_block_id,
     helpers::{command::process_command_result, configuration::CastConfig, rpc::RpcArgs},
     response::{
         errors::{StarknetCommandError, handle_starknet_command_error},
         get::storage::StorageResponse,
-        ui::UI,
     },
 };
 use starknet_rust::{
