@@ -29,7 +29,6 @@ pub mod voyager;
 
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
-use foundry_ui::components::warning::WarningMessage;
 use starkloupe::StarkloupeVerificationInterface;
 use voyager::Voyager;
 
@@ -255,9 +254,7 @@ pub async fn verify_contract(
 ) -> Result<VerifyResponse> {
     // Handle test_files warning for Starkloupe
     if matches!(common.verifier, Verifier::Starkloupe) && common.test_files {
-        ui.print_warning(WarningMessage::new(
-            "The `--test-files` option is ignored for Starkloupe verifier",
-        ));
+        ui.print_warning("The `--test-files` option is ignored for Starkloupe verifier");
     }
 
     // Create verifier instance, gather files, and perform verification

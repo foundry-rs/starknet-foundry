@@ -2,3 +2,8 @@ disallowed-methods = [
   "foundry_ui::UI::println",
   "foundry_ui::UI::eprintln",
 ]
+
+disallowed-types = [
+  "foundry_ui::components::warning::WarningMessage",
+  "foundry_ui::components::error::ErrorMessage",
+]

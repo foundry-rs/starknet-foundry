@@ -175,11 +175,15 @@ impl UIExt for UI {
         );
     }
 
+    #[expect(clippy::disallowed_types)]
     fn print_warning<T: Message>(&self, message: T) {
+        use foundry_ui::components::warning::WarningMessage;
         emit(
             self,
             message,
-            |warning| WarningWrapper { warning },
+            |warning| WarningWrapper {
+                warning: WarningMessage::new(warning),
+            },
             Stream::Stdout,
         );
     }
