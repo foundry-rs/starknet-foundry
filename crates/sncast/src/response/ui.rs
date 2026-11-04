@@ -110,8 +110,30 @@ where
     }
 }
 
-fn should_skip_empty_json(format: OutputFormat, json: &Value) -> bool {
-    format == OutputFormat::Json && *json == Value::Null
+#[derive(Clone, Copy)]
+enum Stream {
+    Stdout,
+    Stderr,
+}
+
+fn emit<T, W, F>(ui: &UI, message: T, wrap: F, stream: Stream)
+where
+    T: Message,
+    W: Message,
+    F: FnOnce(T) -> W,
+{
+    // TODO(#3960) Add better handling for no JSON output
+    if ui.output_format() == OutputFormat::Json && message.json() == Value::Null {
+        return;
+    }
+
+    let wrapped = wrap(message);
+
+    #[expect(clippy::disallowed_methods)]
+    match stream {
+        Stream::Stdout => ui.println(&wrapped),
+        Stream::Stderr => ui.eprintln(&wrapped),
+    }
 }
 
 pub trait UIExt {
@@ -123,50 +145,42 @@ pub trait UIExt {
 
 impl UIExt for UI {
     fn print_message<T: Message>(&self, command: &str, message: T) {
-        // TODO(#3960) Add better handling for no JSON output
-        if should_skip_empty_json(self.output_format(), &message.json()) {
-            return;
-        }
+        let command = command.to_string();
 
-        let internal_message = MessageWrapper {
-            command: command.to_string(),
+        emit(
+            self,
             message,
-        };
-        self.println(&internal_message);
+            |message| MessageWrapper { command, message },
+            Stream::Stdout,
+        );
     }
 
     fn print_error<T: Message>(&self, command: &str, message: T) {
-        // TODO(#3960) Add better handling for no JSON output
-        if should_skip_empty_json(self.output_format(), &message.json()) {
-            return;
-        }
+        let command = command.to_string();
 
-        let internal_message = ErrorWrapper {
-            command: command.to_string(),
-            error: message,
-        };
-        self.eprintln(&internal_message);
+        emit(
+            self,
+            message,
+            |error| ErrorWrapper { command, error },
+            Stream::Stderr,
+        );
     }
 
     fn print_notification<T: Message>(&self, message: T) {
-        // TODO(#3960) Add better handling for no JSON output
-        if should_skip_empty_json(self.output_format(), &message.json()) {
-            return;
-        }
-
-        let internal_message = NotificationWrapper {
-            notification: message,
-        };
-        self.println(&internal_message);
+        emit(
+            self,
+            message,
+            |notification| NotificationWrapper { notification },
+            Stream::Stdout,
+        );
     }
 
     fn print_warning<T: Message>(&self, message: T) {
-        // TODO(#3960) Add better handling for no JSON output
-        if should_skip_empty_json(self.output_format(), &message.json()) {
-            return;
-        }
-
-        let internal_message = WarningWrapper { warning: message };
-        self.println(&internal_message);
+        emit(
+            self,
+            message,
+            |warning| WarningWrapper { warning },
+            Stream::Stdout,
+        );
     }
 }

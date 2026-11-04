@@ -149,15 +149,14 @@ fn resolve_and_validate_contract_name(
     contract_name: &str,
     ui: &UI,
 ) -> Result<String> {
-    let base_ui = ui;
     let artifacts = build_and_load_artifacts(
         package,
         &BuildConfig {
             scarb_toml_path: package.manifest_path.clone(),
-            json: base_ui.output_format() == OutputFormat::Json,
+            json: ui.output_format() == OutputFormat::Json,
             profile,
         },
-        base_ui,
+        ui,
     )
     .context("Failed to build contract")?;
 
