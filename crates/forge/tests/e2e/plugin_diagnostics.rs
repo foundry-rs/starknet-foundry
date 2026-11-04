@@ -124,7 +124,7 @@ fn semantic() {
         note: this error originates in the attribute macro: `__fuzzer_wrapper`
         note: this error originates in the attribute macro: `fork`
         note: this error originates in the attribute macro: `ignore`
-        note: this error originates in the attribute macro: `__internal_config_statement`
+        note: this error originates in the attribute macro: `__snforge_finalize`
         
         warn[E0001]: Unused variable. Consider ignoring by prefixing with `_`.
          --> [..]/tests/contract.cairo:21:9
@@ -136,7 +136,7 @@ fn semantic() {
         note: this error originates in the attribute macro: `__fuzzer_wrapper`
         note: this error originates in the attribute macro: `fork`
         note: this error originates in the attribute macro: `ignore`
-        note: this error originates in the attribute macro: `__internal_config_statement`
+        note: this error originates in the attribute macro: `__snforge_finalize`
         
         error: could not compile `semantic_integrationtest` due to 1 previous error and 2 warnings
         "},
@@ -252,7 +252,7 @@ fn multiple() {
         note: this error originates in the attribute macro: `__fuzzer_wrapper`
         note: this error originates in the attribute macro: `fork`
         note: this error originates in the attribute macro: `ignore`
-        note: this error originates in the attribute macro: `__internal_config_statement`
+        note: this error originates in the attribute macro: `__snforge_finalize`
         
         error: could not compile `multiple_integrationtest` due to 7 previous errors and 1 warning
     "},
@@ -284,7 +284,7 @@ fn generic() {
         note: this error originates in the attribute macro: `__fuzzer_wrapper`
         note: this error originates in the attribute macro: `fork`
         note: this error originates in the attribute macro: `ignore`
-        note: this error originates in the attribute macro: `__internal_config_statement`
+        note: this error originates in the attribute macro: `__snforge_finalize`
         
         error: could not compile `generic_integrationtest` due to 1 previous error and 1 warning
     "},
@@ -316,7 +316,7 @@ fn inline_macros() {
         note: this error originates in the attribute macro: `__fuzzer_wrapper`
         note: this error originates in the attribute macro: `fork`
         note: this error originates in the attribute macro: `ignore`
-        note: this error originates in the attribute macro: `__internal_config_statement`
+        note: this error originates in the attribute macro: `__snforge_finalize`
         
         error: could not compile `inline_macros_integrationtest` due to 1 previous error and 1 warning
     "},
