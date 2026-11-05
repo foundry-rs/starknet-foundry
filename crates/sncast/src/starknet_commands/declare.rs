@@ -160,7 +160,9 @@ pub async fn declare(
         .await
         {
             Ok(VerifyResponse { message }) => response.verification_message = Some(message),
-            Err(e) => ui.print_error("declare", format!("Failed to verify the contract: {e}")),
+            Err(e) => {
+                ui.print_command_error("declare", format!("Failed to verify the contract: {e}"));
+            }
         }
     }
 

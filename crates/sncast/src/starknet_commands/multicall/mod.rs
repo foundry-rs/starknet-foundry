@@ -70,7 +70,7 @@ pub async fn multicall(
                 );
                 Ok(process_command_result("multicall new", result, ui, None))
             } else {
-                ui.print_message(
+                ui.print_command_message(
                     "multicall_new",
                     MulticallMessage {
                         file_contents: DEFAULT_MULTICALL_CONTENTS.to_string(),
