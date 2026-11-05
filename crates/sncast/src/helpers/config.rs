@@ -59,7 +59,6 @@ fn build_default_manifest() -> String {
         # show-explorer-links = {default_show_explorer_links}
         # accounts-file = "{default_accounts_file}"
         # account = ""
-        # keystore = ""
         
         # Configure custom network addresses
         # [sncast.default.networks]
