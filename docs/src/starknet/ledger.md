@@ -193,7 +193,7 @@ A confirmation screen will be displayed on the device. Once approved, the signat
 <summary>Output:</summary>
 
 ```shell
-Hash signature:
+Hash signature
 r: 0x[..]
 s: 0x[..]
 ```

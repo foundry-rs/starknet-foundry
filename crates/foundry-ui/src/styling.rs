@@ -14,6 +14,10 @@ enum OutputEntry {
     },
     BlankLine,
     Text(String),
+    Heading {
+        text: String,
+        indent: usize,
+    },
 }
 
 pub struct OutputBuilder {
@@ -50,10 +54,28 @@ impl OutputBuilder {
             .unwrap_or(0)
     }
 
-    /// Sets the indentation (in spaces) applied to fields added afterwards.
+    /// Runs `f` with the indentation increased by `by` spaces relative to the current one.
+    /// The previous indentation is restored afterwards.
     #[must_use]
-    pub fn with_indent(mut self, indent: usize) -> Self {
-        self.current_indent = indent;
+    pub fn indented<F>(mut self, by: usize, f: F) -> Self
+    where
+        F: FnOnce(Self) -> Self,
+    {
+        let previous = self.current_indent;
+        self.current_indent = previous + by;
+        let mut builder = f(self);
+        builder.current_indent = previous;
+        builder
+    }
+
+    /// Adds a bold line at the current indentation.
+    /// Headings are not aligned with fields, so they never widen the value column.
+    #[must_use]
+    pub fn heading(mut self, text: &str) -> Self {
+        self.entries.push(OutputEntry::Heading {
+            text: text.to_string(),
+            indent: self.current_indent,
+        });
         self
     }
 
@@ -180,6 +202,9 @@ impl OutputBuilder {
                         }
                     }
                 }
+                OutputEntry::Heading { text, indent } => {
+                    writeln!(content, "{:indent$}{}", "", style(text).bold()).unwrap();
+                }
                 OutputEntry::BlankLine => {
                     content.push('\n');
                 }
@@ -197,5 +222,56 @@ impl OutputBuilder {
             content.pop();
         }
         content
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::OutputBuilder;
+
+    fn disable_colors() {
+        console::set_colors_enabled(false);
+    }
+
+    #[test]
+    fn indented_is_relative_to_current_indent() {
+        disable_colors();
+        let output = OutputBuilder::new()
+            .indented(2, |b| b.indented(2, |b| b.field("ab", "1")))
+            .build();
+
+        assert_eq!(output, "    ab: 1");
+    }
+
+    #[test]
+    fn heading_does_not_widen_label_column() {
+        disable_colors();
+        let output = OutputBuilder::new()
+            .heading("A very long heading indeed")
+            .field("a", "1")
+            .build();
+
+        assert_eq!(output, "A very long heading indeed\na: 1");
+    }
+
+    #[test]
+    fn heading_uses_current_indent_in_nested_indented() {
+        disable_colors();
+        let output = OutputBuilder::new()
+            .heading("h0")
+            .indented(2, |b| {
+                b.heading("h2")
+                    .indented(3, |b| b.heading("h5").field("f5", "1"))
+                    .heading("h2b")
+                    .field("f2", "2")
+            })
+            .heading("h0b")
+            .field("f0", "3")
+            .build();
+
+        assert_eq!(
+            output,
+            "h0\n  h2\n     h5\n     f5: 1\n  h2b\n  f2:    2\nh0b\nf0:      3"
+        );
     }
 }

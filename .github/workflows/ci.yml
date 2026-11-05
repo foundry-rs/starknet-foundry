@@ -51,7 +51,8 @@ jobs:
 
   test-cheatnet-native:
     name: Cheatnet Tests (native)
-    runs-on: ubuntu-latest
+    # LLVM 19 packages used by cairo-native are not compatible with Ubuntu 26.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
@@ -84,7 +85,8 @@ jobs:
 
   build-test-forge-nextest-archive-native:
     name: Build Nextest Archive (Forge Native)
-    runs-on: ubuntu-latest
+    # LLVM 19 packages used by cairo-native are not compatible with Ubuntu 26.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-tools
@@ -422,7 +424,8 @@ jobs:
 
   fmt-lint-typos:
     name: Lint and Format
-    runs-on: ubuntu-latest
+    # Clippy builds cairo-native, which requires the Ubuntu 24 LLVM 19 packages.
+    runs-on: ubuntu-24.04
     env:
       # Make sure CI fails on all warnings - including Clippy lints.
       RUSTFLAGS: "-Dwarnings"

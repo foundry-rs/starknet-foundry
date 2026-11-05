@@ -42,9 +42,10 @@ m/2645'/1195502025'/355113700'/0'/0'/0
 > ```
 >
 > ```shell
-> - my_ledger_account:
->   ledger path: m/2645'/1195502025'/355113700'/0'/1'/0
->   ...
+> alpha-sepolia
+>   my_ledger_account
+>     ...
+>     Ledger Path: m/2645'/1195502025'/355113700'/0'/1'/0
 > ```
 
 ### Omitting the `2645'` Segment
