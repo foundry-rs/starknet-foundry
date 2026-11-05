@@ -305,7 +305,7 @@ pub async fn account(
                 && let Err(err) = prompt_to_add_account_as_default(account_name.as_str(), ui)
             {
                 // TODO(#3436)
-                ui.print_error(
+                ui.print_command_error(
                     "account import",
                     format!("Error: Failed to launch interactive prompt: {err}"),
                 );
@@ -389,7 +389,7 @@ pub async fn account(
                 )
             {
                 // TODO(#3436)
-                ui.print_error(
+                ui.print_command_error(
                     "account deploy",
                     format!("Error: Failed to launch interactive prompt: {err}"),
                 );

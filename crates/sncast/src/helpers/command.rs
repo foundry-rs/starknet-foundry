@@ -23,7 +23,7 @@ where
 
     match cast_msg {
         Ok(response) => {
-            ui.print_message(command, response);
+            ui.print_command_message(command, response);
             if let Some(link) = block_explorer_link {
                 ui.print_notification(link);
             }
@@ -31,7 +31,7 @@ where
         }
         Err(err) => {
             let err = ResponseError::from_anyhow(command.to_string(), &err);
-            ui.print_error(command, err);
+            ui.print_command_error(command, err);
             ExitCode::FAILURE
         }
     }

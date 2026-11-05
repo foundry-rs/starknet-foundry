@@ -294,7 +294,7 @@ fn main() -> ExitCode {
     match run(cli, &ui) {
         Ok(code) => code,
         Err(err) => {
-            ui.print_error(
+            ui.print_command_error(
                 &command_name,
                 ResponseError::from_anyhow(command_name.clone(), &err),
             );

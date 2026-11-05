@@ -24,7 +24,7 @@ pub enum Commands {
 pub fn alias(alias: &Alias, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
     match alias.command {
         Commands::List(_) => {
-            ui.print_message("alias list", list::list(config));
+            ui.print_command_message("alias list", list::list(config));
             Ok(ExitCode::SUCCESS)
         }
     }

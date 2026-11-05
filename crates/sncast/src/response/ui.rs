@@ -137,14 +137,14 @@ where
 }
 
 pub trait UIExt {
-    fn print_message<T: Message>(&self, command: &str, message: T);
-    fn print_error<T: Message>(&self, command: &str, message: T);
+    fn print_command_message<T: Message>(&self, command: &str, message: T);
+    fn print_command_error<T: Message>(&self, command: &str, message: T);
     fn print_notification<T: Message>(&self, message: T);
     fn print_warning<T: Message>(&self, message: T);
 }
 
 impl UIExt for UI {
-    fn print_message<T: Message>(&self, command: &str, message: T) {
+    fn print_command_message<T: Message>(&self, command: &str, message: T) {
         let command = command.to_string();
 
         emit(
@@ -155,7 +155,7 @@ impl UIExt for UI {
         );
     }
 
-    fn print_error<T: Message>(&self, command: &str, message: T) {
+    fn print_command_error<T: Message>(&self, command: &str, message: T) {
         let command = command.to_string();
 
         emit(
