@@ -142,7 +142,7 @@ $ sncast \
 
 ### [`account list`](../appendix/sncast/account/list.md)
 
-List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
+List all accounts saved in `accounts file`, grouped based on the chain IDs they are defined on.
 
 <!-- TODO(#2736) -->
 <!-- { "ignored_output": true } -->
@@ -156,7 +156,7 @@ $ sncast account list
 ```shell
 Accounts File:  [..]
 
-alpha-sepolia
+SN_SEPOLIA
   my_account
     Address:    0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d
     Type:       OpenZeppelin
@@ -172,7 +172,7 @@ alpha-sepolia
     Salt:       [..]
     Legacy:     false
 
-To show private keys too, run with --display-private-keys or -p
+To include private keys in the output, run with --display-private-keys or -p
 ```
 
 </details>
@@ -191,7 +191,7 @@ confirm the deletion.
 ```shell
 $ sncast account delete \
     --name new_account \
-    --network-name alpha-sepolia
+    --chain-id SN_SEPOLIA
 ```
 
 ### [`account migrate`](../appendix/sncast/account/migrate.md)

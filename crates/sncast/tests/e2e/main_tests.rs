@@ -198,7 +198,7 @@ async fn test_nonexistent_account_address() {
 
     assert_stderr_contains(
         output,
-        "Error: Account with address 0x1010101010011aaabbcc not found on network SN_SEPOLIA",
+        "Error: Account with address 0x1010101010011aaabbcc not found on chain ID SN_SEPOLIA",
     );
 }
 
@@ -368,7 +368,10 @@ async fn test_keystore_undeployed_account() {
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
-    assert_stderr_contains(output, "Error: Failed to get account address");
+    assert_stderr_contains(
+        output,
+        "Error: account is missing required field `address` for connected account use",
+    );
 }
 
 #[tokio::test]

@@ -42,7 +42,7 @@ m/2645'/1195502025'/355113700'/0'/0'/0
 > ```
 >
 > ```shell
-> alpha-sepolia
+> SN_SEPOLIA
 >   my_ledger_account
 >     ...
 >     Ledger Path: m/2645'/1195502025'/355113700'/0'/1'/0

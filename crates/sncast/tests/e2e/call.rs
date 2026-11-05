@@ -413,7 +413,7 @@ async fn deploy_data_transformer_contract() -> (tempfile::TempDir, String) {
 
     let contents = std::fs::read_to_string(tempdir.path().join("accounts.json")).unwrap();
     let items: serde_json::Value = serde_json::from_str(&contents).unwrap();
-    let account_address = items["alpha-sepolia"]["my_account"]["address"]
+    let account_address = items["accounts"]["SN_SEPOLIA"]["my_account"]["address"]
         .as_str()
         .unwrap()
         .to_string();
