@@ -1,0 +1,7 @@
+---
+source: crates/sncast/tests/e2e/account/list.rs
+expression: "output.as_stdout().replace(accounts_file_path.to_str().unwrap(),\n\"[ACCOUNTS_FILE]\")"
+---
+No accounts found in [ACCOUNTS_FILE]
+
+To create one, run `sncast account create` or `sncast account import`

@@ -1,10 +1,12 @@
 pub mod balance;
 pub mod block;
 pub mod chain_id;
+pub mod class;
 pub mod class_hash_at;
 pub mod nonce;
 pub mod spec_version;
 pub mod state_update;
+pub mod storage;
 pub mod syncing;
 pub mod transaction;
 pub mod tx_receipt;

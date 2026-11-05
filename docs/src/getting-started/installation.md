@@ -69,6 +69,8 @@ To use Starknet Foundry, you need:
 
 all installed and added to your `PATH` environment variable.
 
+You can run [`snforge check-requirements`](../appendix/snforge/check-requirements.md) to verify that the installed versions satisfy these requirements.
+
 [^note]: Additionally, your platform must be one of the supported:
 * `aarch64-apple-darwin`
 * `aarch64-unknown-linux-gnu`

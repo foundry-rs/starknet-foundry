@@ -130,23 +130,25 @@ $ sncast account list
 <summary>Output:</summary>
 
 ```shell
-Available accounts (at [..]):
-- new_account:
-  network: alpha-sepolia
-  public key: [..]
-  address: [..]
-  salt: [..]
-  class hash: [..]
-  deployed: false
-  legacy: false
-  type: OpenZeppelin
+Accounts File:  [..]
 
-- my_account:
-  network: alpha-sepolia
-  public key: 0x48234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac
-  address: 0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d
-  deployed: true
-  type: OpenZeppelin
+alpha-sepolia
+  my_account
+    Address:    0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d
+    Type:       OpenZeppelin
+    Deployed:   true
+    Public Key: 0x48234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac
+
+  new_account
+    Address:    [..]
+    Type:       OpenZeppelin
+    Deployed:   false
+    Public Key: [..]
+    Class Hash: [..]
+    Salt:       [..]
+    Legacy:     false
+
+To show private keys too, run with --display-private-keys or -p
 ```
 
 </details>

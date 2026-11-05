@@ -69,7 +69,7 @@ mimalloc.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 ctor.workspace = true
 dtor.workspace = true
-insta.workspace = true
+insta = { workspace = true, features = ["json"] }
 snapbox.workspace = true
 indoc.workspace = true
 project-root.workspace = true

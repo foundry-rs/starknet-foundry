@@ -101,3 +101,22 @@ Optional.
 Name of the package that should be used.
 
 If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.
+
+## `--verifier, -v <VERIFIER>`
+Optional.
+
+The verification provider to use for the verification. Possible values are:
+* `starkloupe`
+* `voyager`
+
+## `--confirm-verification`
+Optional.
+
+If passed, assume "yes" as answer to confirmation prompt and run non-interactively.
+Requires [`--verifier`](#--verifier--v-verifier) flag to be used.
+
+## `--test-files`
+Optional.
+
+Include test files under `src/` for verification. Only applies to `voyager`.
+Requires [`--verifier`](#--verifier--v-verifier) flag to be used.
