@@ -136,11 +136,25 @@ where
     }
 }
 
+/// `sncast` extension to `foundry_ui::UI`
 pub trait UIExt {
+    /// Prints a successful response associated with `command` to standard output.
     fn print_command_message<T: Message>(&self, command: &str, message: T);
+
+    /// Prints an error response associated with `command` to standard error.
     fn print_command_error<T: Message>(&self, command: &str, message: T);
+
+    /// Prints a notification to standard output.
     fn print_notification<T: Message>(&self, message: T);
+
+    /// Prints a warning to standard output.
+    ///
+    /// Wraps `message` with `foundry_ui::WarningMessage`
     fn print_warning<T: Message>(&self, message: T);
+
+    /// Prints an error to standard error.
+    ///
+    /// Wraps `message` with `foundry_ui::ErrorMessage`
     fn print_error<T: Message>(&self, message: T);
 }
 
