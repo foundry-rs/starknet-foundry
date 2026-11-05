@@ -141,6 +141,7 @@ pub trait UIExt {
     fn print_command_error<T: Message>(&self, command: &str, message: T);
     fn print_notification<T: Message>(&self, message: T);
     fn print_warning<T: Message>(&self, message: T);
+    fn print_error<T: Message>(&self, message: T);
 }
 
 impl UIExt for UI {
@@ -185,6 +186,19 @@ impl UIExt for UI {
                 warning: WarningMessage::new(warning),
             },
             Stream::Stdout,
+        );
+    }
+
+    #[expect(clippy::disallowed_types)]
+    fn print_error<T: Message>(&self, message: T) {
+        use foundry_ui::components::error::ErrorMessage;
+        emit(
+            self,
+            message,
+            |warning| WarningWrapper {
+                warning: ErrorMessage::new(warning),
+            },
+            Stream::Stderr,
         );
     }
 }
