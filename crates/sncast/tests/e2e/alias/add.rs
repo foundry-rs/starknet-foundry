@@ -39,14 +39,14 @@ fn test_alias_add_happy_path(global: bool) {
 #[test_case(false; "local")]
 #[test_case(true; "global")]
 fn test_alias_add_with_custom_profile(global: bool) {
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_correct.toml", None);
     let current_dir = tempdir().unwrap();
-    let global_dir = tempdir().unwrap();
-    let mut args = vec!["--profile", "bar", "alias", "add", "foo", "0x43"];
+    let mut args = vec!["--profile", "profile1", "alias", "add", "foo", "0x43"];
 
     if global {
         args.push("--global");
         Cast::new()
-            .config_dir(global_dir.path())
+            .config_dir(config_dir.path())
             .command()
             .args(&args)
             .current_dir(current_dir.path())
@@ -54,15 +54,14 @@ fn test_alias_add_with_custom_profile(global: bool) {
             .success();
     } else {
         runner(&args)
-            .current_dir(current_dir.path())
+            .current_dir(config_dir.path())
             .assert()
             .success();
     }
 
-    let config_dir = if global { &global_dir } else { &current_dir };
     let contents = fs::read_to_string(config_dir.path().join("snfoundry.toml")).unwrap();
     assert!(contents.contains(indoc! {r#"
-        [sncast.bar.aliases]
+        [sncast.profile1.aliases]
         foo = "0x43"
     "#}));
 }
@@ -70,14 +69,14 @@ fn test_alias_add_with_custom_profile(global: bool) {
 #[test_case(false; "local")]
 #[test_case(true; "global")]
 fn test_alias_add_with_missing_config(global: bool) {
+    let config_dir = tempdir().unwrap();
     let current_dir = tempdir().unwrap();
-    let global_dir = tempdir().unwrap();
     let mut args = vec!["alias", "add", "foo", "0x43"];
 
     if global {
         args.push("--global");
         Cast::new()
-            .config_dir(global_dir.path())
+            .config_dir(config_dir.path())
             .command()
             .args(&args)
             .current_dir(current_dir.path())
@@ -85,12 +84,11 @@ fn test_alias_add_with_missing_config(global: bool) {
             .success();
     } else {
         runner(&args)
-            .current_dir(current_dir.path())
+            .current_dir(config_dir.path())
             .assert()
             .success();
     }
 
-    let config_dir = if global { &global_dir } else { &current_dir };
     let contents = fs::read_to_string(config_dir.path().join("snfoundry.toml")).unwrap();
     assert!(contents.contains(indoc! {r#"
         [sncast.default.aliases]
@@ -101,15 +99,7 @@ fn test_alias_add_with_missing_config(global: bool) {
 #[test_case(false; "without_force")]
 #[test_case(true; "with_force")]
 fn test_alias_add_overwrite_behavior(force: bool) {
-    let current_dir = tempdir().unwrap();
-    fs::write(
-        current_dir.path().join("snfoundry.toml"),
-        indoc! {r#"
-            [sncast.default.aliases]
-            foo = "0x1"
-        "#},
-    )
-    .unwrap();
+    let config_dir = copy_config_to_tempdir("tests/data/files/snfoundry_with_alias.toml", None);
 
     let mut args = vec!["alias", "add", "foo", "0x2"];
     if force {
@@ -118,12 +108,12 @@ fn test_alias_add_overwrite_behavior(force: bool) {
 
     if force {
         runner(&args)
-            .current_dir(current_dir.path())
+            .current_dir(config_dir.path())
             .assert()
             .success();
     } else {
         let output = runner(&args)
-            .current_dir(current_dir.path())
+            .current_dir(config_dir.path())
             .assert()
             .failure();
         assert_stderr_contains(
@@ -132,11 +122,21 @@ fn test_alias_add_overwrite_behavior(force: bool) {
         );
     }
 
-    let expected_value = if force { "0x2" } else { "0x1" };
-    assert_eq!(
-        fs::read_to_string(current_dir.path().join("snfoundry.toml")).unwrap(),
-        format!("[sncast.default.aliases]\nfoo = \"{expected_value}\"\n")
-    );
+    let expected_value = if force {
+        indoc! {r#"
+        [sncast.default.aliases]
+        foo = "0x2"
+        "#
+        }
+    } else {
+        indoc! {r#"
+        [sncast.default.aliases]
+        foo = "0x1"
+        "#
+        }
+    };
+    let contents = fs::read_to_string(config_dir.path().join("snfoundry.toml")).unwrap();
+    assert!(contents.contains(expected_value));
 }
 
 #[test]
