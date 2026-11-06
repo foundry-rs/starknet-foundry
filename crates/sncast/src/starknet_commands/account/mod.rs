@@ -10,6 +10,7 @@ use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
+use foundry_ui::UI;
 use serde_json::json;
 use sncast::helpers::account::{generate_account_name, load_accounts};
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -21,7 +22,7 @@ use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::{AccountType, chain_id_to_network_name, decode_chain_id};
 use sncast::{SignerSource, SignerType, WaitForTx, get_chain_id};
 use starknet_curve::curve_params::EC_ORDER;
@@ -304,7 +305,7 @@ pub async fn account(
                 && let Err(err) = prompt_to_add_account_as_default(account_name.as_str(), ui)
             {
                 // TODO(#3436)
-                ui.print_error(
+                ui.print_command_error(
                     "account import",
                     format!("Error: Failed to launch interactive prompt: {err}"),
                 );
@@ -388,7 +389,7 @@ pub async fn account(
                 )
             {
                 // TODO(#3436)
-                ui.print_error(
+                ui.print_command_error(
                     "account deploy",
                     format!("Error: Failed to launch interactive prompt: {err}"),
                 );

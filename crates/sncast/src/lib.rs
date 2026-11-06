@@ -50,9 +50,9 @@ pub mod helpers;
 pub mod response;
 
 use crate::helpers::ledger;
-use crate::response::ui::UI;
+use crate::response::ui::UIExt;
 use conversions::byte_array::ByteArray;
-use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::UI;
 pub use helpers::signer::{AccountVariant, SignerSource, SignerType};
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
@@ -342,11 +342,12 @@ pub async fn get_account<'a>(
 
     match (is_devnet_account, exists_in_accounts_file) {
         (true, true) => {
-            ui.print_warning(WarningMessage::new(format!(
+            ui.print_warning(format!(
                 "Using account {account} from accounts file {accounts_file}. \
                 To use an inbuilt devnet account, please rename your existing account or use an account with a different number."
-            )));
+            ));
             ui.print_blank_line();
+
             get_account_from_accounts_file(
                 account,
                 accounts_file,
