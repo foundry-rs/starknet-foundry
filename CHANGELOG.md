@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `read_txt` and the `var` cheatcode now return a parse error instead of panicking when a value is a lone `'` or `"`.
 - Failed library call no longer replaces the calling contract's class hash with the library's class hash in reverted calls.
+- `snforge clean trace` now removes the `snfoundry_trace` directory of every package in a workspace, not only the one in the workspace root.
 
 ### Cast
 
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - *BREAKING*: `sncast verify` no longer accepts both `--url` and `--network` flags.
 - Cosmetic improvement: section headings in `get state-update`, `get block` and `ledger sign-hash` output are now bold, and `ledger sign-hash` prints `Hash signature` without a trailing colon.
 - *BREAKING*: `sncast account list` text output is now grouped by network, and its JSON output is now `{ "accounts_file", "accounts": [...] }`, where each account entry includes its `network` and `name`.
+- `sncast completions` along with `--json` flag will result with an error.
 
 #### Fixed
 

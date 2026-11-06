@@ -59,7 +59,9 @@ pub fn clean(args: CleanArgs, ui: &UI) -> Result<()> {
                 .iter()
                 .try_for_each(|root| clean_dir(&root.join(PROFILE_DIR), ui))?,
             CleanComponent::Cache => clean_cache_dir(&resolve_cache_dir(&workspace_root)?, ui)?,
-            CleanComponent::Trace => clean_dir(&workspace_root.join(TRACE_DIR), ui)?,
+            CleanComponent::Trace => packages_root
+                .iter()
+                .try_for_each(|root| clean_dir(&root.join(TRACE_DIR), ui))?,
             CleanComponent::All => unreachable!("All component should have been handled earlier"),
         }
     }
