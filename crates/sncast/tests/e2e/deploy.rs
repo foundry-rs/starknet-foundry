@@ -855,7 +855,14 @@ async fn test_happy_case_with_declare_nonce() {
         let output = snapbox.assert().success();
 
         let value: Value = serde_json::from_str(output.as_stdout()).unwrap();
-        let account_address = value["my_account"]["address"].as_str().unwrap();
+        let account_address = value["accounts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|account| account["name"].as_str() == Some("my_account"))
+            .unwrap()["address"]
+            .as_str()
+            .unwrap();
 
         provider
             .get_nonce(

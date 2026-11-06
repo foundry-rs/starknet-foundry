@@ -245,38 +245,35 @@ impl SncastCommandMessage for BlockResponse {
     }
 }
 
-fn append_full_transactions(
-    mut builder: OutputBuilder,
-    transactions: &[Transaction],
-) -> OutputBuilder {
-    for (index, transaction) in transactions.iter().enumerate() {
-        builder = append_transaction(
+fn append_full_transactions(builder: OutputBuilder, transactions: &[Transaction]) -> OutputBuilder {
+    transactions
+        .iter()
+        .enumerate()
+        .fold(builder, |builder, (index, transaction)| {
             builder
                 .blank_line()
-                .text_field(&format!("Transaction #{}", index + 1))
-                .with_indent(2),
-            transaction,
-        )
-        .with_indent(0);
-    }
-    builder
+                .heading(&format!("Transaction #{}", index + 1))
+                .indented(2, |transaction_builder| {
+                    append_transaction(transaction_builder, transaction)
+                })
+        })
 }
 
 fn append_receipts(
-    mut builder: OutputBuilder,
+    builder: OutputBuilder,
     transactions: &[TransactionWithReceipt],
 ) -> OutputBuilder {
-    for (index, transaction) in transactions.iter().enumerate() {
-        builder = append_receipt(
+    transactions
+        .iter()
+        .enumerate()
+        .fold(builder, |builder, (index, transaction)| {
             builder
                 .blank_line()
-                .text_field(&format!("Transaction #{}", index + 1))
-                .with_indent(2),
-            &transaction.receipt,
-        )
-        .with_indent(0);
-    }
-    builder
+                .heading(&format!("Transaction #{}", index + 1))
+                .indented(2, |transaction_builder| {
+                    append_receipt(transaction_builder, &transaction.receipt)
+                })
+        })
 }
 
 fn fmt_status(status: BlockStatus) -> &'static str {

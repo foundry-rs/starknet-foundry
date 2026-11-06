@@ -1,0 +1,6 @@
+---
+source: crates/sncast/tests/e2e/account/list.rs
+expression: output.as_stderr()
+---
+Command: account list
+Error: Accounts file = some_inexistent_file.json does not exist! If you do not have an account create one with `account create` command or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument.

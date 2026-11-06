@@ -45,7 +45,7 @@ $ sncast ledger sign-hash \
 <summary>Output:</summary>
 
 ```shell
-Hash signature:
+Hash signature
 r: 0x[..]
 s: 0x[..]
 ```

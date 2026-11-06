@@ -26,15 +26,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get tx-trace` command to get the execution trace of a transaction.
 - `--verifier` flag for `sncast declare` to verify the contract after declaration. It can be combined with `--test-files` and `--confirm-verification` in the same way as in `sncast verify`
 - `get class` command to get the contract class definition associated with the given class hash or class address.
+- `get storage` command to get a value from contract's storage.
 
 #### Changed
 
 - `sncast account delete` confirmation prompt now defaults to "No".
 - *BREAKING*: `sncast verify` no longer accepts both `--url` and `--network` flags.
+- Cosmetic improvement: section headings in `get state-update`, `get block` and `ledger sign-hash` output are now bold, and `ledger sign-hash` prints `Hash signature` without a trailing colon.
+- *BREAKING*: `sncast account list` text output is now grouped by network, and its JSON output is now `{ "accounts_file", "accounts": [...] }`, where each account entry includes its `network` and `name`.
+- `sncast completions` along with `--json` flag will result with an error.
 
 #### Fixed
 
 - `sncast verify` confirmation prompt now correctly defaults to "Yes".
+- `sncast account list` no longer hides accounts that share a name with an account on a different network.
+- `sncast account list --json` now reports `"command": "account list"` instead of `"account delete"`.
+- `sncast account list` now reports an error for a malformed accounts file instead of printing that no accounts were found.
 
 ## [0.64.1] - 2026-10-06
 

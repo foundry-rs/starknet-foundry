@@ -68,7 +68,7 @@ mimalloc.workspace = true
 [dev-dependencies]
 ctor.workspace = true
 dtor.workspace = true
-insta.workspace = true
+insta = { workspace = true, features = ["json"] }
 snapbox.workspace = true
 indoc.workspace = true
 project-root.workspace = true
