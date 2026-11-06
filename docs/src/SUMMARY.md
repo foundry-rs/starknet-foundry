@@ -149,6 +149,7 @@
         * [delete](appendix/sncast/account/delete.md)
         * [list](appendix/sncast/account/list.md)
     * [alias](appendix/sncast/alias/alias.md)
+        * [add](appendix/sncast/alias/add.md)
         * [list](appendix/sncast/alias/list.md)
     * [declare](appendix/sncast/declare.md)
     * [declare-from](appendix/sncast/declare_from.md)
