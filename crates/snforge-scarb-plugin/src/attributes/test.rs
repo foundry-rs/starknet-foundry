@@ -1,8 +1,11 @@
-use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
+use super::{
+    AttributeInfo, ErrorExt,
+    finalize::{FinalizeCollector, config_fn_ident},
+};
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
 use crate::external_inputs::ExternalInput;
-use crate::utils::{create_single_token, get_statements};
+use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -52,10 +55,7 @@ fn test_internal(
         ));
     }
 
-    let internal_config = create_single_token(InternalConfigStatementCollector::ATTR_NAME);
-
-    let func_item = func.as_syntax_node();
-    let func_item = SyntaxNodeWithDb::new(&func_item, db);
+    let finalize_marker = create_single_token(FinalizeCollector::ATTR_NAME);
 
     let name = func.declaration(db).name(db).text(db).to_string();
 
@@ -91,33 +91,35 @@ fn test_internal(
     let func_name_node = func.declaration(db).name(db).as_syntax_node();
     let func_name_ident = SyntaxNodeWithDb::new(&func_name_node, db);
 
+    let body = func.body(db).as_syntax_node();
+    let body = SyntaxNodeWithDb::new(&body, db);
+    let vis = func.visibility(db).as_syntax_node();
+    let vis = SyntaxNodeWithDb::new(&vis, db);
+
+    // The test function is emitted exactly as written. `#[__snforge_finalize]` has to come after
+    // the remaining attributes, so that it expands once they have contributed their config
+    // statements, and lifts those out of the body.
+    let test_fn = quote!(
+        #attributes
+        #[#finalize_marker]
+        #vis fn #func_name_ident #signature
+        #body
+    );
+
     if should_run_test {
         let call_args = TokenStream::empty();
+        let config_fn = config_fn_ident(&name);
 
-        let test_func_with_attrs = test_func_with_attrs(&test_func, &called_func, &call_args);
-
-        let (statements, if_content) = get_statements(db, func);
+        let test_func_with_attrs =
+            test_func_with_attrs(&test_func, &called_func, &call_args, &config_fn);
 
         Ok(quote!(
             #test_func_with_attrs
 
-            #attributes
-            fn #func_name_ident #signature
-            {
-               if snforge_std::_internals::is_config_run() {
-                   #if_content
-
-                   return Default::default();
-               };
-
-               #statements
-           }
+            #test_fn
         ))
     } else {
-        Ok(quote!(
-            #[#internal_config]
-            #func_item
-        ))
+        Ok(test_fn)
     }
 }
 
@@ -151,10 +153,12 @@ pub fn test_func_with_attrs(
     test_fn_name: &TokenStream,
     fn_name: &TokenStream,
     call_args: &TokenStream,
+    config_fn_ident: &TokenStream,
 ) -> TokenStream {
     let test_fn_name = test_fn_name.clone();
     let fn_name = fn_name.clone();
     let call_args = call_args.clone();
+    let config_fn_ident = config_fn_ident.clone();
     let out_of_gas = create_single_token("'Out of gas'");
     quote!(
         #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
@@ -167,7 +171,14 @@ pub fn test_func_with_attrs(
             core::option::OptionTraitImpl::expect(
                 core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
             );
-            #fn_name (#call_args);
+            if snforge_std::_internals::is_config_run() {
+                #config_fn_ident ();
+
+                let mut arr = ArrayTrait::new();
+                return core::array::ArrayTrait::span(@arr);
+            }
+
+            let _ = #fn_name (#call_args);
 
             let mut arr = ArrayTrait::new();
             core::array::ArrayTrait::span(@arr)

@@ -2,6 +2,7 @@
 source: tests/integration/multiple_attributes.rs
 expression: format_output(&result)
 ---
+#[__snforge_finalize]
 fn empty_fn() {
     if snforge_std::_internals::is_config_run() {
         let mut data = array![];

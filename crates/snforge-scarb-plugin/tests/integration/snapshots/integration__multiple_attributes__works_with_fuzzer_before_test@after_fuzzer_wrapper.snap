@@ -3,13 +3,9 @@ source: tests/integration/multiple_attributes.rs
 expression: format_output(&result)
 ---
 fn empty_fn__snforge_internal_fuzzer_generated() {
-    if snforge_std::_internals::is_config_run() {
-        empty_fn(snforge_std::fuzzable::Fuzzable::blank());
-        return Default::default();
-    }
     let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
     snforge_std::_internals::save_fuzzer_arg(@f);
-    empty_fn(f);
+    let _ = empty_fn(f);
 }
 #[implicit_precedence(
     core::pedersen::Pedersen,
@@ -25,5 +21,5 @@ fn empty_fn__snforge_internal_fuzzer_generated() {
     System,
 )]
 #[snforge_internal_test_executable]
-#[__internal_config_statement]
+#[__snforge_finalize]
 fn empty_fn(f: felt252) {}
