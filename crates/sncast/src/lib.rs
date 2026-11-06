@@ -12,19 +12,18 @@ use configuration::Override;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
-use response::errors::SNCastStarknetError;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
 use shared::rpc::create_rpc_client;
 use starknet_rust::accounts::{AccountFactory, AccountFactoryError};
+use starknet_rust::core::types::ExecutionResult;
 use starknet_rust::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, PreConfirmed},
-    ContractClass, ContractErrorData,
+    ContractClass,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
-use starknet_rust::core::types::{ContractExecutionError, ExecutionResult};
 use starknet_rust::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet_rust::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet_rust::{
@@ -405,24 +404,11 @@ pub async fn get_contract_class(
     class_hash: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<ContractClass> {
-    let result = provider
+    provider
         .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
-        .await;
-
-    if let Err(ProviderError::StarknetError(ClassHashNotFound)) = result {
-        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
-        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
-            SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: ContractExecutionError::Message(format!(
-                    "Class with hash {class_hash:#x} is not declared"
-                )),
-            }),
-        );
-
-        return Err(handle_rpc_error(artificial_transaction_revert_error));
-    }
-
-    result.map_err(handle_rpc_error)
+        .await
+        .map_err(handle_rpc_error)
+        .with_context(|| format!("Couldn't retrieve contract class with hash {class_hash:#x}"))
 }
 
 async fn build_account(
@@ -679,26 +665,13 @@ pub async fn get_class_hash_by_address(
     provider: &JsonRpcClient<HttpTransport>,
     address: Felt,
 ) -> Result<Felt> {
-    let result = provider
+    provider
         .get_class_hash_at(BlockId::Tag(PreConfirmed), address)
-        .await;
-
-    if let Err(ProviderError::StarknetError(ContractNotFound)) = result {
-        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
-        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
-            SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: ContractExecutionError::Message(format!(
-                    "Requested contract address {address:#x} is not deployed",
-                )),
-            }),
-        );
-
-        return Err(handle_rpc_error(artificial_transaction_revert_error));
-    }
-
-    result.map_err(handle_rpc_error).with_context(|| {
-        format!("Couldn't retrieve class hash of a contract with address {address:#x}")
-    })
+        .await
+        .map_err(handle_rpc_error)
+        .with_context(|| {
+            format!("Couldn't retrieve class hash of a contract with address {address:#x}")
+        })
 }
 
 #[must_use]
