@@ -38,6 +38,37 @@ fn test_alias_add_happy_path(global: bool) {
 
 #[test_case(false; "local")]
 #[test_case(true; "global")]
+fn test_alias_add_with_custom_profile(global: bool) {
+    let current_dir = tempdir().unwrap();
+    let global_dir = tempdir().unwrap();
+    let mut args = vec!["--profile", "bar", "alias", "add", "foo", "0x43"];
+
+    if global {
+        args.push("--global");
+        Cast::new()
+            .config_dir(global_dir.path())
+            .command()
+            .args(&args)
+            .current_dir(current_dir.path())
+            .assert()
+            .success();
+    } else {
+        runner(&args)
+            .current_dir(current_dir.path())
+            .assert()
+            .success();
+    }
+
+    let config_dir = if global { &global_dir } else { &current_dir };
+    let contents = fs::read_to_string(config_dir.path().join("snfoundry.toml")).unwrap();
+    assert!(contents.contains(indoc! {r#"
+        [sncast.bar.aliases]
+        foo = "0x43"
+    "#}));
+}
+
+#[test_case(false; "local")]
+#[test_case(true; "global")]
 fn test_alias_add_with_missing_config(global: bool) {
     let current_dir = tempdir().unwrap();
     let global_dir = tempdir().unwrap();

@@ -14,7 +14,7 @@ Required.
 
 Felt in hex (prefixed with `0x`) or decimal representation.
 
-## `--profile, -p <PROFILE_NAME>`
+## `--profile <PROFILE_NAME>`
 
 Optional.
 
