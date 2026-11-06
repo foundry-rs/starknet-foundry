@@ -21,10 +21,6 @@ pub struct Add {
     /// Felt value to associate with the alias
     pub value: Felt,
 
-    /// Profile to add the alias to
-    #[arg(short, long, default_value = "default")]
-    pub profile: String,
-
     /// Add the alias to the global configuration file
     #[arg(long)]
     pub global: bool,
@@ -35,7 +31,7 @@ pub struct Add {
 }
 
 #[expect(clippy::needless_pass_by_value)]
-pub fn add(args: Add, _config: &CastConfig, ui: &UI) -> Result<ExitCode> {
+pub fn add(args: Add, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
     let config_path = if args.global {
         resolve_global_config_path_or_warn(ui)
             .context("Failed to resolve the global configuration file")?
@@ -43,15 +39,15 @@ pub fn add(args: Add, _config: &CastConfig, ui: &UI) -> Result<ExitCode> {
         resolve_config_file()
     };
 
-    let mut config = open_config(&config_path)?;
+    let mut config_toml = open_config(&config_path)?;
     add_alias(
-        &mut config,
+        &mut config_toml,
         &args.name,
         args.value,
-        &args.profile,
+        config.profile.as_deref().unwrap_or("default"),
         args.force,
     )?;
-    fs::write(config_path, config.to_string()).context("Failed to write to config file")?;
+    fs::write(config_path, config_toml.to_string()).context("Failed to write to config file")?;
 
     Ok(ExitCode::SUCCESS)
 }
