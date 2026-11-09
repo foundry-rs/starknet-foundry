@@ -11,7 +11,7 @@ use sncast::{
 };
 use starknet_types_core::felt::Felt;
 use std::fs;
-use toml_edit::{DocumentMut, Item, Table, Value};
+use toml_edit::{DocumentMut, InlineTable, Item, Table, Value};
 
 #[derive(Args, Debug)]
 pub struct Add {
@@ -73,33 +73,31 @@ fn add_alias(
         .context("Failed to create or access 'sncast' table")?;
     sncast_table.set_implicit(true);
 
-    let profile_table = sncast_table
+    let profile_item = sncast_table
         .entry(profile)
-        .or_insert(Item::Table(Table::new()))
-        .as_table_mut()
+        .or_insert(Item::Table(Table::new()));
+    let profile_is_inline = profile_item.is_inline_table();
+    let profile_table = profile_item
+        .as_table_like_mut()
         .with_context(|| format!("Failed to create or access `{profile}` profile table"))?;
 
     let aliases_item = profile_table
         .entry("aliases")
-        .or_insert(Item::Table(Table::new()));
-    let value = Value::from(value.into_hex_string());
+        .or_insert(if profile_is_inline {
+            Item::Value(Value::InlineTable(InlineTable::new()))
+        } else {
+            Item::Table(Table::new())
+        });
+    let aliases_table = aliases_item
+        .as_table_like_mut()
+        .context("Failed to create or access aliases table")?;
 
-    if let Some(aliases_table) = aliases_item.as_table_mut() {
-        if aliases_table.contains_key(name) && !force {
-            bail!("Alias `{name}` already exists. Use --force to overwrite it.");
-        }
-
-        aliases_table[name] = value.into();
-    } else if let Some(aliases_table) = aliases_item.as_inline_table_mut() {
-        if aliases_table.contains_key(name) && !force {
-            bail!("Alias `{name}` already exists. Use --force to overwrite it.");
-        }
-
-        aliases_table.insert(name, value);
-        aliases_table.fmt();
-    } else {
-        bail!("Failed to create or access aliases table");
+    if aliases_table.contains_key(name) && !force {
+        bail!("Alias `{name}` already exists. Use --force to overwrite it.");
     }
+
+    aliases_table.insert(name, Value::from(value.into_hex_string()).into());
+    aliases_table.fmt();
 
     Ok(())
 }
@@ -108,6 +106,7 @@ fn add_alias(
 mod tests {
     use super::*;
     use indoc::indoc;
+    use test_case::test_case;
 
     #[test]
     fn adds_alias_without_parent_fields() {
@@ -257,24 +256,50 @@ mod tests {
         );
     }
 
-    #[test]
-    fn adds_alias_to_inline_aliases_table() {
-        let mut config = indoc! {r#"
+    #[test_case(
+        indoc! {r#"
             [sncast.default]
             aliases = { bar = "0x111" }
-        "#}
-        .parse::<DocumentMut>()
-        .unwrap();
+        "#},
+        indoc! {r#"
+            [sncast.default]
+            aliases = { bar = "0x111", map = "0x222" }
+        "#};
+        "inline aliases table")]
+    #[test_case(
+        indoc! {r#"
+            [sncast]
+            default = { aliases = { token = "0x111" } }
+        "#},
+        indoc! {r#"
+            [sncast]
+            default = { aliases = { token = "0x111", map = "0x222" } }
+        "#};
+        "inline profile table")]
+    #[test_case(
+        indoc! {r#"
+            sncast.default = { aliases = { token = "0x111" } }
+        "#},
+        indoc! {r#"
+            sncast.default = { aliases = { token = "0x111", map = "0x222" } }
+        "#};
+        "dotted inline profile table")]
+    #[test_case(
+        indoc! {r#"
+            [sncast]
+            default = { account = "my-account", aliases = { token = "0x111" } }
+        "#},
+        indoc! {r#"
+            [sncast]
+            default = { account = "my-account", aliases = { token = "0x111", map = "0x222" } }
+        "#};
+        "inline profile table with account")]
+    fn adds_alias_to_inline_tables(input: &str, expected: &str) {
+        let mut config = input.parse::<DocumentMut>().unwrap();
 
-        add_alias(&mut config, "foo", Felt::from(0x222), "default", false).unwrap();
+        add_alias(&mut config, "map", Felt::from(0x222), "default", false).unwrap();
 
-        assert_eq!(
-            config.to_string(),
-            indoc! {r#"
-                [sncast.default]
-                aliases = { bar = "0x111", foo = "0x222" }
-            "#}
-        );
+        assert_eq!(config.to_string(), expected);
     }
 
     #[test]
