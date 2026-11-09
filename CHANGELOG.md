@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast account list` no longer hides accounts that share a name with an account on a different network.
 - `sncast account list --json` now reports `"command": "account list"` instead of `"account delete"`.
 - `sncast account list` now reports an error for a malformed accounts file instead of printing that no accounts were found.
+- `u384` values are now serialized and deserialized as two packed felts, matching Cairo's encoding.
 
 ## [0.64.1] - 2026-10-06
 
