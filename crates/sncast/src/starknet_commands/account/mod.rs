@@ -3,6 +3,7 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
+use crate::starknet_commands::account::migrate::Migrate;
 use crate::{process_command_result, starknet_commands};
 use anyhow::{Context, Result, bail, ensure};
 use camino::{Utf8Path, Utf8PathBuf};
@@ -39,6 +40,7 @@ pub mod delete;
 pub mod deploy;
 pub mod import;
 pub mod list;
+pub mod migrate;
 
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
@@ -54,6 +56,7 @@ pub enum Commands {
     Deploy(Deploy),
     Delete(Delete),
     List(List),
+    Migrate(Migrate),
 }
 
 #[derive(Args, Debug)]
@@ -384,6 +387,10 @@ pub async fn account(
                 starknet_commands::account::list::list(&repository, options.display_private_keys);
 
             Ok(process_command_result("account list", result, ui, None))
+        }
+        Commands::Migrate(_) => {
+            let result = starknet_commands::account::migrate::migrate(&repository);
+            Ok(process_command_result("account migrate", result, ui, None))
         }
     }
 }

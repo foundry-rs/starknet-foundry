@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get class` command to get the contract class definition associated with the given class hash or class address.
 - `get storage` command to get a value from contract's storage.
 - `sncast account delete --chain-id` for selecting the account's chain, including custom chains.
+- `account migrate` command to update the schema of the accounts file to latest version.
 
 #### Changed
 
