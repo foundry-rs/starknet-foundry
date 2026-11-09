@@ -3,6 +3,7 @@
 * [common flags](./sncast/common.md)
 * [account](./sncast/account/account.md)
     * [import](./sncast/account/import.md)
+    * [import-starkli](./sncast/account/import-starkli.md)
     * [create](./sncast/account/create.md)
     * [deploy](./sncast/account/deploy.md)
     * [delete](./sncast/account/delete.md)
