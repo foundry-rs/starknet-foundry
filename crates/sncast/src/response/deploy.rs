@@ -2,11 +2,10 @@ use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::declare::DeclareTransactionResponse;
 use crate::response::dry_run::DryRunResponse;
-use crate::response::explorer_link::OutputLink;
+use crate::response::explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink};
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
 use foundry_ui::styling;
-use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
@@ -43,35 +42,35 @@ impl SncastCommandMessage for DeployResponse {
 impl OutputLink for DeployResponse {
     const TITLE: &'static str = "deployment";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         match self {
             DeployResponse::Standard(deploy) => match deploy {
-                StandardDeployResponse::Transaction(response) => formatdoc!(
-                    "
-                        contract: {}
-                        transaction: {}
-                        ",
-                    provider.contract(response.contract_address),
-                    provider.transaction(response.transaction_hash)
-                ),
+                StandardDeployResponse::Transaction(response) => ExplorerLinkBuilder::new()
+                    .link("contract", provider.contract(response.contract_address))
+                    .link(
+                        "transaction",
+                        provider.transaction(response.transaction_hash),
+                    )
+                    .build(),
                 StandardDeployResponse::DryRun(_) => {
                     unreachable!("Dry run response should not generate explorer links")
                 }
             },
-            DeployResponse::WithDeclare(deploy_with_declare) => {
-                formatdoc!(
-                    "
-                    contract: {}
-                    class: {}
-                    deploy transaction: {}
-                    declare transaction: {}
-                    ",
+            DeployResponse::WithDeclare(deploy_with_declare) => ExplorerLinkBuilder::new()
+                .link(
+                    "contract",
                     provider.contract(deploy_with_declare.contract_address),
-                    provider.class(deploy_with_declare.class_hash),
+                )
+                .link("class", provider.class(deploy_with_declare.class_hash))
+                .link(
+                    "deploy transaction",
                     provider.transaction(deploy_with_declare.deploy_transaction_hash),
+                )
+                .link(
+                    "declare transaction",
                     provider.transaction(deploy_with_declare.declare_transaction_hash),
                 )
-            }
+                .build(),
         }
     }
 

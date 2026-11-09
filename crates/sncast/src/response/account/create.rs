@@ -1,5 +1,8 @@
 use crate::response::cast_message::SncastCommandMessage;
-use crate::{helpers::block_explorer::LinkProvider, response::explorer_link::OutputLink};
+use crate::{
+    helpers::block_explorer::LinkProvider,
+    response::explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink},
+};
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
 use foundry_ui::styling;
@@ -39,7 +42,9 @@ impl SncastCommandMessage for AccountCreateResponse {
 impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!("account: {}", provider.contract(self.address))
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
+        ExplorerLinkBuilder::new()
+            .link("account", provider.contract(self.address))
+            .build()
     }
 }

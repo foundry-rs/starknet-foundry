@@ -123,9 +123,10 @@ mod tests {
     use crate::{
         Network,
         helpers::block_explorer::Service,
-        response::{deploy::StandardDeployResponse, explorer_link::OutputLink},
+        response::{deploy::StandardDeployResponse, explorer_link::ExplorerLinksMessage},
     };
     use conversions::padded_felt::PaddedFelt;
+    use foundry_ui::Message;
     use regex::Regex;
     use starknet_rust::macros::felt;
     use test_case::test_case;
@@ -172,14 +173,17 @@ mod tests {
     #[tokio::test]
     async fn test_happy_case_voyager(network: Network, response: &DeployResponse) {
         let provider = Service::Voyager.as_provider(network).unwrap();
-        let result = response.format_links(provider);
+        let result = ExplorerLinksMessage::new(response, provider).text();
         assert_valid_links(&result).await;
     }
 
     #[tokio::test]
     async fn test_happy_case_starkscan() {
-        let result = MAINNET_RESPONSE
-            .format_links(Service::StarkScan.as_provider(Network::Mainnet).unwrap());
+        let result = ExplorerLinksMessage::new(
+            &MAINNET_RESPONSE,
+            Service::StarkScan.as_provider(Network::Mainnet).unwrap(),
+        )
+        .text();
         assert_valid_links(&result).await;
     }
 
@@ -187,7 +191,11 @@ mod tests {
     #[test_case(Service::OkLink; "oklink")]
     #[tokio::test]
     async fn test_happy_case_mainnet(explorer: Service) {
-        let result = MAINNET_RESPONSE.format_links(explorer.as_provider(Network::Mainnet).unwrap());
+        let result = ExplorerLinksMessage::new(
+            &MAINNET_RESPONSE,
+            explorer.as_provider(Network::Mainnet).unwrap(),
+        )
+        .text();
         assert_valid_links(&result).await;
     }
 
