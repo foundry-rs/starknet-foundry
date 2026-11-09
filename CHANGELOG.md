@@ -27,14 +27,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--verifier` flag for `sncast declare` to verify the contract after declaration. It can be combined with `--test-files` and `--confirm-verification` in the same way as in `sncast verify`
 - `get class` command to get the contract class definition associated with the given class hash or class address.
 - `get storage` command to get a value from contract's storage.
+- `sncast account delete --chain-id` for selecting the account's chain, including custom chains.
 
 #### Changed
 
 - `sncast account delete` confirmation prompt now defaults to "No".
 - *BREAKING*: `sncast verify` no longer accepts both `--url` and `--network` flags.
 - Cosmetic improvement: section headings in `get state-update`, `get block` and `ledger sign-hash` output are now bold, and `ledger sign-hash` prints `Hash signature` without a trailing colon.
-- *BREAKING*: `sncast account list` text output is now grouped by network, and its JSON output is now `{ "accounts_file", "accounts": [...] }`, where each account entry includes its `network` and `name`.
+- *BREAKING*: `sncast account list` text output is now grouped by chain ID, and its JSON output is now `{ "accounts_file", "accounts": [...] }`, where each account entry includes its `chain_id` and `name`.
 - `sncast completions` along with `--json` flag will result with an error.
+- Account mutations automatically upgrade legacy accounts files to schema V2 and save the original as a `.v1.bak` file.
+- *BREAKING*: `sncast show-config` reports canonical chain IDs (`SN_MAIN` and `SN_SEPOLIA`) instead of legacy network aliases.
+- `sncast account delete --network-name` is deprecated in favor of `--chain-id`. Legacy aliases are normalized to chain IDs; custom identifiers must be valid Starknet chain IDs.
 
 #### Fixed
 

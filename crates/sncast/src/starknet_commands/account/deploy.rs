@@ -1,23 +1,23 @@
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::Map;
-use sncast::helpers::account::load_accounts;
+use sncast::accounts::{AccountName, AccountRecord, AccountRepository, AccountsError, ChainId};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use sncast::helpers::dry_run::DryRunArgs;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
-use sncast::helpers::ledger;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
 use sncast::response::errors::{SNCastProviderError, SNCastStarknetError};
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
 use sncast::response::ui::UI;
+use sncast::signers::RuntimeSigner;
 use sncast::{
-    AccountData, AccountType, SignerType, WaitForTx, apply_optional_fields,
-    chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
-    get_account_data_from_keystore, handle_rpc_error, handle_wait_for_tx,
+    AccountType, WaitForTx, apply_optional_fields, check_account_file_exists,
+    get_account_data_from_keystore, get_account_record_from_repository, handle_rpc_error,
+    handle_wait_for_tx,
 };
 use starknet_rust::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet_rust::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -54,7 +54,7 @@ pub struct Deploy {
 #[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
@@ -82,10 +82,10 @@ pub async fn deploy(
             .name
             .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        check_account_file_exists(accounts_file)?;
+        check_account_file_exists(repository)?;
         deploy_from_accounts_file(
             provider,
-            accounts_file,
+            repository,
             account_name,
             chain_id,
             fee_args,
@@ -129,7 +129,20 @@ async fn deploy_from_keystore(
         bail!("Public key and private key from keystore do not match");
     }
 
-    let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
+    let account_type = account_data
+        .account_type
+        .ok_or(AccountsError::MissingField {
+            field: "type",
+            operation: "account deployment",
+        })?;
+    let class_hash = account_data.class_hash.ok_or(AccountsError::MissingField {
+        field: "class_hash",
+        operation: "account deployment",
+    })?;
+    let salt = account_data.salt.ok_or(AccountsError::MissingField {
+        field: "salt",
+        operation: "account deployment",
+    })?;
 
     let signer = LocalWallet::from_signing_key(private_key);
     let (address, result) = create_factory_and_deploy(
@@ -156,7 +169,7 @@ async fn deploy_from_keystore(
 #[expect(clippy::too_many_arguments)]
 async fn deploy_from_accounts_file(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     name: String,
     chain_id: Felt,
     fee_args: FeeArgs,
@@ -164,54 +177,32 @@ async fn deploy_from_accounts_file(
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse> {
-    let account_data = get_account_data_from_accounts_file(&name, chain_id, accounts_file)?;
+    let account_data = get_account_record_from_repository(&name, chain_id, repository)?;
     let (account_type, class_hash, salt) = extract_deployment_fields(&account_data)?;
-
-    let (_, result) = match &account_data.signer_type {
-        SignerType::Ledger { ledger_path } => {
-            let signer = ledger::create_ledger_signer(ledger_path, ui, true).await?;
-
-            ledger::verify_ledger_public_key(
-                signer.get_public_key().await?.scalar(),
-                account_data.public_key,
-            )?;
-
-            create_factory_and_deploy(
-                provider,
-                account_type,
-                class_hash,
-                signer,
-                salt,
-                chain_id,
-                fee_args,
-                dry_run_args,
-                wait_config,
-                ui,
-            )
-            .await?
-        }
-        SignerType::Local { private_key } => {
-            let signer =
-                LocalWallet::from_signing_key(SigningKey::from_secret_scalar(*private_key));
-
-            create_factory_and_deploy(
-                provider,
-                account_type,
-                class_hash,
-                signer,
-                salt,
-                chain_id,
-                fee_args,
-                dry_run_args,
-                wait_config,
-                ui,
-            )
-            .await?
-        }
-    };
+    let signer = RuntimeSigner::from_spec(account_data.signer.clone(), ui).await?;
+    let actual_public_key = signer.get_public_key().await?.scalar();
+    ensure!(
+        actual_public_key == account_data.public_key,
+        "{} signer public key does not match the account: expected {:#x}, got {actual_public_key:#x}",
+        signer.kind(),
+        account_data.public_key
+    );
+    let (_, result) = create_factory_and_deploy(
+        provider,
+        account_type,
+        class_hash,
+        signer,
+        salt,
+        chain_id,
+        fee_args,
+        dry_run_args,
+        wait_config,
+        ui,
+    )
+    .await?;
 
     if let InvokeResponse::Transaction(_) = &result {
-        update_account_in_accounts_file(accounts_file, &name, chain_id)?;
+        update_account_in_accounts_file(repository, &name, chain_id, ui)?;
     }
 
     Ok(result)
@@ -290,16 +281,13 @@ where
     }
 }
 
-fn extract_deployment_fields(account_data: &AccountData) -> Result<(AccountType, Felt, Felt)> {
-    let account_type = account_data
-        .account_type
-        .context("Failed to get account type from file")?;
-    let class_hash = account_data
-        .class_hash
-        .context("Failed to get class hash from file")?;
-    let salt = account_data.salt.context("Failed to get salt from file")?;
-
-    Ok((account_type, class_hash, salt))
+fn extract_deployment_fields(account: &AccountRecord) -> Result<(AccountType, Felt, Felt)> {
+    let deployable = account.as_deployable()?;
+    Ok((
+        deployable.account_type(),
+        deployable.class_hash(),
+        deployable.salt(),
+    ))
 }
 
 fn execution_error_message(error: &ContractExecutionError) -> &str {
@@ -405,16 +393,22 @@ where
 }
 
 fn update_account_in_accounts_file(
-    accounts_file: &Utf8PathBuf,
+    repository: &AccountRepository,
     account_name: &str,
     chain_id: Felt,
+    ui: &UI,
 ) -> Result<()> {
-    let network_name = chain_id_to_network_name(chain_id);
-
-    let mut items = load_accounts(accounts_file)?;
-    items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
-    std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
-        .context("Failed to write to accounts file")?;
+    repository
+        .update_record(
+            &ChainId::from(chain_id),
+            &AccountName::new(account_name)?,
+            |record| {
+                record.deployed = Some(true);
+                Ok(())
+            },
+        )?
+        .migration_outcome
+        .notify_if_migrated(ui);
 
     Ok(())
 }
@@ -439,4 +433,98 @@ fn update_keystore_account(account: &str, address: Felt) -> Result<()> {
         .context("Failed to write to account file")?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use sncast::ValidatedWaitParams;
+    use starknet_rust::core::types::FeeEstimate;
+    use test_case::test_case;
+    use wiremock::matchers::body_partial_json;
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    #[test_case(true, false, "signer public key does not match the account"; "wrong signer")]
+    #[test_case(false, true, "Failed to estimate fee:"; "failed estimation")]
+    #[test_case(false, false, "Estimated fee (4400) is higher than provided max fee (1)"; "max fee too low")]
+    #[tokio::test]
+    async fn deployment_errors_do_not_modify_accounts_file(
+        wrong_key: bool,
+        failed_estimation: bool,
+        expected: &str,
+    ) {
+        let directory = tempfile::tempdir().unwrap();
+        let path = Utf8PathBuf::from_path_buf(directory.path().join("accounts.json")).unwrap();
+        let mut accounts: serde_json::Value =
+            serde_json::from_str(include_str!("../../../tests/data/accounts/accounts.json"))
+                .unwrap();
+        if wrong_key {
+            accounts["accounts"]["SN_SEPOLIA"]["oz"]["public_key"] = json!("0x1");
+        }
+        let original = serde_json::to_vec(&accounts).unwrap();
+        std::fs::write(&path, &original).unwrap();
+        let repository = AccountRepository::try_new(&path).unwrap();
+
+        let server = MockServer::start().await;
+        Mock::given(body_partial_json(json!({"method": "starknet_getNonce"})))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "jsonrpc": "2.0", "id": 1, "result": "0x0"
+            })))
+            .mount(&server)
+            .await;
+        let fee_response = if failed_estimation {
+            json!({"error": {"code": -32603, "message": "estimation unavailable"}})
+        } else {
+            json!({"result": [FeeEstimate {
+                l1_gas_consumed: 10,
+                l1_gas_price: 60,
+                l2_gas_consumed: 30,
+                l2_gas_price: 40,
+                l1_data_gas_consumed: 50,
+                l1_data_gas_price: 20,
+                overall_fee: 4400,
+            }]})
+        };
+        Mock::given(body_partial_json(json!({"method": "starknet_estimateFee"})))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "jsonrpc": "2.0", "id": 1,
+                "result": fee_response.get("result"),
+                "error": fee_response.get("error"),
+            })))
+            .mount(&server)
+            .await;
+        let provider = sncast::get_provider(&server.uri().parse().unwrap()).unwrap();
+        let fee_args = FeeArgs {
+            max_fee: Some(Felt::ONE.try_into().unwrap()),
+            ..Default::default()
+        };
+        let args = Deploy {
+            name: Some("oz".to_owned()),
+            fee_args,
+            dry_run_args: DryRunArgs::default(),
+            rpc: RpcArgs::default(),
+            silent: true,
+        };
+        let error = deploy(
+            &provider,
+            &repository,
+            &args,
+            sncast::SEPOLIA,
+            WaitForTx {
+                wait: false,
+                wait_params: ValidatedWaitParams::default(),
+                show_ui_outputs: false,
+            },
+            "",
+            None,
+            fee_args,
+            DryRunArgs::default(),
+            &UI::default(),
+        )
+        .await
+        .unwrap_err();
+        assert!(error.to_string().contains(expected), "{error:#}");
+        assert_eq!(std::fs::read(&path).unwrap(), original);
+    }
 }
