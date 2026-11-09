@@ -2,7 +2,11 @@ use crate::response::cast_message::SncastCommandMessage;
 use crate::response::invoke::InvokeTransactionResponse;
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{dry_run::DryRunResponse, explorer_link::OutputLink, invoke::InvokeResponse},
+    response::{
+        dry_run::DryRunResponse,
+        explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink},
+        invoke::InvokeResponse,
+    },
 };
 use conversions::string::IntoHexStr;
 use foundry_ui::styling;
@@ -53,12 +57,14 @@ impl SncastCommandMessage for AccountDeployResponse {
 impl OutputLink for AccountDeployResponse {
     const TITLE: &'static str = "account deployment";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         match self {
-            AccountDeployResponse::Transaction(response) => format!(
-                "transaction: {}",
-                provider.transaction(response.transaction_hash)
-            ),
+            AccountDeployResponse::Transaction(response) => ExplorerLinkBuilder::new()
+                .link(
+                    "transaction",
+                    provider.transaction(response.transaction_hash),
+                )
+                .build(),
             AccountDeployResponse::DryRun(_) => {
                 unreachable!("Dry run response should not generate explorer links")
             }

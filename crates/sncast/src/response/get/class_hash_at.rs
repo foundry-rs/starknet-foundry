@@ -1,6 +1,6 @@
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::explorer_link::OutputLink;
+use crate::response::explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink};
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoPaddedHexStr;
 use foundry_ui::styling;
@@ -24,7 +24,9 @@ impl SncastCommandMessage for ClassHashAtResponse {
 impl OutputLink for ClassHashAtResponse {
     const TITLE: &'static str = "class";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!("class: {}", provider.class(self.class_hash))
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
+        ExplorerLinkBuilder::new()
+            .link("class", provider.class(self.class_hash))
+            .build()
     }
 }

@@ -1,7 +1,11 @@
 use crate::response::cast_message::SncastCommandMessage;
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{dry_run::DryRunResponse, explorer_link::OutputLink, invoke::InvokeResponse},
+    response::{
+        dry_run::DryRunResponse,
+        explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink},
+        invoke::InvokeResponse,
+    },
 };
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoHexStr;
@@ -61,12 +65,14 @@ impl From<InvokeResponse> for MulticallRunResponse {
 impl OutputLink for MulticallRunResponse {
     const TITLE: &'static str = "invocation";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         match self {
-            MulticallRunResponse::Transaction(response) => format!(
-                "transaction: {}",
-                provider.transaction(response.transaction_hash)
-            ),
+            MulticallRunResponse::Transaction(response) => ExplorerLinkBuilder::new()
+                .link(
+                    "transaction",
+                    provider.transaction(response.transaction_hash),
+                )
+                .build(),
             MulticallRunResponse::DryRun(_) => {
                 unreachable!("Dry run response should not generate explorer links")
             }

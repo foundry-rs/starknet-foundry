@@ -1,6 +1,6 @@
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::explorer_link::OutputLink;
+use crate::response::explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink};
 use conversions::padded_felt::PaddedFelt;
 use conversions::string::IntoDecStr;
 use foundry_ui::styling::OutputBuilder;
@@ -50,9 +50,11 @@ pub fn append_transaction(builder: OutputBuilder, transaction: &Transaction) -> 
 impl OutputLink for TransactionResponse {
     const TITLE: &'static str = "transaction";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         let hash = PaddedFelt(*self.0.transaction_hash());
-        format!("transaction: {}", provider.transaction(hash))
+        ExplorerLinkBuilder::new()
+            .link("transaction", provider.transaction(hash))
+            .build()
     }
 }
 

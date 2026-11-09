@@ -4,7 +4,10 @@ use serde::Serialize;
 use starknet_rust::core::types::ContractClass;
 use starknet_rust_crypto::Felt;
 
-use crate::response::{cast_message::SncastCommandMessage, explorer_link::OutputLink};
+use crate::response::{
+    cast_message::SncastCommandMessage,
+    explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink},
+};
 
 #[derive(Clone, Serialize)]
 pub struct ClassResponse {
@@ -28,10 +31,12 @@ impl SncastCommandMessage for ClassResponse {
 impl OutputLink for ClassResponse {
     const TITLE: &str = "class";
 
-    fn format_links(
+    fn get_links(
         &self,
         provider: Box<dyn crate::helpers::block_explorer::LinkProvider>,
-    ) -> String {
-        format!("class: {}", provider.class(PaddedFelt(self.class_hash)))
+    ) -> Vec<ExplorerLink> {
+        ExplorerLinkBuilder::new()
+            .link("class", provider.class(PaddedFelt(self.class_hash)))
+            .build()
     }
 }

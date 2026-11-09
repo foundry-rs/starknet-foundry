@@ -1,4 +1,4 @@
-use super::explorer_link::OutputLink;
+use super::explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink};
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::dry_run::DryRunResponse;
@@ -50,20 +50,19 @@ impl SncastCommandMessage for InvokeTransactionResponse {
 impl OutputLink for InvokeTransactionResponse {
     const TITLE: &'static str = "invocation";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!(
-            "transaction: {}",
-            provider.transaction(self.transaction_hash)
-        )
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
+        ExplorerLinkBuilder::new()
+            .link("transaction", provider.transaction(self.transaction_hash))
+            .build()
     }
 }
 
 impl OutputLink for InvokeResponse {
     const TITLE: &'static str = "invocation";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         match self {
-            InvokeResponse::Transaction(response) => response.format_links(provider),
+            InvokeResponse::Transaction(response) => response.get_links(provider),
             InvokeResponse::DryRun(_) => {
                 unreachable!("Dry run response should not generate explorer links")
             }
