@@ -64,6 +64,33 @@ sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 > `--max-fee` and the individual resource flags are mutually exclusive.
 > Any individual resource flag that is not provided will be estimated automatically
 
+# Declaring a Class That May Already Exist
+
+Pass [`--skip-if-declare`](../appendix/sncast/declare.md#--skip-if-declare) when a script should keep going if the class is already on the network. `sncast` exits successfully and prints the existing class hash. It does not submit a new declare transaction, so the output has no transaction hash.
+
+<!-- { "ignored": true } -->
+```shell
+$ sncast --account my_account \
+    declare \
+    --network sepolia \
+    --contract-name HelloSncast \
+    --skip-if-declare
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Class already declared
+
+Class Hash: 0x0[..]
+
+To deploy a contract of this class, run:
+sncast --account my_account deploy --class-hash 0x[..] --network sepolia
+```
+</details>
+<br>
+
 # Declaring an Already Compiled Contract
 
 When you already have a compiled contract (Sierra file) and want to declare it directly, use [`declare-from`](../appendix/sncast/declare_from.md) with [`--sierra-file`](../appendix/sncast/declare_from.md#--sierra-file-sierra_file) option.

@@ -467,6 +467,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
                 match declare_result {
                     Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
                         class_hash,
+                        ..
                     })) => (class_hash.into_(), None, Some(local_abi)),
                     Ok(DeclareResponse::Success(declare_transaction_response)) => (
                         declare_transaction_response.class_hash.into_(),

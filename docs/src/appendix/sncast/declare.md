@@ -95,6 +95,12 @@ Optional.
 
 If passed, omits ABI from the declared class. This changes the resulting class hash.
 
+## `--skip-if-declare`
+Optional.
+Conflicts with: [`--dry-run`](#--dry-run)
+
+If the class is already declared, exit successfully and print its class hash instead of returning an error. No new declare transaction is sent in that case, so the output does not include a transaction hash.
+
 ## `--package <NAME>`
 Optional.
 

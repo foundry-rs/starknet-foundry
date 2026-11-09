@@ -543,6 +543,138 @@ async fn test_contract_already_declared_estimate_fee() {
 }
 
 #[tokio::test]
+async fn test_skip_if_declare_returns_existing_class_hash() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "skip_if_declare_human",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--skip-if-declare",
+    ];
+
+    let first_stdout = command_stdout(&args, tempdir.path());
+    assert_stdout_contains(
+        first_stdout.clone(),
+        indoc! {r"
+        Success: Declaration completed
+        "},
+    );
+    assert!(
+        first_stdout.contains("Transaction Hash:"),
+        "a new declaration should still report a transaction hash: {first_stdout}"
+    );
+
+    let second_stdout = command_stdout(&args, tempdir.path());
+    assert_stdout_contains(
+        second_stdout.clone(),
+        indoc! {r"
+        Success: Class already declared
+
+        Class Hash: 0x[..]
+
+        To see class details, visit:
+        class: https://[..]
+
+        To deploy a contract of this class, run:
+        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
+        "},
+    );
+    assert!(
+        !second_stdout.contains("Transaction Hash:"),
+        "an already declared class should not report a transaction hash: {second_stdout}"
+    );
+}
+
+#[tokio::test]
+async fn test_skip_if_declare_json_output() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "skip_if_declare_json",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--json",
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--skip-if-declare",
+    ];
+
+    let first_response = declare_response_json(&command_stdout(&args, tempdir.path()));
+    assert_eq!(first_response["command"], "declare");
+    assert_eq!(first_response["type"], "response");
+    assert!(first_response["transaction_hash"].is_string());
+    assert!(first_response["class_hash"].is_string());
+
+    let second_response = declare_response_json(&command_stdout(&args, tempdir.path()));
+    assert_eq!(second_response["class_hash"], first_response["class_hash"]);
+    assert_eq!(second_response["command"], "declare");
+    assert_eq!(second_response["type"], "response");
+    assert!(second_response.get("transaction_hash").is_none());
+    assert!(second_response.get("verification_message").is_none());
+}
+
+#[test]
+fn test_skip_if_declare_conflicts_with_dry_run() {
+    let args = vec![
+        "declare",
+        "--contract-name",
+        "Map",
+        "--url",
+        URL,
+        "--skip-if-declare",
+        "--dry-run",
+    ];
+
+    let output = runner(&args).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "error: the argument '--skip-if-declare' cannot be used with '--dry-run'",
+    );
+}
+
+fn command_stdout(args: &[&str], current_dir: &std::path::Path) -> String {
+    let output = runner(args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(current_dir)
+        .assert()
+        .success();
+
+    output.as_stdout().to_string()
+}
+
+fn declare_response_json(stdout: &str) -> serde_json::Value {
+    stdout
+        .lines()
+        .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+        .find(|value| value["type"] == "response")
+        .expect("declare response was not printed")
+}
+
+#[tokio::test]
 async fn test_invalid_nonce() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1123");
