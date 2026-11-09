@@ -40,8 +40,7 @@ fn setup_redirect_server() {
 #[test]
 fn should_print_warning() {
     let temp = setup_package("empty");
-    let mut node_url = node_url();
-    node_url.set_path("rpc/v0_9");
+    let node_url = node_url().join("rpc/v0_9").unwrap();
 
     temp.child("tests/test.cairo")
         .write_str(
@@ -78,8 +77,7 @@ fn should_print_warning() {
 #[test]
 fn should_dedup_urls() {
     let temp = setup_package("empty");
-    let mut node_url = node_url();
-    node_url.set_path("rpc/v0_9");
+    let node_url = node_url().join("rpc/v0_9").unwrap();
 
     temp.child("tests/test.cairo")
         .write_str(
@@ -123,8 +121,7 @@ fn should_print_foreach() {
     setup_redirect_server();
 
     let temp = setup_package("empty");
-    let mut node_url = node_url();
-    node_url.set_path("rpc/v0_9");
+    let node_url = node_url().join("rpc/v0_9").unwrap();
 
     temp.child("tests/test.cairo")
         .write_str(

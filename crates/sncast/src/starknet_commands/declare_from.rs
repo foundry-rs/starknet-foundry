@@ -8,7 +8,7 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::artifacts::sierra_class_from_file;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::rpc::{FreeProvider, RpcArgs};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::{
     SNCastProviderError, StarknetCommandError, handle_starknet_command_error,
@@ -94,8 +94,7 @@ impl SourceRpcArgs {
     #[must_use]
     async fn get_url(&self) -> Option<Url> {
         if let Some(network) = self.source_network {
-            let free_provider = FreeProvider::semi_random();
-            Some(network.url(&free_provider).await.ok()?)
+            network.url().await.ok()
         } else {
             self.source_url.clone()
         }
