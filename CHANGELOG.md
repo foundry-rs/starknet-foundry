@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast account list` no longer hides accounts that share a name with an account on a different network.
 - `sncast account list --json` now reports `"command": "account list"` instead of `"account delete"`.
 - `sncast account list` now reports an error for a malformed accounts file instead of printing that no accounts were found.
-- Decoding a `u384` value (for example, in `call` output or transaction traces) no longer panics.
+- Formatting a `u384` value no longer panics.
 
 ## [0.64.1] - 2026-10-06
 
