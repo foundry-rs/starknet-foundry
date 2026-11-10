@@ -125,6 +125,7 @@ mod tests {
         helpers::block_explorer::Service,
         response::{deploy::StandardDeployResponse, explorer_link::ExplorerLinksMessage},
     };
+    use console::strip_ansi_codes;
     use conversions::padded_felt::PaddedFelt;
     use foundry_ui::Message;
     use regex::Regex;
@@ -154,9 +155,10 @@ mod tests {
     );
 
     async fn assert_valid_links(input: &str) {
-        let pattern = Regex::new(r"transaction: |contract: |class: ").unwrap();
-        let links = pattern.replace_all(input, "");
-        let mut links = links.split('\n');
+        let input = strip_ansi_codes(input);
+        let pattern = Regex::new(r"(transaction|contract|class):\s+").unwrap();
+        let links = pattern.replace_all(&input, "");
+        let mut links = links.split('\n').filter(|line| line.starts_with("http"));
 
         let contract = links.next().unwrap();
         let transaction = links.next().unwrap();
