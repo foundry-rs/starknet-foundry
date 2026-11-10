@@ -2,17 +2,17 @@ use crate::Network;
 use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet::detection};
 use foundry_ui::Message;
 use foundry_ui::styling::OutputBuilder;
+use indexmap::IndexMap;
 use serde::Serialize;
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
-use std::collections::BTreeMap;
 
 const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 
 #[derive(Debug)]
 pub struct ExplorerLink {
-    title: String,
-    link: String,
+    pub title: String,
+    pub link: String,
 }
 
 // TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
@@ -30,7 +30,7 @@ pub trait OutputLink {
 #[derive(Serialize)]
 pub struct ExplorerLinksMessage {
     title: String,
-    links: BTreeMap<String, String>,
+    links: IndexMap<String, String>,
 }
 
 impl ExplorerLinksMessage {
