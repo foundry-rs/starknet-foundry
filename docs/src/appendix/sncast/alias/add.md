@@ -14,14 +14,6 @@ Required.
 
 Felt in hex (prefixed with `0x`) or decimal representation.
 
-## `--profile <PROFILE_NAME>`
-
-Optional.
-
-Which profile should the alias be added to.
-
-Defaults to `default`.
-
 ## `--global`
 
 Optional.
