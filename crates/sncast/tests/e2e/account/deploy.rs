@@ -669,6 +669,6 @@ pub async fn test_json_output_format() {
         .current_dir(tempdir.path());
     snapbox.assert().stdout_eq(indoc! {r#"
         {"command":"account deploy","transaction_hash":"0x0[..]","type":"response"}
-        {"links":"transaction: https://sepolia.voyager.online/tx/0x0[..]","title":"account deployment","type":"notification"}
+        {"links":{"transaction":"https://sepolia.voyager.online/tx/0x[..]"},"title":"account deployment","type":"notification"}
     "#});
 }
