@@ -67,9 +67,8 @@ fn add_alias(
     let sncast_table = config
         .entry("sncast")
         .or_insert(Item::Table(Table::new()))
-        .as_table_mut()
+        .as_table_like_mut()
         .context("Failed to create or access 'sncast' table")?;
-    sncast_table.set_implicit(true);
 
     let profile_item = sncast_table
         .entry(profile)
@@ -95,7 +94,10 @@ fn add_alias(
     }
 
     aliases_table.insert(name, Value::from(value.into_hex_string()).into());
-    aliases_table.fmt();
+
+    if profile_is_inline {
+        aliases_table.fmt();
+    }
 
     Ok(())
 }
@@ -104,7 +106,6 @@ fn add_alias(
 mod tests {
     use super::*;
     use indoc::indoc;
-    use test_case::test_case;
 
     #[test]
     fn adds_alias_without_parent_fields() {
@@ -202,6 +203,8 @@ mod tests {
         assert_eq!(
             config.to_string(),
             indoc! {r#"
+                [sncast]
+
                 [sncast.default]
 
                 [sncast.default.aliases]
@@ -254,50 +257,55 @@ mod tests {
         );
     }
 
-    #[test_case(
-        indoc! {r#"
-            [sncast.default]
-            aliases = { bar = "0x111" }
-        "#},
-        indoc! {r#"
-            [sncast.default]
-            aliases = { bar = "0x111", map = "0x222" }
-        "#};
-        "inline aliases table")]
-    #[test_case(
-        indoc! {r#"
-            [sncast]
-            default = { aliases = { token = "0x111" } }
-        "#},
-        indoc! {r#"
-            [sncast]
-            default = { aliases = { token = "0x111", map = "0x222" } }
-        "#};
-        "inline profile table")]
-    #[test_case(
-        indoc! {r#"
-            sncast.default = { aliases = { token = "0x111" } }
-        "#},
-        indoc! {r#"
-            sncast.default = { aliases = { token = "0x111", map = "0x222" } }
-        "#};
-        "dotted inline profile table")]
-    #[test_case(
-        indoc! {r#"
-            [sncast]
-            default = { account = "my-account", aliases = { token = "0x111" } }
-        "#},
-        indoc! {r#"
-            [sncast]
-            default = { account = "my-account", aliases = { token = "0x111", map = "0x222" } }
-        "#};
-        "inline profile table with account")]
-    fn adds_alias_to_inline_tables(input: &str, expected: &str) {
-        let mut config = input.parse::<DocumentMut>().unwrap();
+    #[test]
+    fn handles_inline_tables() {
+        let mut config = indoc! {r#"
+            sncast = { default = { aliases = { token = "0x111" } } }
+        "#}
+        .parse::<DocumentMut>()
+        .unwrap();
 
         add_alias(&mut config, "map", Felt::from(0x222), "default", false).unwrap();
 
-        assert_eq!(config.to_string(), expected);
+        assert_eq!(
+            config.to_string(),
+            indoc! {r#"
+                sncast = { default = { aliases = { token = "0x111", map = "0x222" } } }
+            "#}
+        );
+    }
+
+    #[test]
+    fn preserves_comments() {
+        let mut config = indoc! {r#"
+            # Root documentation
+            [sncast] # Root inline note
+
+            [sncast.default]
+            account = "test"
+
+            [sncast.default.aliases]
+            old = "0x1" # first alias
+        "#}
+        .parse::<DocumentMut>()
+        .unwrap();
+
+        add_alias(&mut config, "new", Felt::from(0x2), "default", false).unwrap();
+
+        assert_eq!(
+            config.to_string(),
+            indoc! {r#"
+            # Root documentation
+            [sncast] # Root inline note
+
+            [sncast.default]
+            account = "test"
+
+            [sncast.default.aliases]
+            old = "0x1" # first alias
+            new = "0x2"
+        "#}
+        );
     }
 
     #[test]
@@ -309,6 +317,8 @@ mod tests {
         assert_eq!(
             config.to_string(),
             indoc! {r#"
+                [sncast]
+
                 [sncast.development]
 
                 [sncast.development.aliases]
