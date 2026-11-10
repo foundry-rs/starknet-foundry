@@ -155,3 +155,21 @@ fn test_added_alias_is_listed() {
 
     assert_stdout_contains(output, "foo: 0x43");
 }
+
+#[test]
+fn empty_name_fails() {
+    let current_dir = tempdir().unwrap();
+
+    let output = runner(&["alias", "add", "", "0x43"])
+        .current_dir(current_dir.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {"
+        Command: alias add
+        Error: Alias name should be non-empty string.
+    "},
+    );
+}

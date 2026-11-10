@@ -32,6 +32,12 @@ pub struct Add {
 
 #[expect(clippy::needless_pass_by_value)]
 pub fn add(args: Add, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
+    let name = args.name.trim();
+
+    if name.is_empty() {
+        bail!("Alias name should be non-empty string.");
+    }
+
     let config_path = if args.global {
         resolve_global_config_path_or_warn(ui)
             .context("Failed to resolve the global configuration file")?
