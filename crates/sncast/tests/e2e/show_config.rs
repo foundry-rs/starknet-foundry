@@ -420,7 +420,7 @@ async fn test_show_config_provider_error() {
     assert_stdout_contains(
         snapbox.assert().success(),
         indoc! {r"
-            Could not reach RPC provider: Error while calling RPC method spec_version: error sending request for url (http://127.0.0.1:1/rpc)
+            [WARNING] Could not reach RPC provider: Error while calling RPC method spec_version: error sending request for url (http://127.0.0.1:1/rpc)
             RPC URL:             http://127.0.0.1:1/rpc
             Account:             user1
             Accounts File Path:  [..]/.starknet_accounts/starknet_open_zeppelin_accounts.json
