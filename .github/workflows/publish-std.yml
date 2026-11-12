@@ -37,7 +37,7 @@ jobs:
     outputs:
       snforge_std_uploaded: ${{ steps.check-uploaded.outputs.snforge_std_uploaded }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Check version
         id: check-uploaded
         run: |
@@ -59,13 +59,13 @@ jobs:
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+      - uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
 
-      - uses: software-mansion/setup-scarb@v1
+      - uses: software-mansion/setup-scarb@v1.6.2
         with:
           cache: false
         

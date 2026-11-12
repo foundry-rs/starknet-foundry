@@ -21,7 +21,7 @@ jobs:
     outputs:
       plugin_uploaded: ${{ steps.check-uploaded.outputs.plugin_uploaded }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Check version
         id: check-uploaded
         run: |
@@ -44,14 +44,16 @@ jobs:
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: software-mansion/setup-scarb@v1
+      - uses: actions/checkout@v7.0.1
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - uses: software-mansion/setup-scarb@v1.6.2
         with:
           cache: false
 
       - name: Download artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v8.0.2
         with:
           path: artifacts-dl
 

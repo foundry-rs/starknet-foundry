@@ -20,8 +20,8 @@ jobs:
     outputs:
       versions: ${{ steps.get_versions.outputs.versions }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: actions/checkout@v7.0.1
+      - uses: asdf-vm/actions/setup@v4.0.1
       - run: |
           asdf plugin add scarb
           asdf install scarb latest
@@ -42,8 +42,8 @@ jobs:
     name: Workspace Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           save-cache: 'true'
       - run: cargo test --profile ci --workspace --exclude sncast --exclude forge --exclude native-api
@@ -54,8 +54,8 @@ jobs:
     # LLVM 19 packages used by cairo-native are not compatible with Ubuntu 26.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           install-llvm: 'true'
           cache-key: 'native'
@@ -65,8 +65,8 @@ jobs:
     name: Build Nextest Archive (Forge)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           setup-scarb: 'false'
           setup-usc: 'false'
@@ -78,7 +78,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --archive-file 'nextest-archive-forge-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: nextest-archive-forge-${{ runner.os }}
           path: nextest-archive-forge-${{ runner.os }}.tar.zst
@@ -88,8 +88,8 @@ jobs:
     # LLVM 19 packages used by cairo-native are not compatible with Ubuntu 26.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           install-llvm: 'true'
           setup-scarb: 'false'
@@ -103,7 +103,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --cargo-profile ci -p forge --features cairo-native --archive-file 'nextest-archive-forge-native-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: nextest-archive-forge-native-${{ runner.os }}
           path: nextest-archive-forge-native-${{ runner.os }}.tar.zst
@@ -117,14 +117,14 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           name: nextest-archive-forge-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -139,14 +139,14 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           name: nextest-archive-forge-native-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -192,15 +192,15 @@ jobs:
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
 
-      - uses: actions/checkout@v7
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: asdf-vm/actions/install@v4.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           name: nextest-archive-forge-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -246,15 +246,15 @@ jobs:
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
 
-      - uses: actions/checkout@v7
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: asdf-vm/actions/install@v4.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           name: nextest-archive-forge-native-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -302,8 +302,8 @@ jobs:
           curl -sSL --fail --retry 5 --retry-all-errors --connect-timeout 10 -H "Authorization: Bearer ${{ github.token }}" https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
           cairo-coverage --version
 
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           scarb-version: ${{ matrix.version }}
       - name: Run snap E2E tests
@@ -313,17 +313,17 @@ jobs:
     name: Test special conditions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         # Scarb is installed manually below to control the version
         with:
           setup-scarb: 'false'
 
       - run: cargo test --profile ci --package forge --features no_scarb_installed --lib compatibility_check::tests::failing_tool_not_installed
 
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: asdf-vm/actions/install@v4.0.1
 
-      - uses: software-mansion/setup-scarb@v1
+      - uses: software-mansion/setup-scarb@v1.6.2
         with:
           scarb-version: "2.13.1"
           cache: false
@@ -335,8 +335,8 @@ jobs:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
       - name: Run Forge Scarb Plugin tests
@@ -347,13 +347,13 @@ jobs:
     name: Build Nextest Archive (Cast)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: asdf-vm/actions/install@v4.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           save-cache: 'true'
       - name: Install nextest
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@v2.90.3
         with:
           tool: nextest@0.9.98
 
@@ -361,7 +361,7 @@ jobs:
         run: cargo nextest archive --cargo-profile ci -p sncast --archive-file 'nextest-archive-cast-${{ runner.os }}.tar.zst'
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: nextest-archive-cast-${{ runner.os }}
           path: nextest-archive-cast-${{ runner.os }}.tar.zst
@@ -375,15 +375,15 @@ jobs:
       matrix:
         partition: [ 1, 2, 3 ]
     steps:
-      - uses: actions/checkout@v7
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: asdf-vm/actions/install@v4.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           setup-rust-cache: 'false'
-      - uses: taiki-e/install-action@v2
+      - uses: taiki-e/install-action@v2.90.3
         with:
           tool: nextest@0.9.98
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           name: nextest-archive-cast-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
@@ -395,10 +395,10 @@ jobs:
     container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:5.3.16
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Save ledger builder Rust toolchain
         run: echo "LEDGER_RUST_TOOLCHAIN=${RUSTUP_TOOLCHAIN}" >> $GITHUB_ENV
-      - uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+      - uses: asdf-vm/actions/install@v4.0.1
       - name: Clone app-starknet
         run: git clone --depth 1 --branch nanox_2.7.0_2.4.0_sdk_v26.0.2 https://github.com/LedgerHQ/app-starknet.git /tmp/app-starknet
       - name: Build Starknet Ledger App (Nano X)
@@ -409,14 +409,14 @@ jobs:
           mkdir -p ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app
           cp target/nanox/release/starknet \
             ${GITHUB_WORKSPACE}/crates/sncast/tests/data/ledger-app/nanox.elf
-      - uses: ./.github/actions/setup-tools
+      - uses: $/.github/actions/setup-tools
         with:
           cache-key: 'cast-ledger'
           save-cache: 'true'
       # Ledger image sets RUSTUP_TOOLCHAIN to its nightly; workspace uses stable from setup-tools.
       - name: Set workspace Rust toolchain
         run: echo "RUSTUP_TOOLCHAIN=stable" >> $GITHUB_ENV
-      - uses: taiki-e/install-action@v2
+      - uses: taiki-e/install-action@v2.90.3
         with:
           tool: nextest@0.9.98
       - name: Run tests (nextest)
@@ -430,8 +430,8 @@ jobs:
       # Make sure CI fails on all warnings - including Clippy lints.
       RUSTFLAGS: "-Dwarnings"
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
         with:
           install-llvm: 'true'
           setup-usc: 'false'
@@ -470,14 +470,14 @@ jobs:
     name: Test Building Docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-tools
+      - uses: actions/checkout@v7.0.1
+      - uses: $/.github/actions/setup-tools
       - uses: taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486 # 2.75.18
         with:
           # TODO(#3970): Upgrade mdbook-variables after resolving issue
           tool: mdbook@0.4.52,mdbook-variables@0.3.0,mdbook-linkcheck
       - name: Build with mdBook
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        uses: nick-fields/retry@v4.0.0
         with:
           timeout_minutes: 10
           max_attempts: 3

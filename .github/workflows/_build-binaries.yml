@@ -49,13 +49,13 @@ jobs:
     steps:
       - name: Checkout with ref
         if: inputs.ref != ''
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ inputs.ref }}
 
       - name: Checkout default
         if: inputs.ref == ''
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Setup rust
         run: |
@@ -63,7 +63,9 @@ jobs:
 
       - name: Install cross
         if: matrix.cross
-        uses: taiki-e/install-action@cross
+        uses: taiki-e/install-action@v2.90.3
+        with:
+          tool: cross
 
       - name: Enable cross-compilation
         if: matrix.cross
@@ -84,7 +86,7 @@ jobs:
           ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: build-${{ matrix.target }}
           path: ${{ env.PKG_FULL_NAME }}.*

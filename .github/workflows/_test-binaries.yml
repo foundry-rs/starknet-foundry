@@ -32,8 +32,8 @@ jobs:
             os: macos-14-large
 
     steps:
-      - uses: actions/checkout@v7
-      - uses: software-mansion/setup-scarb@v1
+      - uses: actions/checkout@v7.0.1
+      - uses: software-mansion/setup-scarb@v1.6.2
         with:
           cache: false
 
@@ -42,7 +42,7 @@ jobs:
           rustup target add ${{ matrix.target }}
 
       - name: Download artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v8.0.2
         with:
           path: artifacts-dl
 
@@ -65,7 +65,7 @@ jobs:
           tar xzvf ${{ env.ARTIFACTS_PATH }}
 
       - name: Install universal-sierra-compiler
-        uses: software-mansion/setup-universal-sierra-compiler@v1
+        uses: software-mansion/setup-universal-sierra-compiler@v1.0.1
 
       - name: Smoke test
         shell: bash
