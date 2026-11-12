@@ -23,9 +23,14 @@ fn test_add_one_and_two(mut _data: Span<felt252>) -> Span<felt252> {
     core::option::OptionTraitImpl::expect(
         core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
     );
-    test_add(1, 2, 3);
+    if snforge_std::_internals::is_config_run() {
+        test_add__snforge_internal_config();
+        let mut arr = ArrayTrait::new();
+        return core::array::ArrayTrait::span(@arr);
+    }
+    let _ = test_add(1, 2, 3);
     let mut arr = ArrayTrait::new();
     core::array::ArrayTrait::span(@arr)
 }
-#[__internal_config_statement]
+#[__snforge_finalize]
 fn test_add(x: i128, y: i128, expected: i128) {}

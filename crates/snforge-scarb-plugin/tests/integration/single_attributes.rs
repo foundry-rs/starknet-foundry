@@ -1,9 +1,9 @@
 mod available_gas;
 mod disable_predeployed_contracts;
+mod finalize;
 mod fork;
 mod fuzzer;
 mod ignore;
-mod internal_config_statement;
 mod should_panic;
 mod test;
 mod test_case;

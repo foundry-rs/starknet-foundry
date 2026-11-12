@@ -23,14 +23,16 @@ fn empty_fn__snforge_internal_test_generated(mut _data: Span<felt252>) -> Span<f
     core::option::OptionTraitImpl::expect(
         core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
     );
-    empty_fn__snforge_internal_fuzzer_generated();
+    if snforge_std::_internals::is_config_run() {
+        empty_fn__snforge_internal_config();
+        let mut arr = ArrayTrait::new();
+        return core::array::ArrayTrait::span(@arr);
+    }
+    let _ = empty_fn__snforge_internal_fuzzer_generated();
     let mut arr = ArrayTrait::new();
     core::array::ArrayTrait::span(@arr)
 }
 #[__fuzzer_config(runs: 123, seed: 321)]
 #[__fuzzer_wrapper]
-fn empty_fn(f: felt252) {
-    if snforge_std::_internals::is_config_run() {
-        return Default::default();
-    };
-}
+#[__snforge_finalize]
+fn empty_fn(f: felt252) {}

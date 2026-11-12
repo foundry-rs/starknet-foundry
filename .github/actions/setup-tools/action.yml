@@ -66,7 +66,7 @@ runs:
       if: ${{ inputs.install-llvm == 'true' }}
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
+        sudo apt-get install -y -t llvm-toolchain-jammy-19 \
           llvm-19 llvm-19-dev llvm-19-runtime \
           clang-19 clang-tools-19 \
           lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools

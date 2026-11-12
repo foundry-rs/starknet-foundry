@@ -4,10 +4,10 @@ use cairo_lang_parser::utils::SimpleParserDatabase;
 
 pub mod available_gas;
 pub mod disable_predeployed_contracts;
+pub mod finalize;
 pub mod fork;
 pub mod fuzzer;
 pub mod ignore;
-pub mod internal_config_statement;
 pub mod should_panic;
 pub mod test;
 pub mod test_case;
