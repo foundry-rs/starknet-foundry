@@ -2,6 +2,7 @@ use std::process::ExitCode;
 
 use anyhow::{Context, Result};
 use clap::Args;
+use foundry_ui::UI;
 use sncast::{
     get_block_id, get_class_hash_by_address,
     helpers::{command::process_command_result, configuration::CastConfig, rpc::RpcArgs},
@@ -9,7 +10,6 @@ use sncast::{
         errors::{StarknetCommandError, handle_starknet_command_error},
         explorer_link::block_explorer_link_if_allowed,
         get::class::ClassResponse,
-        ui::UI,
     },
 };
 use starknet_rust::{
