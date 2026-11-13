@@ -3768,6 +3768,7 @@ dependencies = [
  "itertools 0.15.0",
  "mimalloc",
  "num-bigint",
+ "openssl",
  "packages_validation",
  "plotters",
  "project-root",
