@@ -39,6 +39,21 @@ impl SncastCommandMessage for DeclareTransactionResponse {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct AlreadyDeclaredResponse {
     pub class_hash: PaddedFelt,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verification_message: Option<String>,
+}
+
+impl SncastCommandMessage for AlreadyDeclaredResponse {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .success_message("Class already declared")
+            .blank_line()
+            .field("Class Hash", &self.class_hash.into_hex_string())
+            .if_some(self.verification_message.as_ref(), |builder, message| {
+                builder.blank_line().text_field(message)
+            })
+            .build()
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
@@ -79,6 +94,19 @@ impl OutputLink for DeclareTransactionResponse {
     }
 }
 
+impl OutputLink for AlreadyDeclaredResponse {
+    const TITLE: &'static str = "class";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        formatdoc!(
+            "
+            class: {}
+            ",
+            provider.class(self.class_hash)
+        )
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployCommandMessage {
     accounts_file: Option<String>,
@@ -93,7 +121,7 @@ impl DeployCommandMessage {
     pub fn new(
         abi: &[AbiEntry],
         no_abi: bool,
-        response: &DeclareTransactionResponse,
+        class_hash: PaddedFelt,
         account: &str,
         accounts_file: &Utf8PathBuf,
         keystore: Option<&Utf8PathBuf>,
@@ -108,7 +136,7 @@ impl DeployCommandMessage {
             account: account.to_string(),
             accounts_file,
             keystore: keystore.map(std::string::ToString::to_string),
-            class_hash: response.class_hash,
+            class_hash,
             constructor_args: ConstructorArgs::from_abi(abi, !no_abi),
             network_flag,
         })
@@ -247,4 +275,42 @@ fn generate_accounts_file_flag(accounts_file: Option<&String>) -> Option<String>
     accounts_file
         .as_ref()
         .map(|file| format!("--accounts-file {file}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AlreadyDeclaredResponse, SncastCommandMessage};
+    use conversions::padded_felt::PaddedFelt;
+    use starknet_types_core::felt::Felt;
+
+    fn sample_response() -> AlreadyDeclaredResponse {
+        AlreadyDeclaredResponse {
+            class_hash: PaddedFelt(Felt::from_hex_unchecked("0x123")),
+            verification_message: None,
+        }
+    }
+
+    #[test]
+    fn already_declared_text_returns_class_hash_without_transaction_hash() {
+        console::set_colors_enabled(false);
+
+        let text = sample_response().text();
+
+        assert_eq!(text, "Success: Class already declared\n\nClass Hash: 0x123");
+    }
+
+    #[test]
+    fn already_declared_json_returns_class_hash_without_transaction_hash() {
+        let response = sample_response();
+        let json = response.json();
+
+        assert_eq!(
+            json,
+            serde_json::json!({
+                "class_hash": format!("{:#066x}", response.class_hash.0),
+            })
+        );
+        assert!(json.get("transaction_hash").is_none());
+        assert!(json.get("verification_message").is_none());
+    }
 }

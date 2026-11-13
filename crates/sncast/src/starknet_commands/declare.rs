@@ -1,9 +1,10 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::OutputFormat;
-use foundry_ui::UI;
+use conversions::padded_felt::PaddedFelt;
+use foundry_ui::{Message, OutputFormat, UI};
 use scarb_metadata::PackageMetadata;
+use serde::Serialize;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::command::process_command_result;
@@ -14,13 +15,14 @@ use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
+use sncast::response::cast_message::{SncastCommandMessage, SncastMessage};
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
 use sncast::response::errors::{
     SNCastProviderError, SNCastStarknetError, StarknetCommandError, handle_starknet_command_error,
 };
-use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::explorer_link::{OutputLink, block_explorer_link_if_allowed};
 use sncast::response::ui::UIExt;
 use sncast::response::verify::VerifyResponse;
 use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
@@ -32,7 +34,7 @@ use starknet_rust::core::types::{
 use starknet_rust::providers::{Provider as _, ProviderError};
 use starknet_rust::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{CompiledClass, SierraClass},
+    core::types::contract::{AbiEntry, CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::Signer,
 };
@@ -77,6 +79,10 @@ pub struct Declare {
     /// If passed, omits ABI from the declared Sierra class. This changes the resulting class hash
     #[arg(long)]
     pub no_abi: bool,
+
+    /// If the class is already declared, return its class hash instead of an error
+    #[arg(long = "skip-if-declare", conflicts_with = "dry_run")]
+    pub skip_if_already_declared: bool,
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
@@ -129,63 +135,130 @@ pub async fn declare(
         args.no_abi,
         account,
         wait_config,
-        false,
+        args.skip_if_already_declared,
         ui,
     )
     .await)
     .map_err(handle_starknet_command_error)?;
 
-    let mut response = match result {
-        DeclareResponse::Success(response) => response,
+    match result {
         DeclareResponse::DryRun(response) => {
-            return Ok(process_command_result("declare", Ok(response), ui, None));
+            Ok(process_command_result("declare", Ok(response), ui, None))
         }
-        DeclareResponse::AlreadyDeclared(_) => {
-            unreachable!("Argument `skip_on_already_declared` is false")
+        DeclareResponse::Success(response) => {
+            finalize_declare_response(
+                response,
+                args.verify,
+                &args.contract_name,
+                args.package,
+                &package,
+                &provider,
+                &args.rpc,
+                &config,
+                ui,
+                &contract_definition.abi,
+                args.no_abi,
+            )
+            .await
         }
-    };
+        DeclareResponse::AlreadyDeclared(response) => {
+            finalize_declare_response(
+                response,
+                args.verify,
+                &args.contract_name,
+                args.package,
+                &package,
+                &provider,
+                &args.rpc,
+                &config,
+                ui,
+                &contract_definition.abi,
+                args.no_abi,
+            )
+            .await
+        }
+    }
+}
 
-    if let Some(verify_args) = args.verify {
+trait ClassDeclarationOutcome: SncastCommandMessage + OutputLink {
+    fn class_hash(&self) -> PaddedFelt;
+    fn set_verification_message(&mut self, message: String);
+}
+
+impl ClassDeclarationOutcome for DeclareTransactionResponse {
+    fn class_hash(&self) -> PaddedFelt {
+        self.class_hash
+    }
+
+    fn set_verification_message(&mut self, message: String) {
+        self.verification_message = Some(message);
+    }
+}
+
+impl ClassDeclarationOutcome for AlreadyDeclaredResponse {
+    fn class_hash(&self) -> PaddedFelt {
+        self.class_hash
+    }
+
+    fn set_verification_message(&mut self, message: String) {
+        self.verification_message = Some(message);
+    }
+}
+
+#[expect(clippy::too_many_arguments)]
+async fn finalize_declare_response<T>(
+    mut response: T,
+    verify_args: Option<VerifyCommonArgs>,
+    contract_name: &str,
+    package: Option<String>,
+    package_metadata: &PackageMetadata,
+    provider: &JsonRpcClient<HttpTransport>,
+    rpc: &RpcArgs,
+    config: &CastConfig,
+    ui: &UI,
+    abi: &[AbiEntry],
+    no_abi: bool,
+) -> Result<ExitCode>
+where
+    T: ClassDeclarationOutcome + Serialize + Clone,
+    SncastMessage<T>: Message,
+{
+    if let Some(verify_args) = verify_args {
         match verify_after_declare(
             verify_args,
-            response.class_hash.0,
-            &args.contract_name,
-            args.package,
-            &package,
-            &provider,
-            &args.rpc,
-            &config,
+            response.class_hash().0,
+            contract_name,
+            package,
+            package_metadata,
+            provider,
+            rpc,
+            config,
             ui,
         )
         .await
         {
-            Ok(VerifyResponse { message }) => response.verification_message = Some(message),
+            Ok(VerifyResponse { message }) => response.set_verification_message(message),
             Err(e) => {
                 ui.print_command_error("declare", format!("Failed to verify the contract: {e}"));
             }
         }
     }
 
-    let network_flag = generate_network_flag(&args.rpc, &config);
-
     let deploy_message = DeployCommandMessage::new(
-        &contract_definition.abi,
-        args.no_abi,
-        &response,
+        abi,
+        no_abi,
+        response.class_hash(),
         &config.account,
         &config.accounts_file,
         config.keystore.as_ref(),
-        network_flag,
-    );
+        generate_network_flag(rpc, config),
+    )?;
 
     let response = Ok(response);
-
     let block_explorer_link =
-        block_explorer_link_if_allowed(&response, provider.chain_id().await?, &config).await;
-
+        block_explorer_link_if_allowed(&response, provider.chain_id().await?, config).await;
     let res = process_command_result("declare", response, ui, block_explorer_link);
-
-    ui.print_notification(deploy_message?);
+    ui.print_notification(deploy_message);
 
     Ok(res)
 }
@@ -309,6 +382,7 @@ where
         {
             Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
                 class_hash: class_hash.into_(),
+                verification_message: None,
             }))
         }
         Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared))) => Err(
@@ -325,6 +399,7 @@ where
             if skip_on_already_declared {
                 Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
                     class_hash: class_hash.into_(),
+                    verification_message: None,
                 }))
             } else {
                 Err(StarknetCommandError::ProviderError(
