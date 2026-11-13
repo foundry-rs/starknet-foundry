@@ -3,8 +3,8 @@ use crate::response::{errors::ResponseError, explorer_link::ExplorerLinksMessage
 use anyhow::Result;
 
 use crate::response::cast_message::SncastCommandMessage;
-use crate::response::ui::UI;
-use foundry_ui::Message;
+use crate::response::ui::UIExt;
+use foundry_ui::{Message, UI};
 use serde::Serialize;
 use std::process::ExitCode;
 
@@ -23,7 +23,7 @@ where
 
     match cast_msg {
         Ok(response) => {
-            ui.print_message(command, response);
+            ui.print_command_message(command, response);
             if let Some(link) = block_explorer_link {
                 ui.print_notification(link);
             }
@@ -31,7 +31,7 @@ where
         }
         Err(err) => {
             let err = ResponseError::from_anyhow(command.to_string(), &err);
-            ui.print_error(command, err);
+            ui.print_command_error(command, err);
             ExitCode::FAILURE
         }
     }

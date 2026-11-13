@@ -2,7 +2,7 @@
 source: crates/sncast/tests/e2e/get/tx_trace.rs
 expression: output.as_stdout()
 ---
-[WARNING] Some trace data is shown as raw felts:
+Warning: Some trace data is shown as raw felts:
 - could not fetch contract class 0x456: Class hash not found
 
 Success: Transaction trace retrieved

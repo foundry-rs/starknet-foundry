@@ -1,13 +1,13 @@
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, Command, FromArgMatches};
 use conversions::IntoConv;
+use foundry_ui::UI;
 use sncast::{
     WaitForTx,
     helpers::{configuration::CastConfig, dry_run::DryRunArgs, fee::FeeArgs, rpc::RpcArgs},
     response::{
         errors::handle_starknet_command_error,
         multicall::run::{MulticallRunResponse, MulticallRunTransactionResponse},
-        ui::UI,
     },
 };
 use starknet_rust::{
