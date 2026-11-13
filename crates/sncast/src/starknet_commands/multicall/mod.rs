@@ -14,9 +14,10 @@ pub mod run;
 use crate::starknet_commands::multicall::execute::Execute;
 use crate::{process_command_result, starknet_commands};
 use foundry_ui::Message;
+use foundry_ui::UI;
 use new::New;
 use run::Run;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::with_account;
 use sncast::{
     WaitForTx, get_account,
@@ -69,7 +70,7 @@ pub async fn multicall(
                 );
                 Ok(process_command_result("multicall new", result, ui, None))
             } else {
-                ui.print_message(
+                ui.print_command_message(
                     "multicall_new",
                     MulticallMessage {
                         file_contents: DEFAULT_MULTICALL_CONTENTS.to_string(),
