@@ -343,7 +343,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Completions(completions) => {
-            generate_completions(completions.shell, &mut Cli::command())?;
+            let _ = generate_completions(completions.shell, &mut Cli::command())?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::OptimizeInlining { args } => {

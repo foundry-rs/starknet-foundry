@@ -10,3 +10,6 @@ proc-macro = true
 syn = "3.0.3"
 quote = "1.0.45"
 proc-macro2 = "1.0.105"
+
+[lints]
+workspace = true
