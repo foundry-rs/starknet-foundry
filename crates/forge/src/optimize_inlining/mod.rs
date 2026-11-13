@@ -66,8 +66,7 @@ pub fn optimize_inlining(
 
     let workspace_name = workspace_root
         .file_name()
-        .map(|n| format!("{n}_"))
-        .unwrap_or_default();
+        .map_or_default(|n| format!("{n}_"));
     let graph_path = target_dir.join(format!(
         "{workspace_name}optimization_results_l_{}_h_{}_s_{}.png",
         args.min_threshold, args.max_threshold, args.step

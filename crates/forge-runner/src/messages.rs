@@ -60,8 +60,7 @@ impl TestResultMessage {
 
         let debugging_trace = test_result
             .debugging_trace()
-            .map(|trace| format!("\n{trace}"))
-            .unwrap_or_default();
+            .map_or_default(|trace| format!("\n{trace}"));
 
         let fuzzer_report = if let AnyTestCaseSummary::Fuzzing(test_result) = test_result {
             match test_result {
@@ -86,8 +85,7 @@ impl TestResultMessage {
                 let gas_report = gas_info
                     .report_data
                     .as_ref()
-                    .map(std::string::ToString::to_string)
-                    .unwrap_or_default();
+                    .map_or_default(std::string::ToString::to_string);
 
                 (
                     format!(
