@@ -30,6 +30,7 @@ scarb-api = { path = "../scarb-api" }
 scarb-ui.workspace = true
 reqwest.workspace = true
 indoc.workspace = true
+indexmap.workspace = true
 tempfile.workspace = true
 conversions = { path = "../conversions" }
 data-transformer = { path = "../data-transformer" }

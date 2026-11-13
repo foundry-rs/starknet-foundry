@@ -1,4 +1,4 @@
-use super::explorer_link::OutputLink;
+use super::explorer_link::{ExplorerLink, ExplorerLinkBuilder, OutputLink};
 use crate::helpers::block_explorer::LinkProvider;
 use crate::response::cast_message::SncastCommandMessage;
 use crate::response::dry_run::DryRunResponse;
@@ -67,15 +67,11 @@ impl DeclareResponse {
 impl OutputLink for DeclareTransactionResponse {
     const TITLE: &'static str = "declaration";
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        formatdoc!(
-            "
-            class: {}
-            transaction: {}
-            ",
-            provider.class(self.class_hash),
-            provider.transaction(self.transaction_hash)
-        )
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
+        ExplorerLinkBuilder::new()
+            .link("class", provider.class(self.class_hash))
+            .link("transaction", provider.transaction(self.transaction_hash))
+            .build()
     }
 }
 

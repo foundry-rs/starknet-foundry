@@ -7930,6 +7930,7 @@ dependencies = [
  "foundry-ui",
  "fs_extra",
  "futures",
+ "indexmap 2.14.2",
  "indoc",
  "insta",
  "itertools 0.15.0",

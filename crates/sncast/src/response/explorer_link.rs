@@ -1,18 +1,26 @@
 use crate::Network;
 use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet::detection};
 use foundry_ui::Message;
+use foundry_ui::styling::OutputBuilder;
+use indexmap::IndexMap;
 use serde::Serialize;
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
 
 const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 
+#[derive(Debug)]
+pub struct ExplorerLink {
+    pub title: String,
+    pub link: String,
+}
+
 // TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
 //  included in `sncast` output messages.
 pub trait OutputLink {
     const TITLE: &'static str;
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink>;
 
     fn is_dry_run(&self) -> bool {
         false
@@ -22,7 +30,7 @@ pub trait OutputLink {
 #[derive(Serialize)]
 pub struct ExplorerLinksMessage {
     title: String,
-    links: String,
+    links: IndexMap<String, String>,
 }
 
 impl ExplorerLinksMessage {
@@ -32,14 +40,27 @@ impl ExplorerLinksMessage {
     {
         Self {
             title: T::TITLE.to_string(),
-            links: response.format_links(provider),
+            links: response
+                .get_links(provider)
+                .into_iter()
+                .map(|ExplorerLink { title, link }| (title, link))
+                .collect(),
         }
     }
 }
 
 impl Message for ExplorerLinksMessage {
     fn text(&self) -> String {
-        format!("\nTo see {} details, visit:\n{}", self.title, self.links)
+        let builder = OutputBuilder::new()
+            .blank_line()
+            .text_field(&format!("To see {} details, visit:", self.title));
+
+        let builder = self
+            .links
+            .iter()
+            .fold(builder, |acc, (title, link)| acc.field(title, link));
+
+        builder.build()
     }
 
     fn json(&self) -> Value {
@@ -93,4 +114,34 @@ where
 #[must_use]
 pub fn is_explorer_link_overridden() -> bool {
     std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV).is_ok_and(|value| value == "1")
+}
+
+#[derive(Debug, Default)]
+pub struct ExplorerLinkBuilder {
+    links: Vec<ExplorerLink>,
+}
+
+impl ExplorerLinkBuilder {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    #[must_use]
+    pub fn link<T>(mut self, title: &T, link: String) -> Self
+    where
+        T: ToString + ?Sized,
+    {
+        self.links.push(ExplorerLink {
+            title: title.to_string(),
+            link,
+        });
+
+        self
+    }
+
+    #[must_use]
+    pub fn build(self) -> Vec<ExplorerLink> {
+        self.links
+    }
 }
