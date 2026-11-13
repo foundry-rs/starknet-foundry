@@ -2371,6 +2371,7 @@ dependencies = [
  "cairo-lang-utils",
  "cairo-serde-macros",
  "cairo-vm",
+ "itertools 0.15.0",
  "num-traits",
  "serde",
  "serde_json",
