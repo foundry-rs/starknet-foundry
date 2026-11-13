@@ -5945,7 +5945,6 @@ name = "packages_validation"
 version = "1.0.0"
 dependencies = [
  "camino",
- "project-root",
  "scarb-api",
  "test-case",
 ]
@@ -7338,7 +7337,6 @@ dependencies = [
  "camino",
  "foundry-ui",
  "indoc",
- "itertools 0.15.0",
  "native-api",
  "num-bigint",
  "rayon",
@@ -7960,7 +7958,6 @@ dependencies = [
  "starknet-rust-crypto",
  "starknet-types-core 0.2.4",
  "starknet_api",
- "strum 0.28.0",
  "strum_macros 0.28.0",
  "tempfile",
  "test-case",

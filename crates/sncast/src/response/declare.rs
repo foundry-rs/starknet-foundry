@@ -156,8 +156,7 @@ impl Message for DeployCommandMessage {
             .constructor_args
             .as_ref()
             .and_then(ConstructorArgs::hint)
-            .map(|hint| format!("\n\nHint: {hint}"))
-            .unwrap_or_default();
+            .map_or_default(|hint| format!("\n\nHint: {hint}"));
 
         formatdoc!(
             "

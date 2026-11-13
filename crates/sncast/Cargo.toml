@@ -59,7 +59,6 @@ voyager-verifier = "2.3.1"
 tracing-subscriber.workspace = true
 tracing.workspace = true
 tracing-log.workspace = true
-strum.workspace = true
 strum_macros.workspace = true
 primitive-types.workspace = true
 coins-ledger.workspace = true
