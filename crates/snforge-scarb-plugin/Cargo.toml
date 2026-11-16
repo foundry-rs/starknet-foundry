@@ -6,7 +6,6 @@ version = "0.64.1"
 edition = "2024"
 publish = false
 rust-version = "1.87.0"
-license.workspace = true
 
 [lib]
 crate-type = ["rlib", "cdylib"]
