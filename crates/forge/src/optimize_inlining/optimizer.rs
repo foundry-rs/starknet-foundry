@@ -268,7 +268,7 @@ impl Optimizer {
         cores: usize,
         ui: &Arc<UI>,
     ) -> Result<OptimalResult> {
-        let total_iterations = ((self.max_threshold - self.min_threshold) / self.step.get()) + 1;
+        let total_iterations = ((self.max_threshold - self.min_threshold) / self.step) + 1;
         let mut current = self.min_threshold;
         let mut iteration = 1;
 

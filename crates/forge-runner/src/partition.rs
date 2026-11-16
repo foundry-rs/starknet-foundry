@@ -185,8 +185,7 @@ fn collect_test_full_paths(test_target_raw: &TestTargetRaw) -> Result<Vec<String
         .debug_info
         .as_ref()
         .and_then(|info| info.executables.get("snforge_internal_test_executable"))
-        .map(Vec::as_slice)
-        .unwrap_or_default();
+        .map_or_default(Vec::as_slice);
     executables
         .par_iter()
         .map(|case| {
