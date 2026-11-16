@@ -76,7 +76,7 @@ If using `sncast` extensively, we recommend getting access to a dedicated RPC no
 
 Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing arguments to perform an action with on the blockchain.
 
-Under the hood `sncast` always sends request with a serialized form of arguments, but it can be passed in 
+Under the hood `sncast` always sends request with a serialized form of arguments, but it can be passed in
 human-readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in `sncast`.
 
 In the example above we called a function with a deserialized argument: `'"Charizard"'`, passed using `--arguments` flag.
@@ -131,7 +131,7 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract: https://voyager.online/search/[..]
+contract:    https://voyager.online/search/[..]
 transaction: https://voyager.online/search/[..]
 ```
 </details>

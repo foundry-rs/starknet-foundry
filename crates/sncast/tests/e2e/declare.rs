@@ -67,7 +67,7 @@ async fn test_happy_case_human_readable(no_abi: bool) {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
+        class:       https://[..]
         transaction: https://[..]
 
         To deploy a contract of this class, run:
@@ -111,7 +111,7 @@ async fn test_happy_case_json_output() {
 {"status":"compiling","message":"[..]"}
 {"status":"finished","message":"[..]"}
 {"class_hash":"0x0[..]","command":"declare","transaction_hash":"0x0[..]","type":"response"}
-{"links":"class: https://sepolia.voyager.online/class/0x0[..]/ntransaction: https://sepolia.voyager.online/tx/0x0[..]/n","title":"declaration","type":"notification"}
+{"links":{"class":"https://sepolia.voyager.online/class/[..]","transaction":"https://sepolia.voyager.online/tx/[..]"},"title":"declaration","type":"notification"}
 "#,
     });
 }
@@ -188,7 +188,7 @@ async fn test_contract_with_constructor_params() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
+        class:       https://[..]
         transaction: https://[..]
 
         To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
@@ -230,7 +230,7 @@ async fn test_happy_case_with_full_module_path_contract_name() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
+        class:       https://[..]
         transaction: https://[..]
     "},
     );
@@ -273,7 +273,7 @@ async fn test_contract_with_constructor_params_no_abi() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
+        class:       https://[..]
         transaction: https://[..]
 
         To deploy a contract of this class, replace the placeholders in `--constructor-calldata` with your actual values, then run:
@@ -964,7 +964,7 @@ async fn test_non_existent_profile() {
             Transaction Hash: [..]
 
             To see declaration details, visit:
-            class: [..]
+            class:       [..]
             transaction: [..]
 
             To deploy a contract of this class, run:
