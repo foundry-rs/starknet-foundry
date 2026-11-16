@@ -230,10 +230,6 @@ pub struct PartialCastConfig {
     /// Default fee and tip settings for transaction-sending commands
     pub fee_params: Option<FeeParams>,
 
-    /// Profile selected through the CLI. This is runtime-only and is not read from config files.
-    #[serde(skip)]
-    pub profile: Option<String>,
-
     /// Additional data not captured by deserializer.
     #[doc(hidden)]
     #[serde(flatten, default, skip_serializing)]
@@ -342,7 +338,6 @@ impl Override for PartialCastConfig {
             scarb_profile: other.scarb_profile.or_else(|| self.scarb_profile.clone()),
             aliases: override_optional(self.aliases.clone(), other.aliases),
             fee_params: override_optional(self.fee_params.clone(), other.fee_params),
-            profile: other.profile.or_else(|| self.profile.clone()),
             unknown_fields: HashMap::default(),
         }
     }
@@ -440,7 +435,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             scarb_profile: p.scarb_profile.unwrap_or(d.scarb_profile),
             aliases: p.aliases.unwrap_or_default(),
             fee_params: p.fee_params.unwrap_or_default(),
-            profile: p.profile,
+            profile: None,
         };
         config.validate()?;
         Ok(config)
