@@ -413,5 +413,5 @@ fn resolve_thread_count(max_threads: Option<NonZeroUsize>, ui: &UI) -> usize {
     }
 }
 
-// Supress unused dependency warning
+// Suppress unused dependency warning
 use openssl as _;
