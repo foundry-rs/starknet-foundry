@@ -3,6 +3,7 @@ name = "sncast"
 description = "sncast - a Starknet Foundry CLI client"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [lints]
 workspace = true
