@@ -41,7 +41,6 @@ workflows:
         - 'software-mansion/setup-scarb@v1.6.2'
         - 'software-mansion/setup-universal-sierra-compiler@v1.0.1'
         - 'swatinem/rust-cache@v2.7.8'
-        - 'taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486'
         - 'taiki-e/install-action@v2.90.3'
     '.github/workflows/docs.yml':
         - 'actions/checkout@v7.0.1'
@@ -49,7 +48,7 @@ workflows:
         - 'actions/deploy-pages@v5.0.1'
         - 'actions/setup-node@v7.1.0'
         - 'actions/upload-pages-artifact@v5.0.0'
-        - 'dtolnay/rust-toolchain@v1'
+        - 'dtolnay/rust-toolchain@master'
         - 'software-mansion/setup-scarb@v1.6.2'
     '.github/workflows/nightly.yml':
         - 'actions/checkout@v7.0.1'
@@ -58,7 +57,7 @@ workflows:
     '.github/workflows/publish-plugin.yml': []
     '.github/workflows/publish-std.yml':
         - 'actions/checkout@v7.0.1'
-        - 'dtolnay/rust-toolchain@v1'
+        - 'dtolnay/rust-toolchain@master'
         - 'software-mansion/setup-scarb@v1.6.2'
     '.github/workflows/release.yml':
         - 'actions/checkout@v7.0.1'
@@ -141,11 +140,6 @@ dependencies:
         commit: 'sha1-683b588c487a69d01f6c6ddf40f036ff682cc2c8'
         owner_id: 1940490
         repo_id: 260749683
-    'dtolnay/rust-toolchain@v1':
-        ref: 'v1'
-        commit: 'sha1-683b588c487a69d01f6c6ddf40f036ff682cc2c8'
-        owner_id: 1940490
-        repo_id: 260749683
     'mikefarah/yq@v4.54.1':
         ref: 'v4.54.1'
         commit: 'sha1-504fc38780cc46be8444ea1b72fb55919fc0bfb0'
@@ -191,11 +185,6 @@ dependencies:
         commit: 'sha1-eba8ea96c86cca8a37f1b56e94b4d13301fba651'
         owner_id: 43724913
         repo_id: 335611917
-    'taiki-e/install-action@055f5df8c3f65ea01cd41e9dc855becd88953486':
-        ref: 'main'
-        commit: 'sha1-055f5df8c3f65ea01cd41e9dc855becd88953486'
-        owner_id: 43724913
-        repo_id: 442947557
     'taiki-e/install-action@v2.90.3':
         ref: 'v2.90.3'
         commit: 'sha1-cfdb7ed4ccc7c7dce37759eae89dc5674b469b39'
