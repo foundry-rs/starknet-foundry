@@ -1,7 +1,7 @@
 use clap::Args;
 use starknet_rust::signers::DerivationPath;
 
-use crate::response::ui::UI;
+use foundry_ui::UI;
 
 use super::hd_path::{DerivationPathParser, ParsedDerivationPath, account_id_to_derivation_path};
 

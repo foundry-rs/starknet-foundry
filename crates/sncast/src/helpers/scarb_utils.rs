@@ -1,7 +1,8 @@
 use crate::helpers::artifacts::{CastStarknetContractArtifacts, ContractArtifactsMap};
+use crate::response::ui::UIExt;
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
-use foundry_ui::{UI, components::warning::WarningMessage};
+use foundry_ui::UI;
 use scarb_api::metadata::{MetadataError, MetadataOpts, metadata_for_dir, metadata_with_opts};
 use scarb_api::{
     CompilationOpts, ContractsData, ScarbCommand, ScarbCommandError, ensure_scarb_available,
@@ -184,9 +185,9 @@ pub fn build_and_load_artifacts(
         .map(contracts_data_to_artifacts)?)
     } else {
         let profile = &config.profile;
-        ui.println(&WarningMessage::new(&format!(
+        ui.print_warning(format!(
             "Profile {profile} does not exist in scarb, using '{default_profile}' profile."
-        )));
+        ));
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(default_profile),
             package,

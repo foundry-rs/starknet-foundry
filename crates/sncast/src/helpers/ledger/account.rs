@@ -1,6 +1,7 @@
 use super::{SncastLedgerTransport, create_ledger_app};
-use crate::response::ui::UI;
+use crate::response::ui::UIExt;
 use anyhow::{Context, Result, bail};
+use foundry_ui::UI;
 use starknet_rust::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     core::types::{BlockId, BlockTag},

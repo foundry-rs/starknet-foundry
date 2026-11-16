@@ -6,6 +6,7 @@ use std::fmt::Write;
 enum OutputEntry {
     SuccessMessage(String),
     ErrorMessage(String),
+    WarningMessage(String),
     Field {
         label: String,
         value: String,
@@ -94,6 +95,13 @@ impl OutputBuilder {
     }
 
     #[must_use]
+    pub fn warning_message(mut self, message: &str) -> Self {
+        self.entries
+            .push(OutputEntry::WarningMessage(message.to_string()));
+        self
+    }
+
+    #[must_use]
     pub fn field(mut self, label_text: &str, value: &str) -> Self {
         self.entries.push(OutputEntry::Field {
             label: label_text.to_string(),
@@ -166,6 +174,9 @@ impl OutputBuilder {
                 }
                 OutputEntry::ErrorMessage(message) => {
                     writeln!(content, "{}: {}", style("Error").red(), message).unwrap();
+                }
+                OutputEntry::WarningMessage(message) => {
+                    writeln!(content, "{}: {}", style("Warning").yellow(), message).unwrap();
                 }
                 OutputEntry::Field {
                     label,

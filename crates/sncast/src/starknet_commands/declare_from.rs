@@ -4,6 +4,7 @@ use crate::starknet_commands::declare::{
 use crate::starknet_commands::utils::felt_or_id::ClassHash;
 use anyhow::{Context, Result};
 use clap::{ArgGroup, Args};
+use foundry_ui::UI;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::artifacts::sierra_class_from_file;
 use sncast::helpers::command::process_command_result;
@@ -14,7 +15,6 @@ use sncast::response::errors::{
     SNCastProviderError, StarknetCommandError, handle_starknet_command_error,
 };
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
-use sncast::response::ui::UI;
 use sncast::{Network, WaitForTx, get_account, get_block_id, get_provider, with_account};
 use starknet_rust::core::types::contract::{SierraClass, SierraClassDebugInfo};
 use starknet_rust::core::types::{BlockId, ContractClass, FlattenedSierraClass};
@@ -85,8 +85,7 @@ impl SourceRpcArgs {
             .context("Either `--source-network` or `--source-url` must be provided")?;
 
         let provider = get_provider(&url)?;
-        // TODO(#3959) Remove `base_ui`
-        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
+        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui).await?;
 
         Ok(provider)
     }

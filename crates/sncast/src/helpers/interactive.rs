@@ -1,10 +1,10 @@
 use crate::helpers::config::resolve_global_config_path_or_warn;
-use crate::response::ui::UI;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
 use dialoguer::Select;
 use dialoguer::theme::ColorfulTheme;
+use foundry_ui::UI;
 use std::fmt::Display;
 use std::{env, fs};
 use toml_edit::{DocumentMut, Item, Table, Value};

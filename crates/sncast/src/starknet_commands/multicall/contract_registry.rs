@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use sncast::{get_class_hash_by_address, get_contract_class};
 use starknet_rust::{
     core::types::ContractClass,
@@ -51,9 +51,7 @@ impl ContractRegistry {
         if let Some(hash) = self.get_class_hash_by_address_local(address) {
             return Ok(hash);
         }
-        let class_hash = get_class_hash_by_address(&self.provider, *address)
-            .await
-            .context("Failed to fetch class hash from provider")?;
+        let class_hash = get_class_hash_by_address(&self.provider, *address).await?;
         self.address_to_class_hash.insert(*address, class_hash);
         Ok(class_hash)
     }
@@ -87,9 +85,7 @@ impl ContractRegistry {
                 .expect("Contract class should exist"));
         }
 
-        let contract_class = get_contract_class(*class_hash, &self.provider)
-            .await
-            .context("Failed to fetch contract class from provider")?;
+        let contract_class = get_contract_class(*class_hash, &self.provider).await?;
 
         Ok(self
             .class_hash_to_contract_class

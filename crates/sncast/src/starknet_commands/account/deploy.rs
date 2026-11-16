@@ -2,6 +2,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
+use foundry_ui::UI;
 use serde_json::Map;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
@@ -13,7 +14,6 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::deploy::AccountDeployResponse;
 use sncast::response::errors::{SNCastProviderError, SNCastStarknetError};
 use sncast::response::invoke::{InvokeResponse, InvokeTransactionResponse};
-use sncast::response::ui::UI;
 use sncast::{
     AccountData, AccountType, SignerType, WaitForTx, apply_optional_fields,
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,

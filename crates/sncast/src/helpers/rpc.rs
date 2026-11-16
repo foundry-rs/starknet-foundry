@@ -1,10 +1,10 @@
 use crate::helpers::configuration::{CastConfig, NetworkParams};
 use crate::helpers::devnet::detection;
-use crate::response::ui::UI;
 use crate::{Network, get_provider};
 use anyhow::{Result, bail};
 use clap::Args;
 use configuration::Override;
+use foundry_ui::UI;
 use semver::Version;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -48,9 +48,7 @@ impl RpcArgs {
         let url = self.get_url(config).await?;
         let provider = get_provider(&url)?;
 
-        // TODO(#3959) Remove `base_ui`
-        let spec_version =
-            verify_and_warn_if_incompatible_rpc_version(&provider, url, ui.base_ui()).await?;
+        let spec_version = verify_and_warn_if_incompatible_rpc_version(&provider, url, ui).await?;
 
         Ok((provider, spec_version))
     }

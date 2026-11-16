@@ -1,6 +1,6 @@
 use anyhow::Context;
 use clap::{Args, Subcommand};
-use sncast::response::ui::UI;
+use foundry_ui::UI;
 use sncast::{
     helpers::{
         configuration::CastConfig,
@@ -79,8 +79,7 @@ pub async fn utils(
                             json,
                             profile: config.scarb_profile.clone(),
                         },
-                        // TODO(#3959) Remove `base_ui`
-                        ui.base_ui(),
+                        ui,
                     )
                     .context("Failed to build contract")?,
                 )
@@ -113,8 +112,7 @@ pub async fn utils(
                             json,
                             profile: config.scarb_profile.clone(),
                         },
-                        // TODO(#3959) Remove `base_ui`
-                        ui.base_ui(),
+                        ui,
                     )
                     .context("Failed to build contract")?,
                 )

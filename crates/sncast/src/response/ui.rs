@@ -1,11 +1,6 @@
-use foundry_ui::{Message, OutputFormat, UI as BaseUI};
+use foundry_ui::{Message, OutputFormat, UI};
 use serde::Serialize;
 use serde_json::Value;
-
-#[derive(Default)]
-pub struct UI {
-    ui: BaseUI,
-}
 
 struct MessageWrapper<T: Message> {
     command: String,
@@ -115,88 +110,109 @@ where
     }
 }
 
-impl UI {
-    #[must_use]
-    pub fn new(output_format: OutputFormat) -> Self {
-        let base_ui = BaseUI::new(output_format);
-        Self { ui: base_ui }
+#[derive(Clone, Copy)]
+enum Stream {
+    Stdout,
+    Stderr,
+}
+
+fn emit<T, W, F>(ui: &UI, message: T, wrap: F, stream: Stream)
+where
+    T: Message,
+    W: Message,
+    F: FnOnce(T) -> W,
+{
+    // TODO(#3960) Add better handling for no JSON output
+    if ui.output_format() == OutputFormat::Json && message.json() == Value::Null {
+        return;
     }
 
-    fn should_skip_empty_json(&self, json: &Value) -> bool {
-        self.ui.output_format() == OutputFormat::Json && *json == Value::Null
+    let wrapped = wrap(message);
+
+    #[expect(clippy::disallowed_methods)]
+    match stream {
+        Stream::Stdout => ui.println(&wrapped),
+        Stream::Stderr => ui.eprintln(&wrapped),
     }
+}
 
-    pub fn print_message<T>(&self, command: &str, message: T)
-    where
-        T: Message,
-    {
-        // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
-            return;
-        }
+/// `sncast` extension to `foundry_ui::UI`
+pub trait UIExt {
+    /// Prints a successful response associated with `command` to standard output.
+    fn print_command_message<T: Message>(&self, command: &str, message: T);
 
-        let internal_message = MessageWrapper {
-            command: command.to_string(),
+    /// Prints an error response associated with `command` to standard error.
+    fn print_command_error<T: Message>(&self, command: &str, message: T);
+
+    /// Prints a notification to standard output.
+    fn print_notification<T: Message>(&self, message: T);
+
+    /// Prints a warning to standard output.
+    ///
+    /// Wraps `message` with `foundry_ui::WarningMessage`
+    fn print_warning<T: Message>(&self, message: T);
+
+    /// Prints an error to standard error.
+    ///
+    /// Wraps `message` with `foundry_ui::ErrorMessage`
+    fn print_error<T: Message>(&self, message: T);
+}
+
+impl UIExt for UI {
+    fn print_command_message<T: Message>(&self, command: &str, message: T) {
+        let command = command.to_string();
+
+        emit(
+            self,
             message,
-        };
-        self.ui.println(&internal_message);
+            |message| MessageWrapper { command, message },
+            Stream::Stdout,
+        );
     }
 
-    pub fn print_error<T>(&self, command: &str, message: T)
-    where
-        T: Message,
-    {
-        // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
-            return;
-        }
+    fn print_command_error<T: Message>(&self, command: &str, message: T) {
+        let command = command.to_string();
 
-        let internal_message = ErrorWrapper {
-            command: command.to_string(),
-            error: message,
-        };
-        self.ui.eprintln(&internal_message);
+        emit(
+            self,
+            message,
+            |error| ErrorWrapper { command, error },
+            Stream::Stderr,
+        );
     }
 
-    pub fn print_notification<T>(&self, message: T)
-    where
-        T: Message,
-    {
-        // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
-            return;
-        }
-
-        let internal_message = NotificationWrapper {
-            notification: message,
-        };
-        self.ui.println(&internal_message);
+    fn print_notification<T: Message>(&self, message: T) {
+        emit(
+            self,
+            message,
+            |notification| NotificationWrapper { notification },
+            Stream::Stdout,
+        );
     }
 
-    pub fn print_warning<T>(&self, message: T)
-    where
-        T: Message,
-    {
-        // TODO(#3960) Add better handling for no JSON output
-        if self.should_skip_empty_json(&message.json()) {
-            return;
-        }
-
-        let internal_message = WarningWrapper { warning: message };
-        self.ui.println(&internal_message);
+    #[expect(clippy::disallowed_types)]
+    fn print_warning<T: Message>(&self, message: T) {
+        use foundry_ui::components::warning::WarningMessage;
+        emit(
+            self,
+            message,
+            |warning| WarningWrapper {
+                warning: WarningMessage::new(warning),
+            },
+            Stream::Stdout,
+        );
     }
 
-    pub fn print_blank_line(&self) {
-        self.ui.print_blank_line();
-    }
-
-    #[must_use]
-    pub fn output_format(&self) -> OutputFormat {
-        self.ui.output_format()
-    }
-
-    #[must_use]
-    pub fn base_ui(&self) -> &BaseUI {
-        &self.ui
+    #[expect(clippy::disallowed_types)]
+    fn print_error<T: Message>(&self, message: T) {
+        use foundry_ui::components::error::ErrorMessage;
+        emit(
+            self,
+            message,
+            |warning| WarningWrapper {
+                warning: ErrorMessage::new(warning),
+            },
+            Stream::Stderr,
+        );
     }
 }

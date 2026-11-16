@@ -5,7 +5,7 @@ use data_transformer::{
     find_entry_point_by_selector, reverse_transform_entry_point_input,
     reverse_transform_entry_point_output,
 };
-use foundry_ui::{Message, components::warning::WarningMessage, styling::OutputBuilder};
+use foundry_ui::styling::OutputBuilder;
 use itertools::Itertools;
 use serde::{Serialize, Serializer, ser::Error as _};
 use serde_json::Value;
@@ -180,7 +180,7 @@ impl SncastCommandMessage for TransactionTraceResponse {
         } else {
             let warning_message = format_decoding_warning(&decoding_warnings);
             OutputBuilder::new()
-                .text_field(&WarningMessage::new(warning_message).text())
+                .warning_message(&warning_message)
                 .blank_line()
         };
 

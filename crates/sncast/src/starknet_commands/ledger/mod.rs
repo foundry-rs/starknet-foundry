@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
+use foundry_ui::UI;
 use sncast::helpers::ledger::create_ledger_app;
-use sncast::response::ui::UI;
 
 use sncast::response::ledger::LedgerResponse;
 

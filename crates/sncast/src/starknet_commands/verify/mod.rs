@@ -3,6 +3,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
 use foundry_ui::OutputFormat;
+use foundry_ui::UI;
 use promptly::prompt_default;
 use scarb_metadata::PackageMetadata;
 use shared::utils::contract_name_from_module_path;
@@ -16,7 +17,7 @@ use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::ui::UI;
+use sncast::response::ui::UIExt;
 use sncast::response::verify::VerifyResponse;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use std::fmt;
@@ -28,7 +29,6 @@ pub mod voyager;
 
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
-use foundry_ui::components::warning::WarningMessage;
 use starkloupe::StarkloupeVerificationInterface;
 use voyager::Voyager;
 
@@ -148,16 +148,14 @@ fn resolve_and_validate_contract_name(
     contract_name: &str,
     ui: &UI,
 ) -> Result<String> {
-    // TODO(#3959) Remove `base_ui`
-    let base_ui = ui.base_ui();
     let artifacts = build_and_load_artifacts(
         package,
         &BuildConfig {
             scarb_toml_path: package.manifest_path.clone(),
-            json: base_ui.output_format() == OutputFormat::Json,
+            json: ui.output_format() == OutputFormat::Json,
             profile,
         },
-        base_ui,
+        ui,
     )
     .context("Failed to build contract")?;
 
@@ -256,9 +254,7 @@ pub async fn verify_contract(
 ) -> Result<VerifyResponse> {
     // Handle test_files warning for Starkloupe
     if matches!(common.verifier, Verifier::Starkloupe) && common.test_files {
-        ui.print_warning(WarningMessage::new(
-            "The `--test-files` option is ignored for Starkloupe verifier",
-        ));
+        ui.print_warning("The `--test-files` option is ignored for Starkloupe verifier");
     }
 
     // Create verifier instance, gather files, and perform verification
@@ -319,6 +315,7 @@ pub async fn verify_contract(
 mod tests {
     use super::{resolve_and_validate_contract_name, resolve_verification_network};
     use camino::Utf8PathBuf;
+    use foundry_ui::UI;
     use scarb_metadata::PackageMetadata;
     use serde_json::json;
     use sncast::Network;
@@ -326,7 +323,6 @@ mod tests {
     use sncast::helpers::configuration::CastConfig;
     use sncast::helpers::rpc::RpcArgs;
     use sncast::helpers::scarb_utils::get_package_metadata;
-    use sncast::response::ui::UI;
     use starknet_types_core::felt::Felt;
     use url::Url;
     use wiremock::matchers::{body_partial_json, method};

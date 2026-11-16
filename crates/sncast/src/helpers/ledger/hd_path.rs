@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use crate::response::ui::UI;
+use crate::response::ui::UIExt;
 use anyhow::{Result, anyhow, bail};
 use clap::{Arg, Command, Error, builder::TypedValueParser, error::ErrorKind};
-use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::UI;
 use sha2::{Digest, Sha256};
 use starknet_rust::signers::DerivationPath;
 
@@ -31,7 +31,7 @@ pub struct ParsedDerivationPath {
 impl ParsedDerivationPath {
     pub fn print_warnings(&self, ui: &UI) {
         for warning in &self.warnings {
-            ui.print_warning(WarningMessage::new(warning));
+            ui.print_warning(warning);
         }
     }
 }

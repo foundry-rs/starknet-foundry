@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Args;
+use foundry_ui::UI;
 use sncast::helpers::command::process_command_result;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
@@ -7,7 +8,6 @@ use sncast::response::errors::{StarknetCommandError, handle_starknet_command_err
 use sncast::response::get::tx_status::{
     ExecutionStatus, FinalityStatus, TransactionStatusResponse,
 };
-use sncast::response::ui::UI;
 use starknet_rust::core::types::{TransactionExecutionStatus, TransactionStatus};
 use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
