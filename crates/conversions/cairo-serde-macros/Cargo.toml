@@ -2,6 +2,7 @@
 name = "cairo-serde-macros"
 version = "1.0.0"
 edition.workspace = true
+license.workspace = true
 
 [lib]
 proc-macro = true
@@ -10,3 +11,6 @@ proc-macro = true
 syn = "3.0.3"
 quote = "1.0.45"
 proc-macro2 = "1.0.105"
+
+[lints]
+workspace = true
