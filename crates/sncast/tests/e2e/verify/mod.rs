@@ -117,3 +117,19 @@ async fn test_verification_confirmation_reprompts_on_other_input(input: &str) {
         format!("Could not parse {input} as bool."),
     );
 }
+
+#[tokio::test]
+async fn test_json_output_requires_confirmation() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let args = [vec!["--json"], VERIFY_ARGS.to_vec()].concat();
+    let output = runner(&args)
+        .current_dir(contract_path.path())
+        .assert()
+        .failure();
+
+    assert_stderr_contains(
+        output,
+        r#"{"command":"verify","error":"--confirm_verification is required with --json","type":"error"}"#,
+    );
+}
