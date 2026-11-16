@@ -9,17 +9,29 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-regex.workspace = true
-shell-words.workspace = true
-walkdir.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-toml_edit.workspace = true
-camino.workspace = true
-tempfile.workspace = true
-anyhow.workspace = true
-semver.workspace = true
-scarb-api = { path = "../scarb-api" }
+regex = { workspace = true, optional = true }
+shell-words = { workspace = true, optional = true }
+walkdir = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+toml_edit = { workspace = true, optional = true }
+camino = { workspace = true, optional = true }
+tempfile = { workspace = true, optional = true }
+anyhow = { workspace = true, optional = true }
+semver = { workspace = true, optional = true }
+scarb-api = { path = "../scarb-api", optional = true }
 
 [features]
-testing = []
+testing = [
+    "dep:anyhow",
+    "dep:camino",
+    "dep:regex",
+    "dep:scarb-api",
+    "dep:semver",
+    "dep:serde",
+    "dep:serde_json",
+    "dep:shell-words",
+    "dep:tempfile",
+    "dep:toml_edit",
+    "dep:walkdir",
+]
