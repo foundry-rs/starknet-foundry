@@ -1,9 +1,0 @@
----
-source: tests/integration/return_types.rs
-expression: output
----
-fn returning_fn__snforge_internal_config() {}
-fn returning_fn() -> Result<NonZero<u8>, u8> {
-    if snforge_std::_internals::is_config_run() {}
-    Result::Ok(1)
-}

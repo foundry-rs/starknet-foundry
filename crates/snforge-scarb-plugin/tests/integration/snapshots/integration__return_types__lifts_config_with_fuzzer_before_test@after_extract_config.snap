@@ -10,6 +10,6 @@ fn returning_fn__snforge_internal_config() {
         .serialize(ref data);
     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 }
-fn returning_fn() -> Result<NonZero<u8>, u8> {
-    Result::Ok(1)
+fn returning_fn(a: u8) -> Result<NonZero<u8>, u8> {
+    Result::Ok(a)
 }
