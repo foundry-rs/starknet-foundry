@@ -4,7 +4,7 @@ use crate::asserts::assert_is_used_once;
 use crate::common::{into_proc_macro_result, with_parsed_values};
 use crate::format_ident;
 use crate::utils::get_statements;
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::FunctionWithBody;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
