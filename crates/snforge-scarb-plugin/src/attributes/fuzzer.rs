@@ -11,6 +11,7 @@ use crate::utils::create_single_token;
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::TypedSyntaxNode;
+use cairo_lang_syntax::node::ast::FunctionWithBody;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_utils::Upcast;
 use num_bigint::BigInt;
@@ -85,6 +86,7 @@ fn fuzzer_internal(
     let db = db.upcast();
 
     assert_is_used_once::<FuzzerCollector>(db, &func)?;
+    assert_has_parameters(db, &func)?;
 
     let attrs = func.attributes(db).as_syntax_node();
     let attrs = SyntaxNodeWithDb::new(&attrs, db);
@@ -107,4 +109,25 @@ fn fuzzer_internal(
         #declaration
             #body
     ))
+}
+
+fn assert_has_parameters(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+) -> Result<(), Diagnostic> {
+    let has_parameters = func
+        .declaration(db)
+        .signature(db)
+        .parameters(db)
+        .elements(db)
+        .len()
+        != 0;
+
+    if !has_parameters {
+        Err(FuzzerCollector::error(
+            "function with #[fuzzer] attribute must have parameters",
+        ))?;
+    }
+
+    Ok(())
 }

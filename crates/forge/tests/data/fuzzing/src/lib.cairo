@@ -19,7 +19,6 @@ mod tests {
     use super::{adder, always_five};
 
     #[test]
-    #[fuzzer]
     fn adding() {
         let result = adder(2, 3);
         assert(result == 5, '2 + 3 == 5');
@@ -40,7 +39,6 @@ mod tests {
     }
 
     #[test]
-    #[fuzzer]
     fn passing() {
         let result = always_five(2, 3);
         assert(result == 5, 'result == 5');
