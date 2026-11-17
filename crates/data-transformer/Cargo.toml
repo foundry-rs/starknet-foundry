@@ -2,6 +2,7 @@
 name = "data-transformer"
 version = "1.0.0"
 edition.workspace = true
+license.workspace = true
 
 [lints]
 workspace = true
@@ -19,7 +20,6 @@ cairo-lang-diagnostics.workspace = true
 cairo-lang-filesystem.workspace = true
 itertools.workspace = true
 num-bigint.workspace = true
-test-case.workspace = true
 thiserror.workspace = true
 conversions = { path = "../conversions" }
 cairo-serde-macros = { path = "../conversions/cairo-serde-macros" }
@@ -27,6 +27,7 @@ cairo-serde-macros = { path = "../conversions/cairo-serde-macros" }
 [dev-dependencies]
 indoc.workspace = true
 primitive-types.workspace = true
+test-case.workspace = true
 tokio.workspace = true
 url.workspace = true
 shared = { path = "../shared" }
