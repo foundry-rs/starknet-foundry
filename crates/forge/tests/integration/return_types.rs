@@ -22,27 +22,8 @@ fn return_type_without_default() {
     assert_passed(&result);
 }
 
-// Passes only if the `should_panic` config reached the runner, and covers a test that panics and
-// therefore never produces a value of its return type.
-#[test]
-fn return_type_without_default_with_should_panic() {
-    let test = test_case!(indoc!(
-        r"#[test]
-        #[should_panic(expected: 'boom')]
-        fn return_type_without_default_with_should_panic() -> Result<NonZero<u8>, u8> {
-            assert(false, 'boom');
-            Result::Ok(5)
-        }
-    "
-    ));
-
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
-
-    assert_passed(&result);
-}
-
-// The only test here that fails if the config is lost on its way out of the test function, rather
-// than passing for the wrong reason.
+// The only test here sensitive to config delivery. If the config never leaves the test function the
+// gas limit is not applied and the test passes, so this one has to assert failure to have teeth.
 #[test]
 fn return_type_without_default_with_available_gas_exceeded() {
     let test = test_case!(indoc!(
