@@ -1,6 +1,6 @@
 use super::{
+    extract_config::{config_fn_ident, ExtractConfigCollector},
     AttributeInfo, ErrorExt,
-    extract_config::{ExtractConfigCollector, config_fn_ident},
 };
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
@@ -11,10 +11,10 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, Terminal, TypedSyntaxNode};
 
 pub struct TestCollector;
 
@@ -96,9 +96,6 @@ fn test_internal(
     let vis = func.visibility(db).as_syntax_node();
     let vis = SyntaxNodeWithDb::new(&vis, db);
 
-    // The test function is emitted exactly as written. `#[__snforge_extract_config]` has to come after
-    // the remaining attributes, so that it expands once they have contributed their config
-    // statements, and lifts those out of the body.
     let test_fn = quote!(
         #attributes
         #[#extract_config_marker]
