@@ -70,7 +70,7 @@ fn test_case_internal(
         test_func_with_attrs(&case_fn_name, &func_name, &call_args, &config_fn);
 
     // Both `#[fuzzer]` and `#[test]` still being here means neither has expanded yet. `#[test]`
-    // attaches the finalize marker itself once it does, so attaching one here would make two.
+    // attaches the marker itself once it does, so attaching one here would make two.
     // Note that `collect_preserved_attributes_for_test_case` drops any marker already on the
     // function - that is safe, because a marker can only be there once `#[fuzzer]` has expanded,
     // and then this condition is false and we re-attach it below.
@@ -78,8 +78,8 @@ fn test_case_internal(
     let extract_config_attr = if skip_extract_config {
         TokenStream::empty()
     } else {
-        let finalize = create_single_token(ExtractConfigCollector::ATTR_NAME);
-        quote!(#[#finalize])
+        let marker = create_single_token(ExtractConfigCollector::ATTR_NAME);
+        quote!(#[#marker])
     };
 
     let func_ident = quote!(
