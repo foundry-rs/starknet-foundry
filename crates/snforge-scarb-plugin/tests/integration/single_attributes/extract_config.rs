@@ -1,26 +1,26 @@
 use crate::utils::{assert_diagnostics, empty_function, format_output};
 use cairo_lang_macro::{Diagnostic, TokenStream, quote};
-use snforge_scarb_plugin::attributes::internal_config_statement::internal_config_statement;
+use snforge_scarb_plugin::attributes::extract_config::extract_config;
 
 #[test]
 fn fails_with_non_empty_args() {
     let args = quote!((123));
 
-    let result = internal_config_statement(args, empty_function());
+    let result = extract_config(args, empty_function());
 
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[__internal_config_statement] does not accept any arguments",
+            "#[__snforge_extract_config] does not accept any arguments",
         )],
     );
 }
 
 #[test]
-fn appends_config_statement() {
+fn extracts_config_function() {
     let args = TokenStream::empty();
 
-    let result = internal_config_statement(args, empty_function());
+    let result = extract_config(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -30,17 +30,17 @@ fn appends_config_statement() {
 #[test]
 fn is_used_once() {
     let item = quote!(
-        #[__internal_config_statement]
+        #[__snforge_extract_config]
         fn empty_fn() {}
     );
     let args = TokenStream::empty();
 
-    let result = internal_config_statement(args, item);
+    let result = extract_config(args, item);
 
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[__internal_config_statement] can only be used once per item",
+            "#[__snforge_extract_config] can only be used once per item",
         )],
     );
 }
