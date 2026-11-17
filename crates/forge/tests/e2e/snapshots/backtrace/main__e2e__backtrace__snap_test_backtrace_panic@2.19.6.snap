@@ -11,23 +11,37 @@ Failure data:
 
 stack backtrace:
    in contract 'InnerContract':
-      0: core::panic_with_const_felt252
-         at [..]lib.cairo:360:5
+      0: core::panic_with_felt252
+         at [..]lib.cairo:346:5
       1: core::panic_with_const_felt252
          at [..]lib.cairo:360:5
-      2: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+      2: (inlined) core::assert
+         at [..]lib.cairo:373:9
+      3: (inlined) backtrace_panic::InnerContract::inner_call
+         at [..]lib.cairo:40:9
+      4: (inlined) backtrace_panic::InnerContract::InnerContract::inner
+         at [..]lib.cairo:35:13
+      5: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
          at [..]lib.cairo:32:5
 
    in contract 'OuterContract':
-      0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+      0: (inlined) core::starknet::SyscallResultTraitImpl::unwrap_syscall
+         at [..]starknet.cairo:138:35
+      1: (inlined) backtrace_panic::IInnerContractDispatcherImpl::inner
+         at [..]lib.cairo:22:1
+      2: (inlined) backtrace_panic::OuterContract::OuterContract::outer
+         at [..]lib.cairo:17:13
+      3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
          at [..]lib.cairo:13:5
 
    in test 'backtrace_panic::Test::test_contract_panics':
-      0: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
+      0: (inlined) core::starknet::SyscallResultTraitImpl::unwrap_syscall
+         at [..]starknet.cairo:138:35
+      1: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
          at [..]lib.cairo:1:1
-      1: backtrace_panic::Test::test_contract_panics
+      2: backtrace_panic::Test::test_contract_panics
          at [..]lib.cairo:59:9
-      2: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
+      3: backtrace_panic::Test::test_contract_panics__snforge_internal_test_generated
          at [..]lib.cairo:50:5
 
 [IGNORE] backtrace_panic::Test::test_contract_panics_with_should_panic
@@ -41,15 +55,23 @@ stack backtrace:
    note: backtrace is not available for forked contracts
 
    in contract 'OuterContract':
-      0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+      0: (inlined) core::starknet::SyscallResultTraitImpl::unwrap_syscall
+         at [..]starknet.cairo:138:35
+      1: (inlined) backtrace_panic::IInnerContractDispatcherImpl::inner
+         at [..]lib.cairo:22:1
+      2: (inlined) backtrace_panic::OuterContract::OuterContract::outer
+         at [..]lib.cairo:17:13
+      3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
          at [..]lib.cairo:13:5
 
    in test 'backtrace_panic::Test::test_fork_contract_panics':
-      0: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
+      0: (inlined) core::starknet::SyscallResultTraitImpl::unwrap_syscall
+         at [..]starknet.cairo:138:35
+      1: (inlined) backtrace_panic::IOuterContractDispatcherImpl::outer
          at [..]lib.cairo:1:1
-      1: backtrace_panic::Test::test_fork_contract_panics
+      2: backtrace_panic::Test::test_fork_contract_panics
          at [..]lib.cairo:90:9
-      2: backtrace_panic::Test::test_fork_contract_panics__snforge_internal_test_generated
+      3: backtrace_panic::Test::test_fork_contract_panics__snforge_internal_test_generated
          at [..]lib.cairo:76:5
 
 
