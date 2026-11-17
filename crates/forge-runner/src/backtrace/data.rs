@@ -131,7 +131,7 @@ impl BacktraceSourceData {
     fn backtrace_from(&self, pc: usize) -> Result<Vec<Backtrace<'_>>> {
         let sierra_statement_idx = StatementIdx(
             self.casm_debug_info_start_offsets
-                .partition_point(|start_offset| *start_offset < pc - 1)
+                .partition_point(|start_offset| *start_offset < pc)
                 .saturating_sub(1),
         );
 

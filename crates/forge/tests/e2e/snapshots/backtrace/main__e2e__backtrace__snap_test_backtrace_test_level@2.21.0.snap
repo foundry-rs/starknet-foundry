@@ -11,13 +11,19 @@ Failure data:
 
 stack backtrace:
    in test 'backtrace_test_panic::tests::test_panics_in_test_body':
-      0: core::panic_with_const_felt252
-         at [..]lib.cairo:360:5
+      0: core::panic_with_felt252
+         at [..]lib.cairo:346:5
       1: core::panic_with_const_felt252
          at [..]lib.cairo:360:5
-      2: (inlined) backtrace_test_panic::tests::test_panics_in_test_body
-         at [..]lib.cairo:13:5
-      3: backtrace_test_panic::tests::test_panics_in_test_body__snforge_internal_test_generated
+      2: (inlined) core::assert
+         at [..]lib.cairo:373:9
+      3: (inlined) backtrace_test_panic::fail_deep
+         at [..]lib.cairo:2:5
+      4: (inlined) backtrace_test_panic::fail
+         at [..]lib.cairo:6:5
+      5: (inlined) backtrace_test_panic::tests::test_panics_in_test_body
+         at [..]lib.cairo:15:9
+      6: backtrace_test_panic::tests::test_panics_in_test_body__snforge_internal_test_generated
          at [..]lib.cairo:13:5
 
 
