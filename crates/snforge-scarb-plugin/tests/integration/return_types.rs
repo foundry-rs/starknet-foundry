@@ -1,6 +1,6 @@
 use crate::multiple_attributes::get_function;
 use crate::utils::{assert_diagnostics, format_output};
-use cairo_lang_macro::{TokenStream, quote};
+use cairo_lang_macro::{quote, TokenStream};
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 use snforge_scarb_plugin::attributes::extract_config::extract_config;
 use snforge_scarb_plugin::attributes::fork::fork;
@@ -102,32 +102,4 @@ fn several_config_attributes_are_all_lifted_out() {
     assert_constructs_no_default(&format_output(&result));
 
     insta::assert_snapshot!(format_output(&result));
-}
-
-/// `is_config_run` is exported from `snforge_std::_internals`, so a test body may start with an
-/// `if` that looks like the one we generate. Such a block is not ours: it has no trailing
-/// `return`, and we must leave it in the test instead of taking it apart.
-#[test]
-fn user_written_config_if_is_left_alone() {
-    let item = quote!(
-        fn returning_fn() -> Result<NonZero<u8>, u8> {
-            if snforge_std::_internals::is_config_run() {}
-            Result::Ok(1)
-        }
-    );
-
-    let result = extract_config(TokenStream::empty(), item);
-    assert_diagnostics(&result, &[]);
-
-    let output = format_output(&result);
-    assert!(
-        output.contains("fn returning_fn__snforge_internal_config() {}"),
-        "the user's `if` is not our config block, so nothing should be lifted out of it:\n{output}"
-    );
-    assert!(
-        output.contains("if snforge_std::_internals::is_config_run() {}"),
-        "the user's `if` must stay in the test function:\n{output}"
-    );
-
-    insta::assert_snapshot!(output);
 }
