@@ -1,8 +1,9 @@
 use crate::multiple_attributes::get_function;
 use crate::utils::{assert_diagnostics, format_output};
 use cairo_lang_macro::{TokenStream, quote};
+use snforge_scarb_plugin::attributes::AttributeInfo;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
-use snforge_scarb_plugin::attributes::extract_config::extract_config;
+use snforge_scarb_plugin::attributes::extract_config::{ExtractConfigCollector, extract_config};
 use snforge_scarb_plugin::attributes::fork::fork;
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::test::test;
@@ -24,7 +25,7 @@ fn assert_constructs_no_default(output: &str) {
 }
 
 #[test]
-fn test_leaves_returning_function_untouched() {
+fn test_leaves_body_untouched() {
     let result = test(TokenStream::empty(), returning_function());
     assert_diagnostics(&result, &[]);
     assert_constructs_no_default(&format_output(&result));
@@ -33,7 +34,7 @@ fn test_leaves_returning_function_untouched() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    // `#[__snforge_extract_config]` is consumed when it expands, so drop it like the real chain does
+    // Scarb drops an attribute when it expands, so the marker goes too.
     let item = get_function(&result.token_stream, "returning_fn", true);
     let result = extract_config(TokenStream::empty(), item);
     assert_diagnostics(&result, &[]);
@@ -45,21 +46,7 @@ fn test_leaves_returning_function_untouched() {
 }
 
 #[test]
-fn config_attribute_statements_are_lifted_out() {
-    let result = available_gas(quote!((l2_gas: 999)), returning_function());
-    assert_diagnostics(&result, &[]);
-
-    // `#[__snforge_extract_config]` is consumed when it expands, so drop it like the real chain does
-    let item = get_function(&result.token_stream, "returning_fn", true);
-    let result = extract_config(TokenStream::empty(), item);
-    assert_diagnostics(&result, &[]);
-    assert_constructs_no_default(&format_output(&result));
-
-    insta::assert_snapshot!(format_output(&result));
-}
-
-#[test]
-fn fuzzer_wrapper_before_test_keeps_the_marker_on_the_test_function() {
+fn lifts_config_with_fuzzer_before_test() {
     let item = quote!(
         #[test]
         fn returning_fn(a: u8) -> Result<NonZero<u8>, u8> {
@@ -67,24 +54,36 @@ fn fuzzer_wrapper_before_test_keeps_the_marker_on_the_test_function() {
         }
     );
 
+    let result = available_gas(quote!((l2_gas: 999)), item);
+    assert_diagnostics(&result, &[]);
+
+    let item = get_function(&result.token_stream, "returning_fn", false);
     let result = fuzzer_wrapper(TokenStream::empty(), item);
     assert_diagnostics(&result, &[]);
 
     let output = format_output(&result);
-    assert_constructs_no_default(&output);
+    let marker = format!("#[{}]", ExtractConfigCollector::ATTR_NAME);
     assert!(
-        output.contains("#[__snforge_extract_config]"),
+        output.contains(&marker),
         "the test function must keep the marker, otherwise its config is never lifted:\n{output}"
     );
 
-    insta::assert_snapshot!(output);
+    insta::with_settings!({ snapshot_suffix => "after_fuzzer_wrapper" }, {
+        insta::assert_snapshot!(output);
+    });
+
+    let item = get_function(&result.token_stream, "returning_fn", true);
+    let result = extract_config(TokenStream::empty(), item);
+    assert_diagnostics(&result, &[]);
+    assert_constructs_no_default(&format_output(&result));
+
+    insta::with_settings!({ snapshot_suffix => "after_extract_config" }, {
+        insta::assert_snapshot!(format_output(&result));
+    });
 }
 
-/// Config attributes accumulate in the test body one by one, and only `#[__snforge_extract_config]`
-/// lifts them out. Several of them in a row must still leave nothing behind that would need a
-/// value of the return type.
 #[test]
-fn several_config_attributes_are_all_lifted_out() {
+fn lifts_config_from_several_attributes() {
     let result = test(TokenStream::empty(), returning_function());
     assert_diagnostics(&result, &[]);
 
