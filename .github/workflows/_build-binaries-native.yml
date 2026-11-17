@@ -59,13 +59,13 @@ jobs:
     steps:
       - name: Checkout with ref
         if: inputs.ref != ''
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ inputs.ref }}
 
       - name: Checkout default
         if: inputs.ref == ''
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Setup rust
         run: |
@@ -111,7 +111,7 @@ jobs:
           ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           # TODO(#3790): Perhaps this name needs to be changed to avoid conflicts with `_build-binaries.yml` workflow
           name: build-${{ matrix.target }}

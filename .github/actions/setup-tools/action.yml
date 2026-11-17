@@ -34,23 +34,24 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: stable
         components: clippy, rustfmt
 
-    - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+    - uses: Swatinem/rust-cache@v2.7.8
       if: ${{ inputs.setup-rust-cache == 'true' }}
       with:
         shared-key: ${{ inputs.cache-key }}
         save-if: ${{ inputs.save-cache }}
 
-    - uses: software-mansion/setup-scarb@v1
+    - uses: software-mansion/setup-scarb@v1.6.2
       if: ${{ inputs.setup-scarb == 'true' }}
       with:
         scarb-version: ${{ inputs.scarb-version }}
         cache: false
 
-    - uses: software-mansion/setup-universal-sierra-compiler@v1
+    - uses: software-mansion/setup-universal-sierra-compiler@v1.0.1
       if: ${{ inputs.setup-usc == 'true' }}
 
     - name: Add LLVM APT repository
