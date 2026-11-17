@@ -22,8 +22,6 @@ fn return_type_without_default() {
     assert_passed(&result);
 }
 
-// The only test here sensitive to config delivery. If the config never leaves the test function the
-// gas limit is not applied and the test passes, so this one has to assert failure to have teeth.
 #[test]
 fn return_type_without_default_with_available_gas_exceeded() {
     let test = test_case!(indoc!(
@@ -62,8 +60,6 @@ fn return_type_without_default_with_fuzzer() {
     assert_passed(&result);
 }
 
-// `#[fuzzer]` expanding before `#[test]` makes the test wrapper delegate the config run through the
-// generated fuzzer function, which is a different shape than the opposite order produces.
 #[test]
 fn return_type_without_default_with_fuzzer_before_test() {
     let test = test_case!(indoc!(
@@ -97,8 +93,6 @@ fn return_type_without_default_with_test_case() {
     assert_passed(&result);
 }
 
-// With both `#[fuzzer]` and `#[test_case]` present, only one of them may attach the marker that
-// lifts the config out - two markers would generate the config function twice.
 #[test]
 fn return_type_without_default_with_fuzzer_and_test_case() {
     let test = test_case!(indoc!(

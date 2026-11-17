@@ -1,12 +1,12 @@
 use crate::multiple_attributes::get_function;
 use crate::utils::{assert_diagnostics, format_output};
-use cairo_lang_macro::{TokenStream, quote};
-use snforge_scarb_plugin::attributes::AttributeInfo;
+use cairo_lang_macro::{quote, TokenStream};
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
-use snforge_scarb_plugin::attributes::extract_config::{ExtractConfigCollector, extract_config};
+use snforge_scarb_plugin::attributes::extract_config::{extract_config, ExtractConfigCollector};
 use snforge_scarb_plugin::attributes::fork::fork;
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::test::test;
+use snforge_scarb_plugin::attributes::AttributeInfo;
 
 /// `Result<NonZero<u8>, u8>` stands in for any type without a `Default` impl.
 fn returning_function() -> TokenStream {
@@ -34,7 +34,6 @@ fn test_leaves_body_untouched() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    // Scarb drops an attribute when it expands, so the marker goes too.
     let item = get_function(&result.token_stream, "returning_fn", true);
     let result = extract_config(TokenStream::empty(), item);
     assert_diagnostics(&result, &[]);
