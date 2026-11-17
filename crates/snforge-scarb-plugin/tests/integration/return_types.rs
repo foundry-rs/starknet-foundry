@@ -1,9 +1,6 @@
-//! A test function may declare any return type. Generated code must never have to produce a
-//! value of it, which is what used to limit tests to types implementing `Default`.
-
 use crate::multiple_attributes::get_function;
 use crate::utils::{assert_diagnostics, format_output};
-use cairo_lang_macro::{TokenStream, quote};
+use cairo_lang_macro::{quote, TokenStream};
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 use snforge_scarb_plugin::attributes::extract_config::extract_config;
 use snforge_scarb_plugin::attributes::fork::fork;
