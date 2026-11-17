@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- A test function may now declare a return type that does not implement `Default`.
+
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.19.6` (updated from `2.18.0`).
