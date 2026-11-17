@@ -4,26 +4,18 @@ use crate::asserts::assert_is_used_once;
 use crate::common::{into_proc_macro_result, with_parsed_values};
 use crate::format_ident;
 use crate::utils::get_statements;
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::FunctionWithBody;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 
-/// Marker attached last by `#[test]` and `#[test_case]`, which lifts the collected config
-/// statements out of the test function into [`config_fn_ident`].
-///
-/// The test wrapper is emitted with a call to that function already in it, so the marker has to
-/// survive every macro expansion that follows. A third-party attribute macro placed after
-/// `#[test]` that drops the attributes it does not consume would break the test target with a call
-/// to a function that was never generated.
 pub struct ExtractConfigCollector;
 
 impl AttributeInfo for ExtractConfigCollector {
     const ATTR_NAME: &'static str = "__snforge_extract_config";
 }
 
-/// Name of the function holding the config statements collected for `test_name`.
 #[must_use]
 pub fn config_fn_ident(test_name: &str) -> TokenStream {
     TokenStream::new(vec![format_ident!("{test_name}__snforge_internal_config")])
@@ -36,12 +28,6 @@ pub fn extract_config(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     })
 }
 
-/// Added last by `#[test]`, so it expands once every other snforge attribute has contributed its
-/// config statements.
-///
-/// Moves them out of the test function into a separate unit function, which the generated test
-/// wrapper calls during the config run. The test function is then left exactly as the user wrote
-/// it, so generated code never has to produce a value of its return type.
 #[expect(clippy::needless_pass_by_value)]
 fn extract_config_internal(
     db: &SimpleParserDatabase,
