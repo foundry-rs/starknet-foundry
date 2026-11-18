@@ -28,7 +28,7 @@ jobs:
             os: macos-latest
 
           - target: x86_64-apple-darwin
-            # macos-latest is Arm; macos-26-intel is the Intel (x86_64) runner. macOS 14 images were retired on 2026-11-02
+            # macos-latest uses ARM; test x86_64 binaries on Intel.
             os: macos-26-intel
 
     steps:
