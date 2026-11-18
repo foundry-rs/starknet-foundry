@@ -1,6 +1,6 @@
 use super::{
+    extract_config::{config_fn_ident, fuzzer_config_fn_ident, ExtractConfigCollector},
     AttributeInfo, ErrorExt,
-    extract_config::{ExtractConfigCollector, config_fn_ident},
 };
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
@@ -11,10 +11,10 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, Terminal, TypedSyntaxNode};
 
 pub struct TestCollector;
 
@@ -105,7 +105,12 @@ fn test_internal(
 
     if should_run_test {
         let call_args = TokenStream::empty();
-        let config_fn = config_fn_ident(&name);
+        // The fuzzed test also needs the fuzzer config, which is kept out of the shared config.
+        let config_fn = if has_fuzzer {
+            fuzzer_config_fn_ident(&name)
+        } else {
+            config_fn_ident(&name)
+        };
 
         let test_func_with_attrs =
             test_func_with_attrs(&test_func, &called_func, &call_args, &config_fn);
