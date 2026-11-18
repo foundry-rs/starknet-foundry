@@ -2,16 +2,16 @@ use crate::Network;
 use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet::detection};
 use foundry_ui::Message;
 use foundry_ui::styling::OutputBuilder;
-use indexmap::IndexMap;
 use serde::Serialize;
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
 
 const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ExplorerLink {
-    pub title: String,
+    #[serde(rename = "type")]
+    pub link_type: String,
     pub link: String,
 }
 
@@ -30,7 +30,7 @@ pub trait OutputLink {
 #[derive(Serialize)]
 pub struct ExplorerLinksMessage {
     title: String,
-    links: IndexMap<String, String>,
+    links: Vec<ExplorerLink>,
 }
 
 impl ExplorerLinksMessage {
@@ -40,11 +40,7 @@ impl ExplorerLinksMessage {
     {
         Self {
             title: T::TITLE.to_string(),
-            links: response
-                .get_links(provider)
-                .into_iter()
-                .map(|ExplorerLink { title, link }| (title, link))
-                .collect(),
+            links: response.get_links(provider),
         }
     }
 }
@@ -58,13 +54,14 @@ impl Message for ExplorerLinksMessage {
         let builder = self
             .links
             .iter()
-            .fold(builder, |acc, (title, link)| acc.field(title, link));
+            .fold(builder, |acc, ExplorerLink { link_type, link }| {
+                acc.field(link_type, link)
+            });
 
         builder.build()
     }
 
     fn json(&self) -> Value {
-        // TODO(#3960) Fix JSON output support, currently links contain `\n` characters
         serde_json::to_value(self).unwrap()
     }
 }
@@ -128,12 +125,12 @@ impl ExplorerLinkBuilder {
     }
 
     #[must_use]
-    pub fn link<T>(mut self, title: &T, link: String) -> Self
+    pub fn link<T>(mut self, link_type: &T, link: String) -> Self
     where
         T: ToString + ?Sized,
     {
         self.links.push(ExplorerLink {
-            title: title.to_string(),
+            link_type: link_type.to_string(),
             link,
         });
 

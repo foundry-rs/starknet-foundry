@@ -142,12 +142,14 @@ mod hash {
 
         #[derive(Deserialize)]
         struct Link {
-            class: String,
+            #[serde(rename = "type")]
+            link_type: String,
+            link: String,
         }
 
         #[derive(Deserialize)]
         struct LinkResponse {
-            links: Link,
+            links: Vec<Link>,
             title: String,
             #[serde(rename = "type")]
             res_type: String,
@@ -191,10 +193,11 @@ mod hash {
 
         assert_eq!(link_res.title, "class");
         assert_eq!(link_res.res_type, "notification");
+        assert_eq!(link_res.links.len(), 1);
+        assert_eq!(link_res.links[0].link_type, "class");
         assert!(
-            link_res
-                .links
-                .class
+            link_res.links[0]
+                .link
                 .starts_with("https://sepolia.voyager.online/class/"),
             "Link should be valid voyager URL"
         );
@@ -313,12 +316,14 @@ mod address {
 
         #[derive(Deserialize)]
         struct Link {
-            class: String,
+            #[serde(rename = "type")]
+            link_type: String,
+            link: String,
         }
 
         #[derive(Deserialize)]
         struct LinkResponse {
-            links: Link,
+            links: Vec<Link>,
             title: String,
             #[serde(rename = "type")]
             res_type: String,
@@ -359,10 +364,11 @@ mod address {
 
         assert_eq!(link_res.title, "class");
         assert_eq!(link_res.res_type, "notification");
+        assert_eq!(link_res.links.len(), 1);
+        assert_eq!(link_res.links[0].link_type, "class");
         assert!(
-            link_res
-                .links
-                .class
+            link_res.links[0]
+                .link
                 .starts_with("https://sepolia.voyager.online/class/"),
             "Link should be valid voyager URL"
         );

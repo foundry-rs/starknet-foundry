@@ -571,7 +571,7 @@ async fn test_json_output_format() {
         output,
         indoc! {r#"
             {"command":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]","type":"response"}
-            {"links":{"contract":"https://sepolia.voyager.online/contract/0x[..]","transaction":"https://sepolia.voyager.online/tx/0x[..]"},"title":"deployment","type":"notification"}
+            {"links":[{"link":"https://sepolia.voyager.online/contract/0x[..]","type":"contract"},{"link":"https://sepolia.voyager.online/tx/0x[..]","type":"transaction"}],"title":"deployment","type":"notification"}
             "#},
     );
 }
