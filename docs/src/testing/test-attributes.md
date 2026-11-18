@@ -24,7 +24,7 @@ Marks the function as a test case, to be visible for test collector.
 Read more about test collection [here](./test-collection.md).
 
 A test function may declare any return type that implements `Drop`. The returned value is
-discarded — a test passes or fails depending on whether it panics, not on what it returns.
+discarded - a test passes or fails depending on whether it panics, not on what it returns.
 
 ### `#[ignore]`
 
