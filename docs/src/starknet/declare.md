@@ -66,7 +66,7 @@ sncast --account my_account deploy --class-hash 0x[..] --network sepolia
 
 # Declaring a Class That May Already Exist
 
-Pass [`--skip-if-declare`](../appendix/sncast/declare.md#--skip-if-declare) when a script should keep going if the class is already on the network. `sncast` exits successfully and prints the existing class hash. It does not submit a new declare transaction, so the output has no transaction hash.
+Pass [`--skip-if-declared`](../appendix/sncast/declare.md#--skip-if-declared) when a script should keep going if the class is already on the network. `sncast` exits successfully and prints the existing class hash. It does not submit a new declare transaction, so the output has no transaction hash.
 
 <!-- { "ignored": true } -->
 ```shell
@@ -74,7 +74,7 @@ $ sncast --account my_account \
     declare \
     --network sepolia \
     --contract-name HelloSncast \
-    --skip-if-declare
+    --skip-if-declared
 ```
 
 <details>

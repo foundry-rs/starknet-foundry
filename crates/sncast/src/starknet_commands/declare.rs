@@ -81,8 +81,8 @@ pub struct Declare {
     pub no_abi: bool,
 
     /// If the class is already declared, return its class hash instead of an error
-    #[arg(long = "skip-if-declare", conflicts_with = "dry_run")]
-    pub skip_if_already_declared: bool,
+    #[arg(long = "skip-if-declared", conflicts_with = "dry_run")]
+    pub skip_if_declared: bool,
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
@@ -135,7 +135,7 @@ pub async fn declare(
         args.no_abi,
         account,
         wait_config,
-        args.skip_if_already_declared,
+        args.skip_if_declared,
         ui,
     )
     .await)

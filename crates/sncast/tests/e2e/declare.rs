@@ -543,11 +543,11 @@ async fn test_contract_already_declared_estimate_fee() {
 }
 
 #[tokio::test]
-async fn test_skip_if_declare_returns_existing_class_hash() {
+async fn test_skip_if_declared_returns_existing_class_hash() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "skip_if_declare_human",
+        "skip_if_declared_human",
     );
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
@@ -562,7 +562,7 @@ async fn test_skip_if_declare_returns_existing_class_hash() {
         URL,
         "--contract-name",
         "Map",
-        "--skip-if-declare",
+        "--skip-if-declared",
     ];
 
     let first_stdout = command_stdout(&args, tempdir.path());
@@ -599,11 +599,11 @@ async fn test_skip_if_declare_returns_existing_class_hash() {
 }
 
 #[tokio::test]
-async fn test_skip_if_declare_json_output() {
+async fn test_skip_if_declared_json_output() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "skip_if_declare_json",
+        "skip_if_declared_json",
     );
     let tempdir = create_and_deploy_oz_account().await;
     join_tempdirs(&contract_path, &tempdir);
@@ -619,7 +619,7 @@ async fn test_skip_if_declare_json_output() {
         URL,
         "--contract-name",
         "Map",
-        "--skip-if-declare",
+        "--skip-if-declared",
     ];
 
     let first_response = declare_response_json(&command_stdout(&args, tempdir.path()));
@@ -637,14 +637,14 @@ async fn test_skip_if_declare_json_output() {
 }
 
 #[test]
-fn test_skip_if_declare_conflicts_with_dry_run() {
+fn test_skip_if_declared_conflicts_with_dry_run() {
     let args = vec![
         "declare",
         "--contract-name",
         "Map",
         "--url",
         URL,
-        "--skip-if-declare",
+        "--skip-if-declared",
         "--dry-run",
     ];
 
@@ -652,7 +652,7 @@ fn test_skip_if_declare_conflicts_with_dry_run() {
 
     assert_stderr_contains(
         output,
-        "error: the argument '--skip-if-declare' cannot be used with '--dry-run'",
+        "error: the argument '--skip-if-declared' cannot be used with '--dry-run'",
     );
 }
 

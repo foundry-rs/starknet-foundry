@@ -95,7 +95,7 @@ Optional.
 
 If passed, omits ABI from the declared class. This changes the resulting class hash.
 
-## `--skip-if-declare`
+## `--skip-if-declared`
 Optional.
 Conflicts with: [`--dry-run`](#--dry-run)
 
