@@ -2,14 +2,11 @@
 source: tests/integration/single_attributes/fuzzer.rs
 expression: format_output(&result)
 ---
-fn empty_fn(f: felt252, u: u32) {
-    if snforge_std::_internals::is_config_run() {
-        let mut data = array![];
-        snforge_std::_internals::config_types::FuzzerConfig {
-            seed: Option::None, runs: Option::None,
-        }
-            .serialize(ref data);
-        starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-        return Default::default();
-    };
+fn empty_fn__snforge_internal_fuzzer_config() {
+    empty_fn__snforge_internal_config();
+    let mut data = array![];
+    snforge_std::_internals::config_types::FuzzerConfig { seed: Option::None, runs: Option::None }
+        .serialize(ref data);
+    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 }
+fn empty_fn(f: felt252, u: u32) {}
