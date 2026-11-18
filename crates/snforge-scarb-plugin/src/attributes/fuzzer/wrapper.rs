@@ -1,6 +1,6 @@
 use crate::args::Arguments;
 use crate::attributes::AttributeInfo;
-use crate::attributes::extract_config::{ExtractConfigCollector, config_fn_ident};
+use crate::attributes::extract_config::{ExtractConfigCollector, fuzzer_config_fn_ident};
 use crate::attributes::test::TestCollector;
 use crate::common::{into_proc_macro_result, with_parsed_values};
 use crate::format_ident;
@@ -106,15 +106,16 @@ fn fuzzer_wrapper_internal(
     let body = SyntaxNodeWithDb::new(&body, db);
 
     let extract_config_marker = create_single_token(ExtractConfigCollector::ATTR_NAME);
-    let config_fn = config_fn_ident(&test_fn_name_text);
+    let fuzzer_config_fn = fuzzer_config_fn_ident(&test_fn_name_text);
 
     // Config statements keep accumulating in the test function itself, and `#[__snforge_extract_config]`
-    // lifts them into `#config_fn`. When the test wrapper is generated for the outer function, its
-    // config run just delegates there.
+    // lifts them into the shared config function. `#[__fuzzer_config]` has already generated
+    // `#fuzzer_config_fn`, which adds the fuzzer config on top of it. When the test wrapper is
+    // generated for the outer function, its config run just delegates there.
     let outer_config_run = if test_runs_on_outer_fn {
         quote!(
             if snforge_std::_internals::is_config_run() {
-                #config_fn ();
+                #fuzzer_config_fn ();
 
                 return;
             };

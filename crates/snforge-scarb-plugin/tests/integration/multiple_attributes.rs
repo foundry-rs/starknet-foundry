@@ -150,7 +150,7 @@ fn works_with_fuzzer_config_wrapper() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    let item = result.token_stream;
+    let item = get_function(&result.token_stream, "empty_fn", false);
     let args = TokenStream::empty();
 
     let result = fuzzer_wrapper(args, item);

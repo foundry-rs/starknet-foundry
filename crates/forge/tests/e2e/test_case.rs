@@ -74,8 +74,8 @@ fn with_multiple_attributes() {
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_3_4_7
         [IGNORE] test_case_integrationtest::multiple_attributes::with_ignore_1_2_3
         [PASS] test_case_integrationtest::multiple_attributes::with_available_gas_3_4_7 [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_3_4 [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_3_4 [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_3_4 (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_3_4 (l1_gas: [..]
         [FAIL] test_case_integrationtest::multiple_attributes::with_available_gas_exceed_limit_3_4_7
 
         Failure data:
@@ -87,12 +87,18 @@ fn with_multiple_attributes() {
 
         Failure data:
         	Test cost exceeded the available gas. Consumed [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2 [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_1_2 [..]
-        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_1_2 (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer (runs: 256, [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_1_2 (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order (runs: 256, [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_runs_explicit (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_runs (runs: 3, [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_before_fuzzer_explicit (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_before_fuzzer (runs: 3, [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_after_fuzzer_explicit (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_after_fuzzer (runs: 3, [..]
         Running 0 test(s) from src/
-        Tests: 10 passed, 2 failed, 2 ignored, [..] filtered out
+        Tests: 16 passed, 2 failed, 2 ignored, [..] filtered out
         Fuzzer seed: [..]
 
         Failures:
