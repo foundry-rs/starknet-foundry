@@ -1,12 +1,12 @@
 use crate::multiple_attributes::get_function;
 use crate::utils::{assert_diagnostics, format_output};
-use cairo_lang_macro::{quote, TokenStream};
+use cairo_lang_macro::{TokenStream, quote};
+use snforge_scarb_plugin::attributes::AttributeInfo;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
-use snforge_scarb_plugin::attributes::extract_config::{extract_config, ExtractConfigCollector};
+use snforge_scarb_plugin::attributes::extract_config::{ExtractConfigCollector, extract_config};
 use snforge_scarb_plugin::attributes::fork::fork;
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::test::test;
-use snforge_scarb_plugin::attributes::AttributeInfo;
 
 /// `Result<NonZero<u8>, u8>` stands in for any type without a `Default` impl.
 fn returning_function() -> TokenStream {
