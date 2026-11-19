@@ -84,7 +84,7 @@ async fn test_create_ledger_account(
             sncast --accounts-file accounts.json account deploy --url {URL} --name {LEDGER_ACCOUNT_NAME}
 
             To see account creation details, visit:
-            account: [..]
+            Account: [..]
         ",
             URL = URL,
             LEDGER_ACCOUNT_NAME = LEDGER_ACCOUNT_NAME,

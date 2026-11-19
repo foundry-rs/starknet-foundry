@@ -108,7 +108,7 @@ mod hash {
             output,
             indoc! {"
             To see class details, visit:
-            class: https://sepolia.voyager.online/class/[..]
+            Class: https://sepolia.voyager.online/class/[..]
         "},
         );
 
@@ -285,7 +285,7 @@ mod address {
             output,
             indoc! {"
             To see class details, visit:
-            class: https://sepolia.voyager.online/class/[..]
+            Class: https://sepolia.voyager.online/class/[..]
         "},
         );
 

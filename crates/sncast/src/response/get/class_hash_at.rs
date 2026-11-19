@@ -26,7 +26,7 @@ impl OutputLink for ClassHashAtResponse {
 
     fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         ExplorerLinkBuilder::new()
-            .link("class", provider.class(self.class_hash))
+            .class(provider.class(self.class_hash))
             .build()
     }
 }

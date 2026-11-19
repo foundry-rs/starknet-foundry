@@ -23,7 +23,7 @@ You can download latest version of `sncast` [here](https://github.com/foundry-rs
 
 ## Documentation
 
-For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/sncast-overview.html) 
+For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/sncast-overview.html)
 
 ## Example usages
 
@@ -138,7 +138,7 @@ Success: Invoke completed
 Transaction Hash: [..]
 
 To see invocation details, visit:
-transaction: https://sepolia.voyager.online/tx/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -163,7 +163,7 @@ Success: Invoke completed
 Transaction Hash: [..]
 
 To see invocation details, visit:
-transaction: https://sepolia.voyager.online/tx/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>

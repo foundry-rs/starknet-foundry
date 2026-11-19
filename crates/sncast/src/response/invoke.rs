@@ -52,7 +52,7 @@ impl OutputLink for InvokeTransactionResponse {
 
     fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         ExplorerLinkBuilder::new()
-            .link("transaction", provider.transaction(self.transaction_hash))
+            .transaction(provider.transaction(self.transaction_hash))
             .build()
     }
 }

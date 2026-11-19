@@ -181,7 +181,7 @@ pub async fn test_valid_class_hash() {
         Transaction Hash: 0x[..]
 
         To see account deployment details, visit:
-        transaction: https://sepolia.voyager.online/tx/0x[..]
+        Transaction: https://sepolia.voyager.online/tx/0x[..]
     "});
 }
 
@@ -213,7 +213,7 @@ pub async fn test_valid_no_max_fee() {
         Transaction Hash: 0x[..]
 
         To see account deployment details, visit:
-        transaction: https://sepolia.voyager.online/tx/0x[..]
+        Transaction: https://sepolia.voyager.online/tx/0x[..]
     "});
 }
 
@@ -310,7 +310,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         Transaction Hash: 0x[..]
 
         To see account deployment details, visit:
-        transaction: https://sepolia.voyager.online/tx/0x[..]
+        Transaction: https://sepolia.voyager.online/tx/0x[..]
     "});
 
     let path = Utf8PathBuf::from_path_buf(tempdir.path().join(account_file))
@@ -643,7 +643,7 @@ pub async fn test_deploy_keystore_other_args() {
         Transaction Hash: 0x[..]
 
         To see account deployment details, visit:
-        transaction: https://sepolia.voyager.online/tx/0x[..]
+        Transaction: https://sepolia.voyager.online/tx/0x[..]
     "});
 }
 

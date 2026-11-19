@@ -62,8 +62,8 @@ async fn test_happy_case_human_readable() {
             Transaction Hash: 0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            transaction: [..]
+            Contract: [..]
+            Transaction: [..]
             "
         },
     );
@@ -615,10 +615,10 @@ async fn test_happy_case_with_declare() {
             Deploy Transaction Hash:  0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            class: [..]
-            deploy transaction: [..]
-            declare transaction: [..]
+            Contract: [..]
+            Class: [..]
+            Deploy Transaction: [..]
+            Declare Transaction: [..]
             "
         },
     );
@@ -765,10 +765,10 @@ async fn test_happy_case_with_declare_no_abi_and_constructor_inputs(use_argument
             Deploy Transaction Hash:  0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            class: [..]
-            deploy transaction: [..]
-            declare transaction: [..]
+            Contract: [..]
+            Class: [..]
+            Deploy Transaction: [..]
+            Declare Transaction: [..]
             "
         },
     );
@@ -829,8 +829,8 @@ async fn test_happy_case_with_already_declared() {
             Transaction Hash: 0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            transaction: [..]
+            Contract: [..]
+            Transaction: [..]
             "
         },
     );
@@ -911,10 +911,10 @@ async fn test_happy_case_with_declare_nonce() {
             Deploy Transaction Hash:  0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            class: [..]
-            deploy transaction: [..]
-            declare transaction: [..]
+            Contract: [..]
+            Class: [..]
+            Deploy Transaction: [..]
+            Declare Transaction: [..]
             "
         },
     );

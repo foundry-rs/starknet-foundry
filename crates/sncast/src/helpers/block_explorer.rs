@@ -156,7 +156,7 @@ mod tests {
 
     async fn assert_valid_links(input: &str) {
         let input = strip_ansi_codes(input);
-        let pattern = Regex::new(r"(transaction|contract|class):\s+").unwrap();
+        let pattern = Regex::new(r"(Transaction|Contract|Class):\s+").unwrap();
         let links = pattern.replace_all(&input, "");
         let mut links = links.split('\n').filter(|line| line.starts_with("http"));
 

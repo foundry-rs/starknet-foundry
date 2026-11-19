@@ -62,7 +62,7 @@ pub async fn test_happy_case(account_type: &str) {
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "},
     );
 
@@ -326,7 +326,7 @@ pub async fn test_create_with_class_hash_alias() {
         sncast --accounts-file accounts.json account deploy  --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -437,7 +437,7 @@ pub async fn test_happy_case_generate_salt() {
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -534,7 +534,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -639,7 +639,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
     ", account_file, keystore_file, URL});
 
     assert!(temp_dir.path().join(keystore_file).exists());
@@ -843,7 +843,7 @@ pub async fn test_happy_case_keystore_int_format() {
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
     ", account_file, keystore_file, URL});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
@@ -897,7 +897,7 @@ pub async fn test_happy_case_default_name_generation() {
             sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
 
             To see account creation details, visit:
-            account: [..]
+            Account: [..]
         ", id = id});
     };
 

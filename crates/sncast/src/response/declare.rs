@@ -69,8 +69,8 @@ impl OutputLink for DeclareTransactionResponse {
 
     fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         ExplorerLinkBuilder::new()
-            .link("class", provider.class(self.class_hash))
-            .link("transaction", provider.transaction(self.transaction_hash))
+            .class(provider.class(self.class_hash))
+            .transaction(provider.transaction(self.transaction_hash))
             .build()
     }
 }

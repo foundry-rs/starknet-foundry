@@ -68,10 +68,7 @@ impl OutputLink for MulticallRunResponse {
     fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         match self {
             MulticallRunResponse::Transaction(response) => ExplorerLinkBuilder::new()
-                .link(
-                    "transaction",
-                    provider.transaction(response.transaction_hash),
-                )
+                .transaction(provider.transaction(response.transaction_hash))
                 .build(),
             MulticallRunResponse::DryRun(_) => {
                 unreachable!("Dry run response should not generate explorer links")

@@ -36,7 +36,7 @@ impl OutputLink for ClassResponse {
         provider: Box<dyn crate::helpers::block_explorer::LinkProvider>,
     ) -> Vec<ExplorerLink> {
         ExplorerLinkBuilder::new()
-            .link("class", provider.class(PaddedFelt(self.class_hash)))
+            .class(provider.class(PaddedFelt(self.class_hash)))
             .build()
     }
 }

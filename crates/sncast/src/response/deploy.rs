@@ -46,28 +46,20 @@ impl OutputLink for DeployResponse {
         match self {
             DeployResponse::Standard(deploy) => match deploy {
                 StandardDeployResponse::Transaction(response) => ExplorerLinkBuilder::new()
-                    .link("contract", provider.contract(response.contract_address))
-                    .link(
-                        "transaction",
-                        provider.transaction(response.transaction_hash),
-                    )
+                    .contract(provider.contract(response.contract_address))
+                    .transaction(provider.transaction(response.transaction_hash))
                     .build(),
                 StandardDeployResponse::DryRun(_) => {
                     unreachable!("Dry run response should not generate explorer links")
                 }
             },
             DeployResponse::WithDeclare(deploy_with_declare) => ExplorerLinkBuilder::new()
-                .link(
-                    "contract",
-                    provider.contract(deploy_with_declare.contract_address),
-                )
-                .link("class", provider.class(deploy_with_declare.class_hash))
-                .link(
-                    "deploy transaction",
+                .contract(provider.contract(deploy_with_declare.contract_address))
+                .class(provider.class(deploy_with_declare.class_hash))
+                .deploy_transaction(
                     provider.transaction(deploy_with_declare.deploy_transaction_hash),
                 )
-                .link(
-                    "declare transaction",
+                .declare_transaction(
                     provider.transaction(deploy_with_declare.declare_transaction_hash),
                 )
                 .build(),

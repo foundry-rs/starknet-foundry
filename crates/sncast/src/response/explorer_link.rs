@@ -8,13 +8,6 @@ use starknet_types_core::felt::Felt;
 
 const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 
-#[derive(Debug, Serialize)]
-pub struct ExplorerLink {
-    #[serde(rename = "type")]
-    pub link_type: String,
-    pub link: String,
-}
-
 // TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
 //  included in `sncast` output messages.
 pub trait OutputLink {
@@ -55,7 +48,7 @@ impl Message for ExplorerLinksMessage {
             .links
             .iter()
             .fold(builder, |acc, ExplorerLink { link_type, link }| {
-                acc.field(link_type, link)
+                acc.field(link_type.as_str(), link)
             });
 
         builder.build()
@@ -113,6 +106,37 @@ pub fn is_explorer_link_overridden() -> bool {
     std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV).is_ok_and(|value| value == "1")
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum ExplorerLinkType {
+    Account,
+    Class,
+    Contract,
+    DeclareTransaction,
+    DeployTransaction,
+    Transaction,
+}
+
+impl ExplorerLinkType {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Account => "Account",
+            Self::Class => "Class",
+            Self::Contract => "Contract",
+            Self::DeclareTransaction => "Declare Transaction",
+            Self::DeployTransaction => "Deploy Transaction",
+            Self::Transaction => "Transaction",
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ExplorerLink {
+    #[serde(rename = "type")]
+    link_type: ExplorerLinkType,
+    link: String,
+}
+
 #[derive(Debug, Default)]
 pub struct ExplorerLinkBuilder {
     links: Vec<ExplorerLink>,
@@ -125,20 +149,43 @@ impl ExplorerLinkBuilder {
     }
 
     #[must_use]
-    pub fn link<T>(mut self, link_type: &T, link: String) -> Self
-    where
-        T: ToString + ?Sized,
-    {
-        self.links.push(ExplorerLink {
-            link_type: link_type.to_string(),
-            link,
-        });
-
-        self
+    pub fn build(self) -> Vec<ExplorerLink> {
+        self.links
     }
 
     #[must_use]
-    pub fn build(self) -> Vec<ExplorerLink> {
-        self.links
+    pub fn account(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Account, link)
+    }
+
+    #[must_use]
+    pub fn class(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Class, link)
+    }
+
+    #[must_use]
+    pub fn contract(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Contract, link)
+    }
+
+    #[must_use]
+    pub fn declare_transaction(self, link: String) -> Self {
+        self.link(ExplorerLinkType::DeclareTransaction, link)
+    }
+
+    #[must_use]
+    pub fn deploy_transaction(self, link: String) -> Self {
+        self.link(ExplorerLinkType::DeployTransaction, link)
+    }
+
+    #[must_use]
+    pub fn transaction(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Transaction, link)
+    }
+
+    fn link(mut self, link_type: ExplorerLinkType, link: String) -> Self {
+        self.links.push(ExplorerLink { link_type, link });
+
+        self
     }
 }

@@ -37,8 +37,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract:    https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -80,8 +80,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract:    https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -130,10 +130,10 @@ Declare Transaction Hash: 0x0[..]
 Deploy Transaction Hash:  0x0[..]
 
 To see deployment details, visit:
-contract:            [..]
-class:               [..]
-deploy transaction:  [..]
-declare transaction: [..]
+Contract:            [..]
+Class:               [..]
+Deploy Transaction:  [..]
+Declare Transaction: [..]
 ```
 </details>
 
@@ -157,8 +157,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract:    https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -184,7 +184,7 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract:    https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>

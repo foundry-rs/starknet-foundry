@@ -45,7 +45,7 @@ After prefunding the account, run:
 sncast --accounts-file [..]accounts.json account deploy --url [..] --name new_account
 
 To see account creation details, visit:
-account: https://sepolia.voyager.online/contract/[..]
+Account: https://sepolia.voyager.online/contract/[..]
 ```
 
 </details>
@@ -86,7 +86,7 @@ Success: Account deployed
 Transaction Hash: 0x[..]
 
 To see invocation details, visit:
-transaction: https://sepolia.voyager.online/tx/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 
 </details>

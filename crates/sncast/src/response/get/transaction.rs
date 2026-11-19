@@ -53,7 +53,7 @@ impl OutputLink for TransactionResponse {
     fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         let hash = PaddedFelt(*self.0.transaction_hash());
         ExplorerLinkBuilder::new()
-            .link("transaction", provider.transaction(hash))
+            .transaction(provider.transaction(hash))
             .build()
     }
 }

@@ -44,7 +44,7 @@ impl OutputLink for AccountCreateResponse {
 
     fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink> {
         ExplorerLinkBuilder::new()
-            .link("account", provider.contract(self.address))
+            .account(provider.contract(self.address))
             .build()
     }
 }
