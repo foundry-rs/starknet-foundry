@@ -4,7 +4,7 @@ expression: format_output(&result)
 ---
 #[__fuzzer_config(runs: 123, seed: 321)]
 #[__fuzzer_wrapper]
-fn empty_fn() {
+fn empty_fn(f: felt252) {
     if snforge_std::_internals::is_config_run() {
         return Default::default();
     };

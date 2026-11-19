@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, empty_function, format_output};
-use cairo_lang_macro::{TokenStream, TokenTree, quote};
+use cairo_lang_macro::{TextSpan, Token, TokenStream, TokenTree, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
@@ -101,8 +101,12 @@ fn works_with_few_attributes() {
 #[test]
 fn works_with_fuzzer() {
     let args = TokenStream::empty();
+    let item = quote!(
+        #[fuzzer]
+        fn empty_fn(f: felt252) {}
+    );
 
-    let result = test(args, empty_function());
+    let result = test(args, item);
 
     assert_diagnostics(&result, &[]);
 
@@ -110,7 +114,12 @@ fn works_with_fuzzer() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    let item = get_function(&result.token_stream, "empty_fn", false);
+    // The compiler strips the `#[fuzzer]` attribute before expanding it, so remove it here too
+    let item = get_function(&result.token_stream, "empty_fn", false).to_string();
+    let item = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        item.replacen("#[fuzzer]", "", 1),
+        TextSpan::call_site(),
+    ))]);
     let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer(args, item);
