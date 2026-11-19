@@ -21,6 +21,15 @@ pub fn config_fn_ident(test_name: &str) -> TokenStream {
     TokenStream::new(vec![format_ident!("{test_name}__snforge_internal_config")])
 }
 
+/// Config of the fuzzed test only: the shared config plus the fuzzer config. Explicit
+/// `#[test_case]`s use [`config_fn_ident`], so they are not fuzzed.
+#[must_use]
+pub fn fuzzer_config_fn_ident(test_name: &str) -> TokenStream {
+    TokenStream::new(vec![format_ident!(
+        "{test_name}__snforge_internal_fuzzer_config"
+    )])
+}
+
 #[must_use]
 pub fn extract_config(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     into_proc_macro_result(args, item, |args, item, warns| {

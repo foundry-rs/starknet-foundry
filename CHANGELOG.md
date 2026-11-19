@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Failed library call no longer replaces the calling contract's class hash with the library's class hash in reverted calls.
 - `snforge clean trace` now removes the `snfoundry_trace` directory of every package in a workspace, not only the one in the workspace root.
 - Backtraces no longer drop stack frames or report unrelated functions, caused by an off-by-one when mapping a program counter to a Sierra statement.
+- Config attributes (e.g. `#[should_panic]`, `#[available_gas]`) placed before `#[fuzzer]` are now also applied to explicit `#[test_case]`s.
 
 ### Cast
 
