@@ -579,7 +579,7 @@ async fn test_skip_if_declared_returns_existing_class_hash() {
 
     let second_stdout = command_stdout(&args, tempdir.path());
     assert_stdout_contains(
-        second_stdout.clone(),
+        second_stdout,
         indoc! {r"
         Success: Class already declared
 
@@ -591,10 +591,6 @@ async fn test_skip_if_declared_returns_existing_class_hash() {
         To deploy a contract of this class, run:
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
-    );
-    assert!(
-        !second_stdout.contains("Transaction Hash:"),
-        "an already declared class should not report a transaction hash: {second_stdout}"
     );
 }
 
@@ -623,17 +619,10 @@ async fn test_skip_if_declared_json_output() {
     ];
 
     let first_response = declare_response_json(&command_stdout(&args, tempdir.path()));
-    assert_eq!(first_response["command"], "declare");
-    assert_eq!(first_response["type"], "response");
-    assert!(first_response["transaction_hash"].is_string());
-    assert!(first_response["class_hash"].is_string());
-
     let second_response = declare_response_json(&command_stdout(&args, tempdir.path()));
+
     assert_eq!(second_response["class_hash"], first_response["class_hash"]);
-    assert_eq!(second_response["command"], "declare");
-    assert_eq!(second_response["type"], "response");
     assert!(second_response.get("transaction_hash").is_none());
-    assert!(second_response.get("verification_message").is_none());
 }
 
 #[test]

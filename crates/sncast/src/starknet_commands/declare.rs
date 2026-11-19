@@ -164,7 +164,7 @@ pub async fn declare(
         DeclareResponse::AlreadyDeclared(response) => {
             finalize_declare_response(
                 response,
-                args.verify,
+                None,
                 &args.contract_name,
                 args.package,
                 &package,
@@ -244,20 +244,21 @@ where
         }
     }
 
+    let class_hash = response.class_hash();
+    let response = Ok(response);
+    let block_explorer_link =
+        block_explorer_link_if_allowed(&response, provider.chain_id().await?, config).await;
+    let res = process_command_result("declare", response, ui, block_explorer_link);
+
     let deploy_message = DeployCommandMessage::new(
         abi,
         no_abi,
-        response.class_hash(),
+        class_hash,
         &config.account,
         &config.accounts_file,
         config.keystore.as_ref(),
         generate_network_flag(rpc, config),
     )?;
-
-    let response = Ok(response);
-    let block_explorer_link =
-        block_explorer_link_if_allowed(&response, provider.chain_id().await?, config).await;
-    let res = process_command_result("declare", response, ui, block_explorer_link);
     ui.print_notification(deploy_message);
 
     Ok(res)
