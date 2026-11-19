@@ -28,8 +28,8 @@ jobs:
             os: macos-latest
 
           - target: x86_64-apple-darwin
-            # Target macos-latest uses Mac with ARM, macos-14-large is still on Intel
-            os: macos-14-large
+            # macos-latest uses ARM; test x86_64 binaries on Intel.
+            os: macos-26-intel
 
     steps:
       - uses: actions/checkout@v7.0.1
