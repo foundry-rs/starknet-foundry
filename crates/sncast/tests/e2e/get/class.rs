@@ -108,7 +108,7 @@ mod hash {
             output,
             indoc! {"
             To see class details, visit:
-            class: https://sepolia.voyager.online/class/[..]
+            Class: https://sepolia.voyager.online/class/[..]
         "},
         );
 
@@ -142,7 +142,14 @@ mod hash {
 
         #[derive(Deserialize)]
         struct Link {
-            links: String,
+            #[serde(rename = "type")]
+            link_type: String,
+            link: String,
+        }
+
+        #[derive(Deserialize)]
+        struct LinkResponse {
+            links: Vec<Link>,
             title: String,
             #[serde(rename = "type")]
             res_type: String,
@@ -169,7 +176,8 @@ mod hash {
         let res: Response = serde_json::from_str(response)
             .expect("Failed to parse as ContractClass with additional data");
 
-        let link_res: Link = serde_json::from_str(link).expect("Failed to parse as Explorer link");
+        let link_res: LinkResponse =
+            serde_json::from_str(link).expect("Failed to parse as Explorer link");
 
         assert_eq!(&res.res_type, "response");
         assert_eq!(&res.command, "get class");
@@ -185,10 +193,12 @@ mod hash {
 
         assert_eq!(link_res.title, "class");
         assert_eq!(link_res.res_type, "notification");
+        assert_eq!(link_res.links.len(), 1);
+        assert_eq!(link_res.links[0].link_type, "class");
         assert!(
-            link_res
-                .links
-                .starts_with("class: https://sepolia.voyager.online/class/"),
+            link_res.links[0]
+                .link
+                .starts_with("https://sepolia.voyager.online/class/"),
             "Link should be valid voyager URL"
         );
     }
@@ -275,7 +285,7 @@ mod address {
             output,
             indoc! {"
             To see class details, visit:
-            class: https://sepolia.voyager.online/class/[..]
+            Class: https://sepolia.voyager.online/class/[..]
         "},
         );
 
@@ -306,7 +316,14 @@ mod address {
 
         #[derive(Deserialize)]
         struct Link {
-            links: String,
+            #[serde(rename = "type")]
+            link_type: String,
+            link: String,
+        }
+
+        #[derive(Deserialize)]
+        struct LinkResponse {
+            links: Vec<Link>,
             title: String,
             #[serde(rename = "type")]
             res_type: String,
@@ -333,7 +350,8 @@ mod address {
 
         let res: Response = serde_json::from_str(response)
             .expect("Failed to parse as ContractClass with additional data");
-        let link_res: Link = serde_json::from_str(link).expect("Failed to parse as Explorer link");
+        let link_res: LinkResponse =
+            serde_json::from_str(link).expect("Failed to parse as Explorer link");
 
         assert_eq!(&res.res_type, "response");
         assert_eq!(&res.command, "get class");
@@ -346,10 +364,12 @@ mod address {
 
         assert_eq!(link_res.title, "class");
         assert_eq!(link_res.res_type, "notification");
+        assert_eq!(link_res.links.len(), 1);
+        assert_eq!(link_res.links[0].link_type, "class");
         assert!(
-            link_res
-                .links
-                .starts_with("class: https://sepolia.voyager.online/class/"),
+            link_res.links[0]
+                .link
+                .starts_with("https://sepolia.voyager.online/class/"),
             "Link should be valid voyager URL"
         );
     }

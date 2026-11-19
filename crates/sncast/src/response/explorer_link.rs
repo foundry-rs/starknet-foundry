@@ -1,6 +1,7 @@
 use crate::Network;
 use crate::helpers::{block_explorer::LinkProvider, configuration::CastConfig, devnet::detection};
 use foundry_ui::Message;
+use foundry_ui::styling::OutputBuilder;
 use serde::Serialize;
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
@@ -12,7 +13,7 @@ const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_L
 pub trait OutputLink {
     const TITLE: &'static str;
 
-    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
+    fn get_links(&self, provider: Box<dyn LinkProvider>) -> Vec<ExplorerLink>;
 
     fn is_dry_run(&self) -> bool {
         false
@@ -22,7 +23,7 @@ pub trait OutputLink {
 #[derive(Serialize)]
 pub struct ExplorerLinksMessage {
     title: String,
-    links: String,
+    links: Vec<ExplorerLink>,
 }
 
 impl ExplorerLinksMessage {
@@ -32,18 +33,28 @@ impl ExplorerLinksMessage {
     {
         Self {
             title: T::TITLE.to_string(),
-            links: response.format_links(provider),
+            links: response.get_links(provider),
         }
     }
 }
 
 impl Message for ExplorerLinksMessage {
     fn text(&self) -> String {
-        format!("\nTo see {} details, visit:\n{}", self.title, self.links)
+        let builder = OutputBuilder::new()
+            .blank_line()
+            .text_field(&format!("To see {} details, visit:", self.title));
+
+        let builder = self
+            .links
+            .iter()
+            .fold(builder, |acc, ExplorerLink { link_type, link }| {
+                acc.field(link_type.as_str(), link)
+            });
+
+        builder.build()
     }
 
     fn json(&self) -> Value {
-        // TODO(#3960) Fix JSON output support, currently links contain `\n` characters
         serde_json::to_value(self).unwrap()
     }
 }
@@ -93,4 +104,88 @@ where
 #[must_use]
 pub fn is_explorer_link_overridden() -> bool {
     std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV).is_ok_and(|value| value == "1")
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum ExplorerLinkType {
+    Account,
+    Class,
+    Contract,
+    DeclareTransaction,
+    DeployTransaction,
+    Transaction,
+}
+
+impl ExplorerLinkType {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Account => "Account",
+            Self::Class => "Class",
+            Self::Contract => "Contract",
+            Self::DeclareTransaction => "Declare Transaction",
+            Self::DeployTransaction => "Deploy Transaction",
+            Self::Transaction => "Transaction",
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ExplorerLink {
+    #[serde(rename = "type")]
+    link_type: ExplorerLinkType,
+    link: String,
+}
+
+#[derive(Debug, Default)]
+pub struct ExplorerLinkBuilder {
+    links: Vec<ExplorerLink>,
+}
+
+impl ExplorerLinkBuilder {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    #[must_use]
+    pub fn build(self) -> Vec<ExplorerLink> {
+        self.links
+    }
+
+    #[must_use]
+    pub fn account(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Account, link)
+    }
+
+    #[must_use]
+    pub fn class(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Class, link)
+    }
+
+    #[must_use]
+    pub fn contract(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Contract, link)
+    }
+
+    #[must_use]
+    pub fn declare_transaction(self, link: String) -> Self {
+        self.link(ExplorerLinkType::DeclareTransaction, link)
+    }
+
+    #[must_use]
+    pub fn deploy_transaction(self, link: String) -> Self {
+        self.link(ExplorerLinkType::DeployTransaction, link)
+    }
+
+    #[must_use]
+    pub fn transaction(self, link: String) -> Self {
+        self.link(ExplorerLinkType::Transaction, link)
+    }
+
+    fn link(mut self, link_type: ExplorerLinkType, link: String) -> Self {
+        self.links.push(ExplorerLink { link_type, link });
+
+        self
+    }
 }

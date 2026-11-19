@@ -45,7 +45,7 @@ async fn test_one_invoke() {
             Transaction Hash: 0x[..]
 
             To see invocation details, visit:
-            transaction: [..]
+            Transaction: [..]
             "
         },
     );
@@ -95,7 +95,7 @@ async fn test_two_invokes() {
             Transaction Hash: 0x[..]
 
             To see invocation details, visit:
-            transaction: [..]
+            Transaction: [..]
             "
         },
     );
@@ -141,7 +141,7 @@ async fn test_deploy_and_invoke() {
             Transaction Hash: 0x[..]
 
             To see invocation details, visit:
-            transaction: [..]
+            Transaction: [..]
             "
         },
     );
@@ -189,7 +189,7 @@ async fn test_use_id() {
             Transaction Hash: 0x[..]
 
             To see invocation details, visit:
-            transaction: [..]
+            Transaction: [..]
             "
         },
     );
@@ -464,7 +464,7 @@ async fn test_execute_alias_precedence_step_wins() {
             Transaction Hash: 0x[..]
 
             To see invocation details, visit:
-            transaction: [..]
+            Transaction: [..]
             "
         },
     );

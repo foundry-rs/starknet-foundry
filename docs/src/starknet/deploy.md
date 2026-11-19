@@ -37,8 +37,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract: https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -55,7 +55,7 @@ transaction: https://sepolia.voyager.online/tx/[..]
 
 For such a constructor in the declared contract
 
-```rust    
+```rust
 #[constructor]
 fn constructor(ref self: ContractState, first: felt252, second: u256) {
     ...
@@ -80,8 +80,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract: https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -130,10 +130,10 @@ Declare Transaction Hash: 0x0[..]
 Deploy Transaction Hash:  0x0[..]
 
 To see deployment details, visit:
-contract: [..]
-class: [..]
-deploy transaction: [..]
-declare transaction: [..]
+Contract:            [..]
+Class:               [..]
+Deploy Transaction:  [..]
+Declare Transaction: [..]
 ```
 </details>
 
@@ -157,8 +157,8 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
-contract: https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -176,15 +176,15 @@ $ sncast deploy \
 
 <details>
 <summary>Output:</summary>
-    
+
 ```shell
 Success: Deployment completed
 
 Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
-Details:
-contract: https://sepolia.voyager.online/contract/[..]
-transaction: https://sepolia.voyager.online/tx/[..]
+To see deployment details, visit:
+Contract:    https://sepolia.voyager.online/contract/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
