@@ -27,7 +27,7 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-Chain ID:            alpha-sepolia
+Chain ID:            SN_SEPOLIA
 RPC URL:             http://127.0.0.1:5055/rpc
 Account:             my_account
 Accounts File Path:  [..]/accounts.json

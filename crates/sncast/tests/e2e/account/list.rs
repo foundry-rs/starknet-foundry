@@ -127,18 +127,42 @@ fn test_accounts_with_same_name_in_different_networks_are_listed() {
     fs::write(
         temp_dir.path().join(accounts_file_name),
         r#"{
-            "a": {
-                "shared": { "private_key": "0x1", "public_key": "0x1", "legacy": true },
-                "zed": { "private_key": "0x3", "public_key": "0x3" }
-            },
-            "b": {
-                "alice": {
-                    "public_key": "0x4",
-                    "ledger_path": "m/2645'/1195502025'/355113700'/0'/0'/0"
+            "version": 2,
+            "accounts": {
+                "a": {
+                    "shared": {
+                        "public_key": "0x1",
+                        "address": "0x11",
+                        "legacy": true,
+                        "signer": { "type": "private_key", "private_key": "0x1" }
+                    },
+                    "zed": {
+                        "public_key": "0x3",
+                        "address": "0x33",
+                        "signer": {
+                            "type": "keystore",
+                            "path": "keystore.json",
+                            "password_env": "ZED_PASSWORD"
+                        }
+                    }
                 },
-                "shared": { "private_key": "0x2", "public_key": "0x2" }
-            },
-            "c": {}
+                "b": {
+                    "alice": {
+                        "public_key": "0x4",
+                        "address": "0x44",
+                        "signer": {
+                            "type": "ledger",
+                            "derivation_path": "m/2645'/1195502025'/355113700'/0'/0'/0"
+                        }
+                    },
+                    "shared": {
+                        "public_key": "0x2",
+                        "address": "0x22",
+                        "signer": { "type": "private_key", "private_key": "0x2" }
+                    }
+                },
+                "c": {}
+            }
         }"#,
     )
     .expect("Unable to write accounts file");

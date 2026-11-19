@@ -22,10 +22,15 @@ Possible values: `mainnet`, `sepolia`, `devnet`.
 
 Overrides network from `snfoundry.toml`.
 
-## `--network-name`
+## `--chain-id <CHAIN_ID>`
 Optional.
 
-Network in `accounts-file` associated with the account. By default, the network passed as `--network` of RPC node.
+Chain ID of the network in `accounts-file` associated with the account, e.g. `SN_SEPOLIA`. By default, the chain ID of the RPC node passed with `--url` or `--network`.
+
+## `--network-name <NETWORK_NAME>`
+Optional.
+
+Deprecated, use `--chain-id` instead. Accepts a chain ID or one of the legacy network names `alpha-mainnet`, `alpha-sepolia` and `alpha-integration-sepolia`.
 
 ## `--yes`
 Optional.
