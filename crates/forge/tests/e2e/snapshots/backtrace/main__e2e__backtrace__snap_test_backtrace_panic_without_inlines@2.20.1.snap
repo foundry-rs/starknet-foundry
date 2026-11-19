@@ -11,20 +11,20 @@ Failure data:
 
 stack backtrace:
    in contract 'InnerContract':
-      0: core::array_inline_macro
-         at [..]lib.cairo:346:11
+      0: core::panic_with_felt252
+         at [..]lib.cairo:346:5
       1: core::assert
          at [..]lib.cairo:373:9
       2: backtrace_panic::InnerContract::inner_call
          at [..]lib.cairo:40:9
-      3: backtrace_panic::InnerContract::unsafe_new_contract_state
-         at [..]lib.cairo:29:5
+      3: backtrace_panic::InnerContract::InnerContract::inner
+         at [..]lib.cairo:35:13
       4: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
          at [..]lib.cairo:32:5
 
    in contract 'OuterContract':
       0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
-         at [..]starknet.cairo:135:52
+         at [..]starknet.cairo:138:35
       1: backtrace_panic::IInnerContractDispatcherImpl::inner
          at [..]lib.cairo:22:1
       2: backtrace_panic::OuterContract::OuterContract::outer
@@ -34,7 +34,7 @@ stack backtrace:
 
    in test 'backtrace_panic::Test::test_contract_panics':
       0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
-         at [..]starknet.cairo:135:52
+         at [..]starknet.cairo:138:35
       1: backtrace_panic::IOuterContractDispatcherImpl::outer
          at [..]lib.cairo:1:1
       2: backtrace_panic::Test::test_contract_panics
@@ -54,7 +54,7 @@ stack backtrace:
 
    in contract 'OuterContract':
       0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
-         at [..]starknet.cairo:135:52
+         at [..]starknet.cairo:138:35
       1: backtrace_panic::IInnerContractDispatcherImpl::inner
          at [..]lib.cairo:22:1
       2: backtrace_panic::OuterContract::OuterContract::outer
@@ -64,7 +64,7 @@ stack backtrace:
 
    in test 'backtrace_panic::Test::test_fork_contract_panics':
       0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
-         at [..]starknet.cairo:135:52
+         at [..]starknet.cairo:138:35
       1: backtrace_panic::IOuterContractDispatcherImpl::outer
          at [..]lib.cairo:1:1
       2: backtrace_panic::Test::test_fork_contract_panics
