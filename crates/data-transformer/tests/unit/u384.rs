@@ -2,6 +2,11 @@ use conversions::serde::deserialize::{BufferReadError, BufferReader, CairoDeseri
 use conversions::serde::serialize::SerializeToFeltVec;
 use data_transformer::cairo_types::CairoU384;
 use data_transformer::cairo_types::ParseCairoU384Error;
+use data_transformer::{reverse_transform_input, transform};
+use starknet_rust::core::types::contract::{
+    AbiEntry, AbiFunction, AbiNamedMember, StateMutability,
+};
+use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 
@@ -193,6 +198,45 @@ mod tests {
         );
         assert_eq!(reader.read_felt().unwrap(), Felt::from(7_u128));
         assert_eq!(reader.remaining_len(), 0);
+    }
+
+    #[test]
+    fn transform_and_reverse_transform_read_two_felts_before_the_next_argument() {
+        let abi = [AbiEntry::Function(AbiFunction {
+            name: "u384_then_u32".to_string(),
+            inputs: vec![
+                AbiNamedMember {
+                    name: "value".to_string(),
+                    r#type: "core::integer::u384".to_string(),
+                },
+                AbiNamedMember {
+                    name: "tail".to_string(),
+                    r#type: "core::integer::u32".to_string(),
+                },
+            ],
+            outputs: vec![],
+            state_mutability: StateMutability::External,
+        })];
+        let selector = get_selector_from_name("u384_then_u32").unwrap();
+
+        let calldata = "1_u384, 7_u32";
+        let felts = transform(calldata, &abi, &selector).unwrap();
+        assert_eq!(felts, vec![Felt::ONE, Felt::ZERO, Felt::from(7_u32)]);
+        assert_eq!(
+            reverse_transform_input(&felts, &abi, &selector).unwrap(),
+            calldata
+        );
+
+        // `[2, 1, 7]` is `2^192 + 2` followed by `7`, not four `u384` limbs.
+        let mut bytes = [0u8; 48];
+        bytes[47] = 2;
+        bytes[23] = 1;
+        let value = CairoU384::from_bytes(&bytes);
+        let felts = [Felt::from(2_u128), Felt::ONE, Felt::from(7_u32)];
+        assert_eq!(
+            reverse_transform_input(&felts, &abi, &selector).unwrap(),
+            format!("{value}_u384, 7_u32")
+        );
     }
 
     #[test]

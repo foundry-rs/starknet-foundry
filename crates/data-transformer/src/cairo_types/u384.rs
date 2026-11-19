@@ -60,14 +60,7 @@ fn pack_u96_limbs(low: u128, high: u128) -> Felt {
     debug_assert!(low < (1_u128 << 96));
     debug_assert!(high < (1_u128 << 96));
 
-    // A limb is 96 bits stored in a `u128` (16 bytes). The packed felt's low 24 bytes
-    // are the high limb followed by the low limb.
-    let limb_pad = size_of::<u128>() - U96_BYTE_LEN;
-    let mut bytes = [0u8; FELT_BYTE_LEN];
-    bytes[PACKED_PREFIX_LEN..PACKED_PREFIX_LEN + U96_BYTE_LEN]
-        .copy_from_slice(&high.to_be_bytes()[limb_pad..]);
-    bytes[PACKED_PREFIX_LEN + U96_BYTE_LEN..].copy_from_slice(&low.to_be_bytes()[limb_pad..]);
-    Felt::from_bytes_be(&bytes)
+    Felt::from(low) + Felt::from(high) * Felt::from(1_u128 << 96)
 }
 
 fn unpack_u96_limbs(felt: Felt) -> BufferReadResult<(u128, u128)> {
