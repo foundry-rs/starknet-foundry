@@ -194,11 +194,7 @@ pub fn add_created_profile_to_configuration(
     let profile_config = PartialCastConfig {
         network_params: cast_config.network_params.clone(),
         account: Some(cast_config.account.clone()),
-        keystore: cast_config.keystore.clone(),
-        accounts_file: cast_config
-            .keystore
-            .is_none()
-            .then(|| cast_config.accounts_file.clone()),
+        accounts_file: Some(cast_config.accounts_file.clone()),
         ..Default::default()
     };
 
@@ -225,7 +221,6 @@ fn generate_add_profile_message(
     rpc_args: &RpcArgs,
     account_name: &str,
     accounts_file: &Utf8Path,
-    keystore: Option<Utf8PathBuf>,
     config: &CastConfig,
 ) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
@@ -238,7 +233,6 @@ fn generate_add_profile_message(
             network_params,
             account: account_name.into(),
             accounts_file: accounts_file.into(),
-            keystore,
             ..Default::default()
         };
         let config_path = resolve_config_file();
@@ -290,16 +284,11 @@ pub async fn account(
             Ok(process_command_result("account import", result, ui, None))
         }
         Commands::Create(create) => {
-            let signer_type = create.ledger_key_locator.resolve(ui);
-
-            let signer_source = SignerSource::new(config.keystore.clone(), signer_type)?;
+            let ledger_path = create.ledger_key_locator.resolve(ui);
+            let signer_source = SignerSource::new(ledger_path, create.keystore.clone())?;
 
             // Without a name, one is generated when the account is saved.
-            let account = if config.keystore.is_none() {
-                create.name.clone()
-            } else {
-                Some(config.account.clone())
-            };
+            let account = create.name.clone();
 
             let provider = create.rpc.get_provider(&config, ui).await?;
 
@@ -338,8 +327,6 @@ pub async fn account(
                 &deploy,
                 chain_id,
                 wait_config,
-                &config.account,
-                config.keystore.clone(),
                 deploy.fee_args,
                 deploy.dry_run_args,
                 ui,
@@ -349,8 +336,7 @@ pub async fn account(
             let run_interactive_prompt =
                 !deploy.silent && result.is_ok() && io::stdout().is_terminal();
 
-            if config.keystore.is_none()
-                && run_interactive_prompt
+            if run_interactive_prompt
                 && let Err(err) = prompt_to_add_account_as_default(
                     deploy
                         .name
