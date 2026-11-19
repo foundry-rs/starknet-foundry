@@ -148,12 +148,14 @@ jobs:
           mv artifacts-dl/build-*/starknet-foundry-* artifacts/
           ls -lh artifacts/
 
-      - name: Create GitHub release
+      # The release is created as a draft and published only after all assets are uploaded,
+      # so nothing observing `release: published` (e.g. Maat) sees a release with missing assets.
+      - name: Create GitHub release draft
         run: |
           gh release create \
             "${{ needs.prepare.outputs.nightly_tag }}" \
             --repo software-mansion-labs/starknet-foundry-nightlies \
-            --latest \
+            --draft \
             --title "${{ needs.prepare.outputs.nightly_tag }}" \
             --notes-file NIGHTLY_RELEASE_NOTES.md
 
@@ -190,6 +192,30 @@ jobs:
               "$file" \
               --repo software-mansion-labs/starknet-foundry-nightlies
           done
+
+      - name: Publish GitHub release
+        run: |
+          gh release edit \
+            "${{ needs.prepare.outputs.nightly_tag }}" \
+            --repo software-mansion-labs/starknet-foundry-nightlies \
+            --draft=false \
+            --latest
+
+      # Do not leave a dangling draft release behind if uploading or publishing failed.
+      # Only drafts are deleted, so a rerun can never remove an already published release.
+      - name: Delete draft release on failure
+        if: failure()
+        run: |
+          is_draft=$(gh release view "${{ needs.prepare.outputs.nightly_tag }}" \
+            --repo software-mansion-labs/starknet-foundry-nightlies \
+            --json isDraft --jq .isDraft 2>/dev/null || echo "missing")
+          if [[ "$is_draft" == "true" ]]; then
+            gh release delete "${{ needs.prepare.outputs.nightly_tag }}" \
+              --repo software-mansion-labs/starknet-foundry-nightlies \
+              --yes
+          else
+            echo "Release ${{ needs.prepare.outputs.nightly_tag }} is not a draft (${is_draft}), not deleting."
+          fi
 
   cleanup:
     runs-on: ubuntu-latest
