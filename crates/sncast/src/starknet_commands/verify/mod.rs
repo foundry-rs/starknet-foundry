@@ -18,6 +18,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::ui::UIExt;
+use sncast::response::verify::UploadedFiles;
 use sncast::response::verify::VerifyResponse;
 use starknet_rust::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use std::fmt;
@@ -176,20 +177,23 @@ fn display_files_and_confirm(
     ui: &UI,
 ) -> Result<()> {
     // Display files that will be uploaded
-    // TODO(#3960) JSON output support
-    ui.print_notification("The following files will be uploaded to verifier:".to_string());
-    for file_path in files_to_display {
-        ui.print_notification(file_path);
-    }
+    ui.print_notification(UploadedFiles(files_to_display));
 
     // Ask for confirmation after showing files
     if !confirm_verification {
-        let prompt_text = format!(
-            "\n\tYou are about to submit the above files to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed?"
-        );
+        match ui.output_format() {
+            OutputFormat::Human => {
+                let prompt_text = format!(
+                    "\n\tYou are about to submit the above files to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed?"
+                );
 
-        if !prompt_default(prompt_text, true)? {
-            bail!("Verification aborted")
+                if !prompt_default(prompt_text, true)? {
+                    bail!("Verification aborted")
+                }
+            }
+            OutputFormat::Json => {
+                bail!("--confirm_verification is required with --json")
+            }
         }
     }
 
@@ -265,8 +269,7 @@ pub async fn verify_contract(
 
             // Gather and format files for display
             let files = starkloupe.gather_files()?;
-            let files_to_display: Vec<String> =
-                files.iter().map(|(path, _)| format!("  {path}")).collect();
+            let files_to_display: Vec<String> = files.into_iter().map(|(path, _)| path).collect();
 
             // Display files and confirm
             display_files_and_confirm(
@@ -286,8 +289,7 @@ pub async fn verify_contract(
 
             // Gather and format files for display
             let (_, files) = voyager.gather_files(common.test_files)?;
-            let files_to_display: Vec<String> =
-                files.keys().map(|name| format!("  {name}")).collect();
+            let files_to_display: Vec<String> = files.into_keys().collect();
 
             // Display files and confirm
             display_files_and_confirm(
