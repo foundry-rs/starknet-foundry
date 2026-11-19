@@ -70,7 +70,7 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          RPC_URL: ${{ secrets.NODE_URL }}
+          RPC_URL: https://rpc.pathfinder.swmansion.com/testnet-sepolia/rpc/v0_10
         run: |
           ARTIFACTS_PATH="${{ env.ARTIFACTS_PATH }}"
           ARTIFACTS_PATH="${ARTIFACTS_PATH%.tar.gz}"

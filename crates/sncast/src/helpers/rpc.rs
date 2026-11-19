@@ -6,7 +6,7 @@ use clap::Args;
 use configuration::Override;
 use foundry_ui::UI;
 use semver::Version;
-use shared::consts::RPC_URL_VERSION;
+use shared::consts::{MAINNET_RPC_URL, SEPOLIA_RPC_URL};
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet_rust::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use url::Url;
@@ -67,63 +67,20 @@ impl RpcArgs {
         if let Some(custom_url) = config.networks.get_url(*network) {
             Ok(custom_url.clone())
         } else {
-            network.url(&FreeProvider::semi_random()).await
-        }
-    }
-}
-
-pub enum FreeProvider {
-    Zan,
-}
-
-impl FreeProvider {
-    #[must_use]
-    pub fn semi_random() -> Self {
-        Self::Zan
-    }
-
-    #[must_use]
-    pub fn mainnet_rpc(&self) -> Url {
-        match self {
-            FreeProvider::Zan => Url::parse(&format!(
-                "https://api.zan.top/public/starknet-mainnet/rpc/{RPC_URL_VERSION}"
-            ))
-            .expect("Failed to parse URL"),
-        }
-    }
-
-    #[must_use]
-    pub fn sepolia_rpc(&self) -> Url {
-        match self {
-            FreeProvider::Zan => Url::parse(&format!(
-                "https://api.zan.top/public/starknet-sepolia/rpc/{RPC_URL_VERSION}"
-            ))
-            .expect("Failed to parse URL"),
+            network.url().await
         }
     }
 }
 
 impl Network {
-    pub async fn url(self, provider: &FreeProvider) -> Result<Url> {
+    pub async fn url(self) -> Result<Url> {
         match self {
-            Network::Mainnet => Ok(Self::free_mainnet_rpc(provider)),
-            Network::Sepolia => Ok(Self::free_sepolia_rpc(provider)),
-            Network::Devnet => Self::devnet_rpc(provider).await,
+            Network::Mainnet => Ok(Url::parse(MAINNET_RPC_URL).expect("Failed to parse URL")),
+            Network::Sepolia => Ok(Url::parse(SEPOLIA_RPC_URL).expect("Failed to parse URL")),
+            Network::Devnet => detection::detect_devnet_url()
+                .await
+                .map_err(|e| anyhow::anyhow!(e)),
         }
-    }
-
-    fn free_mainnet_rpc(provider: &FreeProvider) -> Url {
-        provider.mainnet_rpc()
-    }
-
-    fn free_sepolia_rpc(provider: &FreeProvider) -> Url {
-        provider.sepolia_rpc()
-    }
-
-    async fn devnet_rpc(_provider: &FreeProvider) -> Result<Url> {
-        detection::detect_devnet_url()
-            .await
-            .map_err(|e| anyhow::anyhow!(e))
     }
 }
 
@@ -152,14 +109,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_mainnet_url_happy_case() {
-        let provider = get_provider(&Network::free_mainnet_rpc(&FreeProvider::Zan)).unwrap();
+        let provider = get_provider(&Network::Mainnet.url().await.unwrap()).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 
     #[tokio::test]
     async fn test_sepolia_url_happy_case() {
-        let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Zan)).unwrap();
+        let provider = get_provider(&Network::Sepolia.url().await.unwrap()).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
@@ -194,6 +151,6 @@ mod tests {
         };
 
         let url = rpc_args.get_url(&config).await.unwrap();
-        assert_eq!(url, Network::free_mainnet_rpc(&FreeProvider::Zan).clone());
+        assert_eq!(url.as_str(), MAINNET_RPC_URL);
     }
 }

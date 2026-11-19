@@ -4,7 +4,6 @@ use starknet_rust::providers::jsonrpc::HttpTransport;
 use starknet_rust::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
 use tokio::sync::OnceCell;
-use url::Url;
 
 mod event_reverse_transformer;
 mod identity;
@@ -23,7 +22,7 @@ static CLASS: OnceCell<ContractClass> = OnceCell::const_new();
 
 async fn init_class(class_hash: Felt) -> ContractClass {
     let client = JsonRpcClient::new(HttpTransport::new(
-        Url::parse("http://188.34.188.184:7070/rpc/v0_10").unwrap(),
+        shared::test_utils::node_url::node_rpc_url(),
     ));
 
     client
