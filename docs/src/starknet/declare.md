@@ -36,7 +36,7 @@ Contract Address: 0x0[..]
 Transaction Hash: 0x0[..]
 
 To see declaration details, visit:
-Class: https://voyager.online/search/[..]
+Class:       https://voyager.online/search/[..]
 Transaction: https://voyager.online/search/[..]
 
 To deploy a contract of this class, run:
