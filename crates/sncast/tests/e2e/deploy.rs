@@ -577,6 +577,43 @@ async fn test_json_output_format() {
 }
 
 #[tokio::test]
+async fn test_json_output_format_with_declare() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "json_output_with_declare",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r#"
+            {"class_hash":"0x[..]","command":"deploy","contract_address":"0x[..]","declare_transaction_hash":"0x[..]","deploy_transaction_hash":"0x[..]","type":"response"}
+            {"links":[{"link":"https://sepolia.voyager.online/contract/0x[..]","type":"contract"},{"link":"https://sepolia.voyager.online/class/0x[..]","type":"class"},{"link":"https://sepolia.voyager.online/tx/0x[..]","type":"deploy_transaction"},{"link":"https://sepolia.voyager.online/tx/0x[..]","type":"declare_transaction"}],"title":"deployment","type":"notification"}
+        "#},
+    );
+}
+
+#[tokio::test]
 async fn test_happy_case_with_declare() {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
