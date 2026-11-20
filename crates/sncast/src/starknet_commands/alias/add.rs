@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use conversions::string::IntoHexStr;
 use foundry_ui::UI;
@@ -100,10 +100,6 @@ fn add_alias(
     }
 
     aliases_table.insert(name, Value::from(value.into_hex_string()).into());
-
-    if profile_is_inline {
-        aliases_table.fmt();
-    }
 
     Ok(())
 }
@@ -276,7 +272,7 @@ mod tests {
         assert_eq!(
             config.to_string(),
             indoc! {r#"
-                sncast = { default = { aliases = { token = "0x111", map = "0x222" } } }
+                sncast = { default = { aliases = { token = "0x111" , map = "0x222" } } }
             "#}
         );
     }
