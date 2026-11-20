@@ -13,7 +13,7 @@ fn test_alias_add_happy_path(global: bool) {
     let current_dir = tempdir().unwrap();
     let mut args = vec!["alias", "add", "foo", "0x43"];
 
-    if global {
+    let output = if global {
         args.push("--global");
         Cast::new()
             .config_dir(config_dir.path())
@@ -21,13 +21,23 @@ fn test_alias_add_happy_path(global: bool) {
             .args(&args)
             .current_dir(current_dir.path())
             .assert()
-            .success();
+            .success()
     } else {
         runner(&args)
             .current_dir(config_dir.path())
             .assert()
-            .success();
-    }
+            .success()
+    };
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+        Success: Alias added
+
+        Profile: default
+        foo:     0x43
+    "},
+    );
 
     let contents = fs::read_to_string(config_dir.path().join("snfoundry.toml")).unwrap();
     assert!(contents.contains(indoc! {r#"
@@ -43,7 +53,7 @@ fn test_alias_add_with_custom_profile(global: bool) {
     let current_dir = tempdir().unwrap();
     let mut args = vec!["--profile", "profile1", "alias", "add", "foo", "0x43"];
 
-    if global {
+    let output = if global {
         args.push("--global");
         Cast::new()
             .config_dir(config_dir.path())
@@ -51,13 +61,23 @@ fn test_alias_add_with_custom_profile(global: bool) {
             .args(&args)
             .current_dir(current_dir.path())
             .assert()
-            .success();
+            .success()
     } else {
         runner(&args)
             .current_dir(config_dir.path())
             .assert()
-            .success();
-    }
+            .success()
+    };
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+        Success: Alias added
+
+        Profile: profile1
+        foo:     0x43
+    "},
+    );
 
     let contents = fs::read_to_string(config_dir.path().join("snfoundry.toml")).unwrap();
     assert!(contents.contains(indoc! {r#"
@@ -73,7 +93,7 @@ fn test_alias_add_with_missing_config(global: bool) {
     let current_dir = tempdir().unwrap();
     let mut args = vec!["alias", "add", "foo", "0x43"];
 
-    if global {
+    let output = if global {
         args.push("--global");
         Cast::new()
             .config_dir(config_dir.path())
@@ -81,13 +101,23 @@ fn test_alias_add_with_missing_config(global: bool) {
             .args(&args)
             .current_dir(current_dir.path())
             .assert()
-            .success();
+            .success()
     } else {
         runner(&args)
             .current_dir(config_dir.path())
             .assert()
-            .success();
-    }
+            .success()
+    };
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+        Success: Alias added
+
+        Profile: default
+        foo:     0x43
+    "},
+    );
 
     let contents = fs::read_to_string(config_dir.path().join("snfoundry.toml")).unwrap();
     assert!(contents.contains(indoc! {r#"
@@ -107,10 +137,19 @@ fn test_alias_add_overwrite_behavior(force: bool) {
     }
 
     if force {
-        runner(&args)
+        let output = runner(&args)
             .current_dir(config_dir.path())
             .assert()
             .success();
+        assert_stdout_contains(
+            output,
+            indoc! {"
+            Success: Alias added
+
+            Profile: default
+            foo:     0x2
+        "},
+        );
     } else {
         let output = runner(&args)
             .current_dir(config_dir.path())
@@ -143,10 +182,20 @@ fn test_alias_add_overwrite_behavior(force: bool) {
 fn test_added_alias_is_listed() {
     let current_dir = tempdir().unwrap();
 
-    runner(&["alias", "add", "foo", "0x43"])
+    let add_output = runner(&["alias", "add", "foo", "0x43"])
         .current_dir(current_dir.path())
         .assert()
         .success();
+
+    assert_stdout_contains(
+        add_output,
+        indoc! {"
+        Success: Alias added
+
+        Profile: default
+        foo:     0x43
+    "},
+    );
 
     let output = runner(&["alias", "list"])
         .current_dir(current_dir.path())

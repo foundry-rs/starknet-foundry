@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use camino::Utf8Path;
 use conversions::string::IntoHexStr;
 use foundry_ui::UI;
@@ -6,7 +6,13 @@ use std::process::ExitCode;
 
 use clap::Args;
 use configuration::resolve_config_file;
-use sncast::helpers::{config::resolve_global_config_path_or_warn, configuration::CastConfig};
+use sncast::{
+    helpers::{
+        command::process_command_result, config::resolve_global_config_path_or_warn,
+        configuration::CastConfig,
+    },
+    response::{alias::add::AliasAddMessage, errors::handle_starknet_command_error},
+};
 use starknet_types_core::felt::Felt;
 use std::fs;
 use toml_edit::{DocumentMut, InlineTable, Item, Table, Value};
@@ -43,17 +49,28 @@ pub fn add(args: Add, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
         resolve_config_file()
     };
 
+    let profile = config.profile.as_deref().unwrap_or("default").to_string();
+
     let mut config_toml = open_config(&config_path)?;
     add_alias(
         &mut config_toml,
         &args.name,
         args.value,
-        config.profile.as_deref().unwrap_or("default"),
+        &profile,
         args.force,
     )?;
     fs::write(config_path, config_toml.to_string()).context("Failed to write to config file")?;
 
-    Ok(ExitCode::SUCCESS)
+    Ok(process_command_result(
+        "alias add",
+        Ok(AliasAddMessage {
+            name: args.name,
+            value: args.value,
+            profile,
+        }),
+        ui,
+        None,
+    ))
 }
 
 fn open_config(path: &Utf8Path) -> Result<DocumentMut> {
