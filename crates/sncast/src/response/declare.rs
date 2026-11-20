@@ -41,6 +41,16 @@ pub struct AlreadyDeclaredResponse {
     pub class_hash: PaddedFelt,
 }
 
+impl SncastCommandMessage for AlreadyDeclaredResponse {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .warning_message("Class already declared")
+            .blank_line()
+            .field("Class Hash", &self.class_hash.into_hex_string())
+            .build()
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "status")]
 pub enum DeclareResponse {
@@ -79,6 +89,19 @@ impl OutputLink for DeclareTransactionResponse {
     }
 }
 
+impl OutputLink for AlreadyDeclaredResponse {
+    const TITLE: &'static str = "class";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        formatdoc!(
+            "
+            class: {}
+            ",
+            provider.class(self.class_hash)
+        )
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployCommandMessage {
     accounts_file: Option<String>,
@@ -99,6 +122,26 @@ impl DeployCommandMessage {
         keystore: Option<&Utf8PathBuf>,
         network_flag: String,
     ) -> Result<Self, Error> {
+        Self::from_class_hash(
+            abi,
+            no_abi,
+            response.class_hash,
+            account,
+            accounts_file,
+            keystore,
+            network_flag,
+        )
+    }
+
+    pub fn from_class_hash(
+        abi: &[AbiEntry],
+        no_abi: bool,
+        class_hash: PaddedFelt,
+        account: &str,
+        accounts_file: &Utf8PathBuf,
+        keystore: Option<&Utf8PathBuf>,
+        network_flag: String,
+    ) -> Result<Self, Error> {
         let accounts_file_str = accounts_file.to_string();
         let accounts_file = (!accounts_file_str
             .contains("starknet_accounts/starknet_open_zeppelin_accounts.json"))
@@ -108,7 +151,7 @@ impl DeployCommandMessage {
             account: account.to_string(),
             accounts_file,
             keystore: keystore.map(std::string::ToString::to_string),
-            class_hash: response.class_hash,
+            class_hash,
             constructor_args: ConstructorArgs::from_abi(abi, !no_abi),
             network_flag,
         })
