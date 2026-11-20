@@ -581,7 +581,7 @@ async fn test_skip_if_declared_returns_existing_class_hash() {
     assert_stdout_contains(
         second_stdout,
         indoc! {r"
-        Success: Class already declared
+        Warning: Class already declared
 
         Class Hash: 0x[..]
 

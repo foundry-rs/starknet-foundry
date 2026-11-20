@@ -81,7 +81,7 @@ $ sncast --account my_account \
 <summary>Output:</summary>
 
 ```shell
-Success: Class already declared
+Warning: Class already declared
 
 Class Hash: 0x0[..]
 

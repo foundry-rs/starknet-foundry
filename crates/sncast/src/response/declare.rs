@@ -39,19 +39,14 @@ impl SncastCommandMessage for DeclareTransactionResponse {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct AlreadyDeclaredResponse {
     pub class_hash: PaddedFelt,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub verification_message: Option<String>,
 }
 
 impl SncastCommandMessage for AlreadyDeclaredResponse {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
-            .success_message("Class already declared")
+            .warning_message("Class already declared")
             .blank_line()
             .field("Class Hash", &self.class_hash.into_hex_string())
-            .if_some(self.verification_message.as_ref(), |builder, message| {
-                builder.blank_line().text_field(message)
-            })
             .build()
     }
 }
@@ -119,6 +114,26 @@ pub struct DeployCommandMessage {
 
 impl DeployCommandMessage {
     pub fn new(
+        abi: &[AbiEntry],
+        no_abi: bool,
+        response: &DeclareTransactionResponse,
+        account: &str,
+        accounts_file: &Utf8PathBuf,
+        keystore: Option<&Utf8PathBuf>,
+        network_flag: String,
+    ) -> Result<Self, Error> {
+        Self::from_class_hash(
+            abi,
+            no_abi,
+            response.class_hash,
+            account,
+            accounts_file,
+            keystore,
+            network_flag,
+        )
+    }
+
+    pub fn from_class_hash(
         abi: &[AbiEntry],
         no_abi: bool,
         class_hash: PaddedFelt,
