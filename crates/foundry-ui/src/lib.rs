@@ -11,6 +11,13 @@ pub enum OutputFormat {
     Json,
 }
 
+impl OutputFormat {
+    #[must_use]
+    pub fn from_json_flag(json: bool) -> Self {
+        if json { Self::Json } else { Self::Human }
+    }
+}
+
 /// An abstraction around console output which stores preferences for output format (human vs JSON),
 /// colour, etc.
 ///

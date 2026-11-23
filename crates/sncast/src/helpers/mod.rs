@@ -12,7 +12,6 @@ pub mod fee;
 pub mod felt;
 pub mod interactive;
 pub mod ledger;
-pub mod output_format;
 pub mod proof;
 pub mod rpc;
 pub mod scarb_utils;
