@@ -11,7 +11,7 @@ use sncast::{
         command::process_command_result, config::resolve_global_config_path_or_warn,
         configuration::CastConfig,
     },
-    response::{alias::add::AliasAddMessage, errors::handle_starknet_command_error},
+    response::alias::add::AliasAddMessage,
 };
 use starknet_types_core::felt::Felt;
 use std::fs;
@@ -34,7 +34,6 @@ pub struct Add {
     pub force: bool,
 }
 
-#[expect(clippy::needless_pass_by_value)]
 pub fn add(args: Add, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
     let name = args.name.trim();
 
