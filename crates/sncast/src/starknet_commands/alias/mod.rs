@@ -1,9 +1,7 @@
-use crate::starknet_commands::alias::list::List;
 use anyhow::Result;
 use clap::{Args, Subcommand};
 use foundry_ui::UI;
 use sncast::helpers::configuration::CastConfig;
-use sncast::response::ui::UIExt;
 use std::process::ExitCode;
 
 pub mod list;
@@ -17,15 +15,13 @@ pub struct Alias {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    List(List),
+    /// List aliases from the current effective config
+    List,
 }
 
-#[allow(clippy::unnecessary_wraps)]
-pub fn alias(alias: &Alias, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
+#[expect(clippy::needless_pass_by_value)]
+pub fn alias(alias: Alias, config: &CastConfig, ui: &UI) -> Result<ExitCode> {
     match alias.command {
-        Commands::List(_) => {
-            ui.print_command_message("alias list", list::list(config));
-            Ok(ExitCode::SUCCESS)
-        }
+        Commands::List => list::list(config, ui),
     }
 }
