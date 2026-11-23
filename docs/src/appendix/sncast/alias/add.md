@@ -2,6 +2,8 @@
 
 Create an alias and save it to `snfoundry.toml`
 
+Select profile which should be updated using global `--profile` flag.
+
 ## `<NAME>`
 
 Required.
