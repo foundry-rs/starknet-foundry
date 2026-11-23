@@ -12,7 +12,7 @@ use crate::starknet_commands::{
     declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     show_config::ShowConfig,
 };
-use crate::starknet_commands::{get, multicall};
+use crate::starknet_commands::{alias, get, multicall};
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgMatches, CommandFactory, FromArgMatches, Parser, Subcommand};
@@ -680,7 +680,7 @@ async fn run_async_command(mut cli: Cli, config: CastConfig, ui: &UI) -> Result<
 
         Commands::Account(account) => account::account(account, config, ui, wait_config).await,
 
-        Commands::Alias(alias) => starknet_commands::alias::alias(&alias, &config, ui),
+        Commands::Alias(alias) => alias::alias(alias, &config, ui),
 
         Commands::ShowConfig(show) => {
             let provider = match show.rpc.get_provider(&config, ui).await {
@@ -786,15 +786,20 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
         .override_with(local_profile.unwrap_or_default())
         .override_with(cli_config);
 
-    CastConfig::try_from(partial_config).with_context(|| {
-        indoc::formatdoc! {"
+    CastConfig::try_from(partial_config)
+        .map(|config| CastConfig {
+            profile: cli.profile.clone(),
+            ..config
+        })
+        .with_context(|| {
+            indoc::formatdoc! {"
             Unable to combine configs. Fix conflicts between config sources and try again.
             Sources:
             - CLI flags
             - Local config: {local}
             - Global config: {global}",
-            local = local_path.as_ref().map_or("missing", |p| p.as_str()),
-            global = global_path.as_ref().map_or("missing", |p| p.as_str()),
-        }
-    })
+                local = local_path.as_ref().map_or("missing", |p| p.as_str()),
+                global = global_path.as_ref().map_or("missing", |p| p.as_str()),
+            }
+        })
 }
