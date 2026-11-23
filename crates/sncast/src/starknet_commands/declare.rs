@@ -34,7 +34,7 @@ use starknet_rust::core::types::{
 use starknet_rust::providers::{Provider as _, ProviderError};
 use starknet_rust::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{CompiledClass, SierraClass},
+    core::types::contract::{AbiEntry, CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::Signer,
 };
@@ -94,7 +94,6 @@ pub struct Declare {
     pub verify: Option<VerifyCommonArgs>,
 }
 
-#[expect(clippy::too_many_lines)]
 pub async fn declare(
     args: Declare,
     mut wait_config: WaitForTx,
@@ -148,16 +147,6 @@ pub async fn declare(
         }
         DeclareResponse::Success(response) => {
             let class_hash = response.class_hash;
-            let network_flag = generate_network_flag(&args.rpc, &config);
-            let deploy_message = DeployCommandMessage::new(
-                &contract_definition.abi,
-                args.no_abi,
-                &response,
-                &config.account,
-                &config.accounts_file,
-                config.keystore.as_ref(),
-                network_flag,
-            );
             finalize_declare_response(
                 response,
                 class_hash,
@@ -173,7 +162,8 @@ pub async fn declare(
                 &args.rpc,
                 &config,
                 ui,
-                deploy_message,
+                &contract_definition.abi,
+                args.no_abi,
             )
             .await
         }
@@ -185,20 +175,10 @@ pub async fn declare(
             }
 
             let class_hash = response.class_hash;
-            let network_flag = generate_network_flag(&args.rpc, &config);
-            let deploy_message = DeployCommandMessage::from_class_hash(
-                &contract_definition.abi,
-                args.no_abi,
-                class_hash,
-                &config.account,
-                &config.accounts_file,
-                config.keystore.as_ref(),
-                network_flag,
-            );
             finalize_declare_response(
                 response,
                 class_hash,
-                |response, _message| response,
+                |response, _| response,
                 None,
                 &args.contract_name,
                 args.package,
@@ -207,7 +187,8 @@ pub async fn declare(
                 &args.rpc,
                 &config,
                 ui,
-                deploy_message,
+                &contract_definition.abi,
+                args.no_abi,
             )
             .await
         }
@@ -227,7 +208,8 @@ async fn finalize_declare_response<T, F>(
     rpc: &RpcArgs,
     config: &CastConfig,
     ui: &UI,
-    deploy_message: Result<DeployCommandMessage>,
+    abi: &[AbiEntry],
+    no_abi: bool,
 ) -> Result<ExitCode>
 where
     T: SncastCommandMessage + OutputLink + Serialize + Clone,
@@ -262,7 +244,16 @@ where
         block_explorer_link_if_allowed(&response, provider.chain_id().await?, config).await;
     let res = process_command_result("declare", response, ui, block_explorer_link);
 
-    ui.print_notification(deploy_message?);
+    let deploy_message = DeployCommandMessage::new(
+        abi,
+        no_abi,
+        class_hash,
+        &config.account,
+        &config.accounts_file,
+        config.keystore.as_ref(),
+        generate_network_flag(rpc, config),
+    )?;
+    ui.print_notification(deploy_message);
 
     Ok(res)
 }

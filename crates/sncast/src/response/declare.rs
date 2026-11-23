@@ -116,26 +116,6 @@ impl DeployCommandMessage {
     pub fn new(
         abi: &[AbiEntry],
         no_abi: bool,
-        response: &DeclareTransactionResponse,
-        account: &str,
-        accounts_file: &Utf8PathBuf,
-        keystore: Option<&Utf8PathBuf>,
-        network_flag: String,
-    ) -> Result<Self, Error> {
-        Self::from_class_hash(
-            abi,
-            no_abi,
-            response.class_hash,
-            account,
-            accounts_file,
-            keystore,
-            network_flag,
-        )
-    }
-
-    pub fn from_class_hash(
-        abi: &[AbiEntry],
-        no_abi: bool,
         class_hash: PaddedFelt,
         account: &str,
         accounts_file: &Utf8PathBuf,
