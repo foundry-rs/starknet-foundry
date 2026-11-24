@@ -129,8 +129,7 @@ impl BacktraceSourceData {
     }
 
     fn backtrace_from(&self, pc: usize) -> Result<Vec<Backtrace<'_>>> {
-        // `pc` is 1-based, while the start offsets are 0-based, so `pc - 1` is the offset we
-        // look for. Forge always runs the program without the casm header, so `pc` is never 0.
+        // `get_reversed_pc_traceback` gives us the program offset plus 1, so subtract it back.
         #[expect(
             clippy::int_plus_one,
             reason = "`pc - 1` spells out that we compare against an offset"
