@@ -46,7 +46,8 @@ pub struct TestResultMessage {
     fuzzer_report: String,
     gas_usage: GasVector,
     used_resources: String,
-    gas_report: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    gas_report: Option<String>,
 }
 
 impl TestResultMessage {
@@ -87,11 +88,11 @@ impl TestResultMessage {
                 let gas_report = gas_info
                     .report_data
                     .as_ref()
-                    .map_or_default(std::string::ToString::to_string);
+                    .map(std::string::ToString::to_string);
 
                 (gas_info.gas_used, gas_report)
             }
-            _ => (GasVector::ZERO, String::new()),
+            _ => (GasVector::ZERO, None),
         };
 
         let used_resources = match (show_detailed_resources, &test_result) {
@@ -158,7 +159,7 @@ impl Message for TestResultMessage {
             " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
             self.gas_usage.l1_gas, self.gas_usage.l1_data_gas, self.gas_usage.l2_gas
         );
-        let gas_report = &self.gas_report;
+        let gas_report = self.gas_report.as_deref().unwrap_or_default();
         let used_resources = &self.used_resources;
 
         format!(
