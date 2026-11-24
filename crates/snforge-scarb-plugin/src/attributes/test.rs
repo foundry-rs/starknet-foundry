@@ -150,12 +150,12 @@ pub fn test_func_with_attrs(
     test_fn_name: &TokenStream,
     fn_name: &TokenStream,
     call_args: &TokenStream,
-    config_fn_ident: &TokenStream,
+    config_fn: &TokenStream,
 ) -> TokenStream {
     let test_fn_name = test_fn_name.clone();
     let fn_name = fn_name.clone();
     let call_args = call_args.clone();
-    let config_fn_ident = config_fn_ident.clone();
+    let config_fn = config_fn.clone();
     let out_of_gas = create_single_token("'Out of gas'");
     quote!(
         #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
@@ -169,7 +169,7 @@ pub fn test_func_with_attrs(
                 core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
             );
             if snforge_std::_internals::is_config_run() {
-                #config_fn_ident ();
+                #config_fn ();
 
                 let mut arr = ArrayTrait::new();
                 return core::array::ArrayTrait::span(@arr);
