@@ -1,6 +1,7 @@
 use num_traits::Pow;
+use serde::Serialize;
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default, Serialize)]
 pub struct GasStats {
     pub min: u64,
     pub max: u64,

@@ -1,6 +1,10 @@
+use std::fmt::Display;
+
 use crate::forge_config::ForgeTrackedResource;
 use crate::gas::resources::GasCalculationResources;
-use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
+use crate::test_case_summary::{
+    AnyTestCaseSummary, FuzzingStatistics, GasFuzzingInfo, TestCaseSummary,
+};
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use console::style;
 use foundry_ui::Message;
@@ -43,7 +47,8 @@ pub struct TestResultMessage {
     name: String,
     msg: Option<String>,
     debugging_trace: String,
-    fuzzer_report: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    fuzzer_report: Option<FuzzerReport>,
     gas_usage: GasVector,
     used_resources: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -71,16 +76,22 @@ impl TestResultMessage {
                     test_statistics: FuzzingStatistics { runs },
                     gas_info,
                     ..
-                } => format!(" (runs: {runs}, {gas_info})"),
+                } => Some(FuzzerReport::Passed {
+                    runs: *runs,
+                    gas_info: gas_info.clone(),
+                }),
                 TestCaseSummary::Failed {
                     fuzzer_args,
                     test_statistics: FuzzingStatistics { runs },
                     ..
-                } => format!(" (runs: {runs}, arguments: {fuzzer_args:?})"),
-                _ => String::new(),
+                } => Some(FuzzerReport::Failed {
+                    runs: *runs,
+                    args: fuzzer_args.clone(),
+                }),
+                _ => None,
             }
         } else {
-            String::new()
+            None
         };
 
         let (gas_usage, gas_report) = match test_result {
@@ -154,7 +165,11 @@ impl Message for TestResultMessage {
         let result_msg = self.result_message();
         let result_debug_trace = &self.debugging_trace;
 
-        let fuzzer_report = &self.fuzzer_report;
+        let fuzzer_report = self
+            .fuzzer_report
+            .as_ref()
+            .map_or_default(std::string::ToString::to_string);
+
         let gas_usage = format!(
             " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
             self.gas_usage.l1_gas, self.gas_usage.l1_data_gas, self.gas_usage.l2_gas
@@ -178,4 +193,28 @@ fn format_detailed_resources(
 ) -> String {
     GasCalculationResources::from_used_resources(used_resources)
         .format_for_display(tracked_resource)
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+enum FuzzerReport {
+    Passed {
+        runs: usize,
+        gas_info: GasFuzzingInfo,
+    },
+    Failed {
+        runs: usize,
+        args: Vec<String>,
+    },
+}
+
+impl Display for FuzzerReport {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FuzzerReport::Passed { runs, gas_info } => write!(f, " (runs: {runs}, {gas_info})"),
+            FuzzerReport::Failed { runs, args } => {
+                write!(f, " (runs: {runs}, arguments: {args:?})")
+            }
+        }
+    }
 }
