@@ -129,9 +129,15 @@ impl BacktraceSourceData {
     }
 
     fn backtrace_from(&self, pc: usize) -> Result<Vec<Backtrace<'_>>> {
+        // `pc` is 1-based, while the start offsets are 0-based, so `pc - 1` is the offset we
+        // look for. Forge always runs the program without the casm header, so `pc` is never 0.
+        #[expect(
+            clippy::int_plus_one,
+            reason = "`pc - 1` spells out that we compare against an offset"
+        )]
         let sierra_statement_idx = StatementIdx(
             self.casm_debug_info_start_offsets
-                .partition_point(|start_offset| *start_offset < pc)
+                .partition_point(|start_offset| *start_offset <= pc - 1)
                 .saturating_sub(1),
         );
 
