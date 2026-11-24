@@ -5,7 +5,6 @@ use crate::gas::resources::GasCalculationResources;
 use crate::test_case_summary::{
     AnyTestCaseSummary, FuzzingStatistics, GasFuzzingInfo, TestCaseSummary,
 };
-use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
 use console::style;
 use foundry_ui::Message;
 use serde::Serialize;
@@ -51,9 +50,13 @@ pub struct TestResultMessage {
     #[serde(skip_serializing_if = "Option::is_none")]
     fuzzer_report: Option<FuzzerReport>,
     gas_usage: GasVector,
-    used_resources: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    used_resources: Option<GasCalculationResources>,
     #[serde(skip_serializing_if = "Option::is_none")]
     gas_report: Option<String>,
+
+    #[serde(skip)]
+    tracked_resource: ForgeTrackedResource,
 }
 
 impl TestResultMessage {
@@ -109,9 +112,9 @@ impl TestResultMessage {
 
         let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
-                format_detailed_resources(used_resources, tracked_resource)
+                Some(GasCalculationResources::from_used_resources(used_resources))
             }
-            _ => String::new(),
+            _ => None,
         };
 
         let msg = test_result.msg().map(std::string::ToString::to_string);
@@ -125,6 +128,7 @@ impl TestResultMessage {
             gas_usage,
             used_resources,
             gas_report,
+            tracked_resource,
         }
     }
 
@@ -176,7 +180,10 @@ impl Message for TestResultMessage {
             self.gas_usage.l1_gas, self.gas_usage.l1_data_gas, self.gas_usage.l2_gas
         );
         let gas_report = self.gas_report.as_deref().unwrap_or_default();
-        let used_resources = &self.used_resources;
+        let used_resources = self
+            .used_resources
+            .as_ref()
+            .map_or_default(|res| res.format_for_display(self.tracked_resource));
 
         format!(
             "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}{gas_report}"
@@ -186,14 +193,6 @@ impl Message for TestResultMessage {
     fn json(&self) -> Value {
         json!(self)
     }
-}
-
-fn format_detailed_resources(
-    used_resources: &UsedResources,
-    tracked_resource: ForgeTrackedResource,
-) -> String {
-    GasCalculationResources::from_used_resources(used_resources)
-        .format_for_display(tracked_resource)
 }
 
 #[derive(Serialize)]

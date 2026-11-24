@@ -5,8 +5,10 @@ use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::fee::resources::{ArchivalDataResources, ComputationResources, MessageResources};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResources;
+use serde::Serialize;
 use starknet_api::execution_resources::GasAmount;
 
+#[derive(Serialize)]
 pub struct GasCalculationResources {
     pub sierra_gas: GasAmount,
     pub vm_resources: ExtendedExecutionResources,
