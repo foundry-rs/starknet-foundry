@@ -1,7 +1,7 @@
-use crate::args::Arguments;
 use crate::args::unnamed::UnnamedArgs;
-use crate::attributes::extract_config::{ExtractConfigCollector, config_fn_ident};
-use crate::attributes::test::{TestCollector, test_func_with_attrs};
+use crate::args::Arguments;
+use crate::attributes::extract_config::{config_fn_ident, ExtractConfigCollector};
+use crate::attributes::test::{test_func_with_attrs, TestCollector};
 use crate::attributes::test_case::name::test_case_name;
 use crate::attributes::{AttributeInfo, ErrorExt};
 use crate::common::{
@@ -9,9 +9,9 @@ use crate::common::{
 };
 use crate::utils::SyntaxNodeUtils;
 use crate::{create_single_token, format_ident};
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::FunctionWithBody;
+use cairo_lang_syntax::node::ast::{FunctionWithBody, OptionArgListParenthesized};
 use cairo_lang_syntax::node::helpers::QueryAttrs;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
@@ -158,7 +158,14 @@ fn collect_preserved_attributes_for_test_case(
     attr_list
         .elements(func_db)
         .filter(|attr| {
-            let is_test_attr = test_attrs.contains(attr);
+            // `query_attr` matches by name only, so it also matches `#[test]` with params, e.g. `#[test(123)`.
+            // Dropping that would swallow the diagnostic `#[test]` emits for its arguments, so only a
+            // bare `#[test]` is treated as the attribute to skip.
+            let is_test_attr = test_attrs.contains(attr)
+                && matches!(
+                    attr.arguments(func_db),
+                    OptionArgListParenthesized::Empty(_)
+                );
             let is_extract_config_attr = extract_config_attrs.contains(attr);
 
             (!is_test_attr || has_fuzzer) && !is_extract_config_attr
