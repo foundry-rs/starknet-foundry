@@ -23,8 +23,9 @@ Currently, those attributes are supported:
 Marks the function as a test case, to be visible for test collector.
 Read more about test collection [here](./test-collection.md).
 
-A test function may declare any return type that implements `Drop`. The returned value is
-discarded - a test passes or fails depending on whether it panics, not on what it returns.
+A test function may declare any return type that implements `Destruct` - which includes every
+type that implements `Drop`. The returned value is discarded - a test passes or fails depending
+on whether it panics, not on what it returns.
 
 ### `#[ignore]`
 
