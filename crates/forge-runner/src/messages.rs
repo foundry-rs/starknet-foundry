@@ -6,6 +6,7 @@ use console::style;
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
+use starknet_api::execution_resources::GasVector;
 
 #[derive(Serialize)]
 enum TestResultStatus {
@@ -42,7 +43,7 @@ pub struct TestResultMessage {
     msg: Option<String>,
     debugging_trace: String,
     fuzzer_report: String,
-    gas_usage: String,
+    gas_usage: GasVector,
     used_resources: String,
     gas_report: String,
 }
@@ -87,17 +88,9 @@ impl TestResultMessage {
                     .as_ref()
                     .map_or_default(std::string::ToString::to_string);
 
-                (
-                    format!(
-                        " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-                        gas_info.gas_used.l1_gas,
-                        gas_info.gas_used.l1_data_gas,
-                        gas_info.gas_used.l2_gas
-                    ),
-                    gas_report,
-                )
+                (gas_info.gas_used, gas_report)
             }
-            _ => (String::new(), String::new()),
+            _ => (GasVector::ZERO, String::new()),
         };
 
         let used_resources = match (show_detailed_resources, &test_result) {
@@ -160,7 +153,10 @@ impl Message for TestResultMessage {
         let result_debug_trace = &self.debugging_trace;
 
         let fuzzer_report = &self.fuzzer_report;
-        let gas_usage = &self.gas_usage;
+        let gas_usage = format!(
+            " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+            self.gas_usage.l1_gas, self.gas_usage.l1_data_gas, self.gas_usage.l2_gas
+        );
         let gas_report = &self.gas_report;
         let used_resources = &self.used_resources;
 
