@@ -1,7 +1,7 @@
-use crate::args::unnamed::UnnamedArgs;
 use crate::args::Arguments;
-use crate::attributes::extract_config::{config_fn_ident, ExtractConfigCollector};
-use crate::attributes::test::{test_func_with_attrs, TestCollector};
+use crate::args::unnamed::UnnamedArgs;
+use crate::attributes::extract_config::{ExtractConfigCollector, config_fn_ident};
+use crate::attributes::test::{TestCollector, test_func_with_attrs};
 use crate::attributes::test_case::name::test_case_name;
 use crate::attributes::{AttributeInfo, ErrorExt};
 use crate::common::{
@@ -9,7 +9,7 @@ use crate::common::{
 };
 use crate::utils::SyntaxNodeUtils;
 use crate::{create_single_token, format_ident};
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{FunctionWithBody, OptionArgListParenthesized};
 use cairo_lang_syntax::node::helpers::QueryAttrs;
