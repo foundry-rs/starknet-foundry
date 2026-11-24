@@ -129,9 +129,14 @@ impl BacktraceSourceData {
     }
 
     fn backtrace_from(&self, pc: usize) -> Result<Vec<Backtrace<'_>>> {
+        // `get_reversed_pc_traceback` gives us the program offset plus 1, so subtract it back.
+        #[expect(
+            clippy::int_plus_one,
+            reason = "`pc - 1` is the offset we compare against"
+        )]
         let sierra_statement_idx = StatementIdx(
             self.casm_debug_info_start_offsets
-                .partition_point(|start_offset| *start_offset < pc - 1)
+                .partition_point(|start_offset| *start_offset <= pc - 1)
                 .saturating_sub(1),
         );
 
