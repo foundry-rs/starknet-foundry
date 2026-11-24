@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use starknet_api::execution_resources::GasVector;
 
 #[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
 enum TestResultStatus {
     Passed,
     Failed,
