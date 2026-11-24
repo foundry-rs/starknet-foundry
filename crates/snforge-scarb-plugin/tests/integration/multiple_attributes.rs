@@ -1,71 +1,9 @@
-use crate::utils::{assert_diagnostics, empty_function, format_output};
-use cairo_lang_macro::{TokenStream, TokenTree, quote};
-use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
-use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
+use crate::utils::{assert_diagnostics, empty_function, format_output, get_function};
+use cairo_lang_macro::{TokenStream, quote};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
 use snforge_scarb_plugin::create_single_token;
-
-pub(crate) fn get_function(
-    token_stream: &TokenStream,
-    function_name: &str,
-    skip_args: bool,
-) -> TokenStream {
-    let db = SimpleParserDatabase::default();
-    let (parsed_node, _diagnostics) = db.parse_token_stream(token_stream);
-    let syntax_file = SyntaxFile::from_syntax_node(&db, parsed_node);
-    let function = syntax_file
-        .items(&db)
-        .elements(&db)
-        .find_map(|e| {
-            if let ModuleItem::FreeFunction(free_function) = e {
-                if free_function.declaration(&db).name(&db).text(&db) == function_name {
-                    Some(free_function.clone())
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .unwrap();
-
-    let vis = function.visibility(&db).as_syntax_node();
-    let vis = SyntaxNodeWithDb::new(&vis, &db);
-
-    let signature = function.declaration(&db).as_syntax_node();
-    let signature = SyntaxNodeWithDb::new(&signature, &db);
-
-    let body = function.body(&db).as_syntax_node();
-    let body = SyntaxNodeWithDb::new(&body, &db);
-
-    let attrs = function.attributes(&db).as_syntax_node();
-    let attrs = SyntaxNodeWithDb::new(&attrs, &db);
-
-    let mut token_stream = if skip_args {
-        quote! {
-            #vis #signature
-            #body
-        }
-    } else {
-        quote! {
-            #attrs
-            #vis #signature
-            #body
-        }
-    };
-
-    match &mut token_stream.tokens[0] {
-        TokenTree::Ident(ident) => {
-            ident.span.start = 0;
-        }
-    }
-
-    token_stream
-}
 
 #[test]
 fn works_with_few_attributes() {

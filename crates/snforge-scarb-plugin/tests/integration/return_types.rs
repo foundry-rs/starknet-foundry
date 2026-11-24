@@ -1,5 +1,4 @@
-use crate::multiple_attributes::get_function;
-use crate::utils::{assert_diagnostics, format_output};
+use crate::utils::{assert_diagnostics, format_output, get_function};
 use cairo_lang_macro::{TokenStream, quote};
 use snforge_scarb_plugin::attributes::AttributeInfo;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
