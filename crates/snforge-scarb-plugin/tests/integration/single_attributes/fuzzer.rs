@@ -1,5 +1,4 @@
-use crate::multiple_attributes::get_function;
-use crate::utils::{assert_diagnostics, empty_function, format_output};
+use crate::utils::{assert_diagnostics, empty_function, format_output, get_function};
 use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quote};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
