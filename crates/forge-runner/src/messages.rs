@@ -45,6 +45,7 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
 pub struct TestResultMessage {
     status: TestResultStatus,
     name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     msg: Option<String>,
     debugging_trace: String,
     #[serde(skip_serializing_if = "Option::is_none")]
