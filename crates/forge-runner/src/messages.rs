@@ -43,19 +43,20 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
 
 #[derive(Serialize)]
 pub struct TestResultMessage {
-    status: TestResultStatus,
     name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    msg: Option<String>,
+    status: TestResultStatus,
+    gas_usage: GasVector,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     debugging_trace: Option<Trace>,
     #[serde(skip_serializing_if = "Option::is_none")]
     fuzzer_report: Option<FuzzerReport>,
-    gas_usage: GasVector,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    used_resources: Option<GasCalculationResources>,
     #[serde(skip_serializing_if = "Option::is_none")]
     gas_report: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    msg: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    used_resources: Option<GasCalculationResources>,
 
     #[serde(skip)]
     tracked_resource: ForgeTrackedResource,
@@ -120,14 +121,14 @@ impl TestResultMessage {
         let msg = test_result.msg().map(std::string::ToString::to_string);
         let status = TestResultStatus::from(test_result);
         Self {
-            status,
             name,
-            msg,
+            status,
+            gas_usage,
             debugging_trace,
             fuzzer_report,
-            gas_usage,
-            used_resources,
             gas_report,
+            msg,
+            used_resources,
             tracked_resource,
         }
     }
