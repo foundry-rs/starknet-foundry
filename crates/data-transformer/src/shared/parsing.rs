@@ -3,6 +3,7 @@ use cairo_lang_filesystem::ids::{FileKind, FileLongId, SmolStrId, VirtualFile};
 use cairo_lang_parser::parser::Parser;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;
+use cairo_lang_syntax::node::{SyntaxNode, TypedSyntaxNode};
 use cairo_lang_utils::Intern;
 
 #[derive(Debug, thiserror::Error)]
@@ -26,7 +27,8 @@ pub fn parse_expression<'a>(
     .intern(db);
 
     let mut diagnostics = DiagnosticsBuilder::default();
-    let expression = Parser::parse_file_expr(db, &mut diagnostics, file, source);
+    let green = Parser::parse_file_expr_green(db, &mut diagnostics, file, source);
+    let expression = Expr::from_syntax_node(db, SyntaxNode::new_detached_root(db, file, green.0));
     let diagnostics = diagnostics.build();
 
     if diagnostics.check_error_free().is_err() {
