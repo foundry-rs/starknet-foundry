@@ -6,6 +6,7 @@ use crate::test_case_summary::{
     AnyTestCaseSummary, FuzzingStatistics, GasFuzzingInfo, TestCaseSummary,
 };
 use console::style;
+use debugging::Trace;
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -46,7 +47,8 @@ pub struct TestResultMessage {
     name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     msg: Option<String>,
-    debugging_trace: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    debugging_trace: Option<Trace>,
     #[serde(skip_serializing_if = "Option::is_none")]
     fuzzer_report: Option<FuzzerReport>,
     gas_usage: GasVector,
@@ -70,9 +72,7 @@ impl TestResultMessage {
             .expect("Test result must have a name")
             .to_string();
 
-        let debugging_trace = test_result
-            .debugging_trace()
-            .map_or_default(|trace| format!("\n{trace}"));
+        let debugging_trace = test_result.debugging_trace().cloned();
 
         let fuzzer_report = if let AnyTestCaseSummary::Fuzzing(test_result) = test_result {
             match test_result {
@@ -168,7 +168,10 @@ impl Message for TestResultMessage {
         let result_header = self.result_header();
 
         let result_msg = self.result_message();
-        let result_debug_trace = &self.debugging_trace;
+        let result_debug_trace = self
+            .debugging_trace
+            .as_ref()
+            .map_or_default(|trace| format!("\n{trace}"));
 
         let fuzzer_report = self
             .fuzzer_report

@@ -7,25 +7,26 @@ use crate::trace::components::{
 };
 use crate::tree::TreeSerialize;
 use cheatnet::trace_data::CallTrace;
+use serde::Serialize;
 use starknet_api::core::ContractAddress as ApiContractAddress;
 use starknet_api::execution_resources::GasAmount as ApiGasAmount;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::fmt::Display;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Trace {
     pub test_name: TestName,
     pub nested_calls: Vec<ContractTrace>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ContractTrace {
     pub selector: Selector,
     pub trace_info: TraceInfo,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TraceInfo {
     pub contract_name: ContractNameContainer,
     pub entry_point_type: EntryPointTypeContainer,
@@ -39,34 +40,35 @@ pub struct TraceInfo {
     pub gas: GasContainer,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TransformedCallResult(pub String);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TransformedCalldata(pub String);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Selector(pub String);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TestName(pub String);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ContractName(pub String);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ContractAddress(pub ApiContractAddress);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct CallerAddress(pub ApiContractAddress);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Gas(pub ApiGasAmount);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Events(pub Vec<Event>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
 pub enum Event {
     /// A successfully reverse-transformed event, pretty-formatted as a human-readable struct.
     Decoded(String),
@@ -84,6 +86,6 @@ impl Trace {
 
 impl Display for Trace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.serialize())
+        write!(f, "{}", self.tree_serialize())
     }
 }
