@@ -132,7 +132,7 @@ impl BacktraceSourceData {
         // `get_reversed_pc_traceback` gives us the program offset plus 1, so subtract it back.
         #[expect(
             clippy::int_plus_one,
-            reason = "`pc - 1` spells out that we compare against an offset"
+            reason = "`pc - 1` is the offset we compare against"
         )]
         let sierra_statement_idx = StatementIdx(
             self.casm_debug_info_start_offsets
