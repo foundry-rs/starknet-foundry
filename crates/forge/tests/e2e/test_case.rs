@@ -91,8 +91,14 @@ fn with_multiple_attributes() {
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order_1_2 [..]
         [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_different_order [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_runs_explicit (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_fuzzer_runs (runs: 3, [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_before_fuzzer_explicit (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_before_fuzzer (runs: 3, [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_after_fuzzer_explicit (l1_gas: [..]
+        [PASS] test_case_integrationtest::multiple_attributes::with_should_panic_after_fuzzer (runs: 3, [..]
         Running 0 test(s) from src/
-        Tests: 10 passed, 2 failed, 2 ignored, [..] filtered out
+        Tests: 16 passed, 2 failed, 2 ignored, [..] filtered out
         Fuzzer seed: [..]
 
         Failures:

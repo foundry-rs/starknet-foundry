@@ -1,6 +1,6 @@
 use super::{
     AttributeInfo, ErrorExt,
-    extract_config::{ExtractConfigCollector, config_fn_ident},
+    extract_config::{ExtractConfigCollector, config_fn_ident, fuzzer_config_fn_ident},
 };
 use crate::asserts::assert_is_used_once;
 use crate::common::{has_fuzzer_attribute, has_test_case_attribute};
@@ -105,7 +105,12 @@ fn test_internal(
 
     if should_run_test {
         let call_args = TokenStream::empty();
-        let config_fn = config_fn_ident(&name);
+        // The fuzzed test also needs the fuzzer config, which is kept out of the shared config.
+        let config_fn = if has_fuzzer {
+            fuzzer_config_fn_ident(&name)
+        } else {
+            config_fn_ident(&name)
+        };
 
         let test_func_with_attrs =
             test_func_with_attrs(&test_func, &called_func, &call_args, &config_fn);

@@ -2,6 +2,13 @@
 source: tests/integration/multiple_attributes.rs
 expression: format_output(&result)
 ---
+fn test_add_one_and_two__snforge_internal_fuzzer_config() {
+    test_add_one_and_two__snforge_internal_config();
+    let mut data = array![];
+    snforge_std::_internals::config_types::FuzzerConfig { seed: Option::None, runs: Option::None }
+        .serialize(ref data);
+    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
+}
 #[implicit_precedence(
     core::pedersen::Pedersen,
     core::RangeCheck,
@@ -17,15 +24,6 @@ expression: format_output(&result)
 )]
 #[snforge_internal_test_executable]
 fn test_add_one_and_two(mut _data: Span<felt252>) -> Span<felt252> {
-    if snforge_std::_internals::is_config_run() {
-        let mut data = array![];
-        snforge_std::_internals::config_types::FuzzerConfig {
-            seed: Option::None, runs: Option::None,
-        }
-            .serialize(ref data);
-        starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
-        return Default::default();
-    }
     core::internal::require_implicit::<System>();
     core::internal::revoke_ap_tracking();
     core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), "Out of gas");

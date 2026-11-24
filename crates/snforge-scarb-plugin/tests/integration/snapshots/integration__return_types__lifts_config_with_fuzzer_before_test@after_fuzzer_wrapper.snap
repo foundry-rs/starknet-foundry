@@ -5,7 +5,7 @@ expression: output
 #[test]
 fn returning_fn__snforge_internal_fuzzer_generated() {
     if snforge_std::_internals::is_config_run() {
-        returning_fn__snforge_internal_config();
+        returning_fn__snforge_internal_fuzzer_config();
         return;
     }
     let a = snforge_std::fuzzable::Fuzzable::<u8>::generate();
