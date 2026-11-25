@@ -5,9 +5,8 @@
 use attributes::fuzzer;
 use attributes::{
     available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,
-    fork::fork, fuzzer::fuzzer, ignore::ignore,
-    internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
-    test_case::test_case,
+    extract_config::extract_config, fork::fork, fuzzer::fuzzer, ignore::ignore,
+    should_panic::should_panic, test::test, test_case::test_case,
 };
 use cairo_lang_macro::{
     ProcMacroResult, TokenStream, attribute_macro, derive_macro, executable_attribute, inline_macro,
@@ -33,8 +32,8 @@ pub use utils::create_single_token;
 executable_attribute!("snforge_internal_test_executable");
 
 #[attribute_macro]
-fn __internal_config_statement(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    internal_config_statement(args, item)
+fn __snforge_extract_config(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    extract_config(args, item)
 }
 
 #[attribute_macro]

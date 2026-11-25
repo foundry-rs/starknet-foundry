@@ -146,6 +146,7 @@ pub struct CastConfig {
     pub scarb_profile: String,
     pub aliases: AliasesConfig,
     pub fee_params: FeeParams,
+    pub profile: Option<String>,
 }
 
 impl CastConfig {
@@ -171,6 +172,7 @@ impl Default for CastConfig {
             scarb_profile: "release".to_string(),
             aliases: AliasesConfig::default(),
             fee_params: FeeParams::default(),
+            profile: None,
         }
     }
 }
@@ -433,6 +435,7 @@ impl TryFrom<PartialCastConfig> for CastConfig {
             scarb_profile: p.scarb_profile.unwrap_or(d.scarb_profile),
             aliases: p.aliases.unwrap_or_default(),
             fee_params: p.fee_params.unwrap_or_default(),
+            profile: None,
         };
         config.validate()?;
         Ok(config)
