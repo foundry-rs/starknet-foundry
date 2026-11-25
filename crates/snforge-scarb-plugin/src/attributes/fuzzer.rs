@@ -92,7 +92,12 @@ fn fuzzer_config_internal(
 ) -> Result<TokenStream, Diagnostics> {
     assert_is_used_once::<FuzzerCollector>(db, func)?;
 
-    let cheatcode = config_cheatcode::<FuzzerCollector>(args_db, args, warns)?;
+    // Keep going on invalid arguments - the generated test calls the function below by name.
+    let cheatcode =
+        config_cheatcode::<FuzzerCollector>(args_db, args, warns).unwrap_or_else(|diagnostics| {
+            warns.extend(diagnostics);
+            TokenStream::empty()
+        });
 
     let name = func.declaration(db).name(db).text(db).to_string();
     let config_fn = config_fn_ident(&name);
