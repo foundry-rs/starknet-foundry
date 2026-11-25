@@ -111,7 +111,7 @@ async fn test_happy_case_json_output() {
 {"status":"compiling","message":"[..]"}
 {"status":"finished","message":"[..]"}
 {"class_hash":"0x0[..]","command":"declare","transaction_hash":"0x0[..]","type":"response"}
-{"links":[{"link":"https://sepolia.voyager.online/class/[..]","type":"class"},{"link":"https://sepolia.voyager.online/tx/[..]","type":"transaction"}],"title":"declaration","type":"notification"}
+{"links":{"class":"https://sepolia.voyager.online/class/[..]","transaction":"https://sepolia.voyager.online/tx/[..]"},"title":"declaration","type":"notification"}
 "#,
     });
 }

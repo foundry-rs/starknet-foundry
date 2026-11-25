@@ -20,10 +20,61 @@ pub trait OutputLink {
     }
 }
 
-#[derive(Serialize)]
 pub struct ExplorerLinksMessage {
     title: String,
     links: Vec<ExplorerLink>,
+}
+
+impl Serialize for ExplorerLinksMessage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Default, Serialize)]
+        struct ExplorerLinksS<'a> {
+            #[serde(skip_serializing_if = "Option::is_none")]
+            account: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            class: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            contract: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            declare_transaction: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            deploy_transaction: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            transaction: Option<&'a str>,
+        }
+
+        #[derive(Serialize)]
+        struct ExplorerLinksMessageS<'a> {
+            title: &'a str,
+            links: ExplorerLinksS<'a>,
+        }
+
+        let mut links = ExplorerLinksS::default();
+
+        for ExplorerLink { link_type, link } in &self.links {
+            match link_type {
+                ExplorerLinkType::Account => links.account = Some(link.as_str()),
+                ExplorerLinkType::Class => links.class = Some(link.as_str()),
+                ExplorerLinkType::Contract => links.contract = Some(link.as_str()),
+                ExplorerLinkType::DeclareTransaction => {
+                    links.declare_transaction = Some(link.as_str());
+                }
+                ExplorerLinkType::DeployTransaction => {
+                    links.deploy_transaction = Some(link.as_str());
+                }
+                ExplorerLinkType::Transaction => links.transaction = Some(link.as_str()),
+            }
+        }
+
+        ExplorerLinksMessageS {
+            title: &self.title,
+            links,
+        }
+        .serialize(serializer)
+    }
 }
 
 impl ExplorerLinksMessage {

@@ -571,7 +571,7 @@ async fn test_json_output_format() {
         output,
         indoc! {r#"
             {"command":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]","type":"response"}
-            {"links":[{"link":"https://sepolia.voyager.online/contract/0x[..]","type":"contract"},{"link":"https://sepolia.voyager.online/tx/0x[..]","type":"transaction"}],"title":"deployment","type":"notification"}
+            {"links":{"contract":"https://sepolia.voyager.online/contract/0x[..]","transaction":"https://sepolia.voyager.online/tx/0x[..]"},"title":"deployment","type":"notification"}
             "#},
     );
 }
@@ -608,7 +608,7 @@ async fn test_json_output_format_with_declare() {
         output,
         indoc! {r#"
             {"class_hash":"0x[..]","command":"deploy","contract_address":"0x[..]","declare_transaction_hash":"0x[..]","deploy_transaction_hash":"0x[..]","type":"response"}
-            {"links":[{"link":"https://sepolia.voyager.online/contract/0x[..]","type":"contract"},{"link":"https://sepolia.voyager.online/class/0x[..]","type":"class"},{"link":"https://sepolia.voyager.online/tx/0x[..]","type":"deploy_transaction"},{"link":"https://sepolia.voyager.online/tx/0x[..]","type":"declare_transaction"}],"title":"deployment","type":"notification"}
+            {"links":{"class":"https://sepolia.voyager.online/class/0x[..]","contract":"https://sepolia.voyager.online/contract/0x[..]","declare_transaction":"https://sepolia.voyager.online/tx/0x[..]","deploy_transaction":"https://sepolia.voyager.online/tx/0x[..]"},"title":"deployment","type":"notification"}
         "#},
     );
 }
