@@ -35,6 +35,19 @@ where
 {
     assert_is_used_once::<Collector>(db, func)?;
 
+    let config_cheatcode = config_cheatcode::<Collector>(args_db, args, warns)?;
+
+    Ok(append_config_statements(db, func, config_cheatcode))
+}
+
+pub fn config_cheatcode<Collector>(
+    args_db: &SimpleParserDatabase,
+    args: Arguments,
+    warns: &mut Vec<Diagnostic>,
+) -> Result<TokenStream, Diagnostics>
+where
+    Collector: AttributeCollector,
+{
     let value = Collector::args_into_config_expression(args_db, args, warns)?;
 
     let cheatcode_name = Collector::CHEATCODE_NAME;
@@ -43,16 +56,14 @@ where
         starknet::testing::cheatcode::<#cheatcode>(data.span());
     };
 
-    let config_cheatcode = quote!(
+    Ok(quote!(
             let mut data = array![];
 
             #value
             .serialize(ref data);
 
             #cheatcode
-    );
-
-    Ok(append_config_statements(db, func, config_cheatcode))
+    ))
 }
 
 #[expect(clippy::needless_pass_by_value)]

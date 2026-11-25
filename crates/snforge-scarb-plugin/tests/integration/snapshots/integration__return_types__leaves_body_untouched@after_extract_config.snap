@@ -1,0 +1,8 @@
+---
+source: tests/integration/return_types.rs
+expression: format_output(&result)
+---
+fn returning_fn__snforge_internal_config() {}
+fn returning_fn() -> Result<NonZero<u8>, u8> {
+    Result::Ok(1)
+}

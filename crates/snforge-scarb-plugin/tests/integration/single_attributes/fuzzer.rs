@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, empty_function, format_output};
+use crate::utils::{assert_diagnostics, empty_function, format_output, get_function};
 use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quote};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
@@ -70,7 +70,8 @@ fn config_wrapper_work_without_args() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    let item = result.token_stream;
+    // `fuzzer_config` also emits the fuzzer config function, pass only the test function on.
+    let item = get_function(&result.token_stream, "empty_fn", false);
     let args = TokenStream::empty();
 
     let result = fuzzer_wrapper(args, item);
@@ -94,7 +95,8 @@ fn config_wrapper_work_with_both_args() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    let item = result.token_stream;
+    // `fuzzer_config` also emits the fuzzer config function, pass only the test function on.
+    let item = get_function(&result.token_stream, "empty_fn", false);
     let args = TokenStream::empty();
 
     let result = fuzzer_wrapper(args, item);
@@ -121,7 +123,8 @@ fn config_wrapper_work_with_fn_with_single_param() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    let item = result.token_stream;
+    // `fuzzer_config` also emits the fuzzer config function, pass only the test function on.
+    let item = get_function(&result.token_stream, "empty_fn", false);
     let args = TokenStream::empty();
 
     let result = fuzzer_wrapper(args, item);
@@ -148,7 +151,8 @@ fn config_wrapper_work_with_fn_with_params() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    let item = result.token_stream;
+    // `fuzzer_config` also emits the fuzzer config function, pass only the test function on.
+    let item = get_function(&result.token_stream, "empty_fn", false);
     let args = TokenStream::empty();
 
     let result = fuzzer_wrapper(args, item);
