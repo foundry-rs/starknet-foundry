@@ -146,10 +146,9 @@ pub async fn declare(
             Ok(process_command_result("declare", Ok(response), ui, None))
         }
         DeclareResponse::Success(response) => {
-            let class_hash = response.class_hash;
             finalize_declare_response(
+                response.class_hash,
                 response,
-                class_hash,
                 |response, message| DeclareTransactionResponse {
                     verification_message: Some(message),
                     ..response
@@ -174,10 +173,9 @@ pub async fn declare(
                 );
             }
 
-            let class_hash = response.class_hash;
             finalize_declare_response(
+                response.class_hash,
                 response,
-                class_hash,
                 |response, _| response,
                 None,
                 &args.contract_name,
@@ -197,8 +195,8 @@ pub async fn declare(
 
 #[expect(clippy::too_many_arguments)]
 async fn finalize_declare_response<T, F>(
-    mut response: T,
     class_hash: PaddedFelt,
+    mut response: T,
     set_verification_message: F,
     verify_args: Option<VerifyCommonArgs>,
     contract_name: &str,

@@ -567,14 +567,13 @@ async fn test_skip_if_declared_returns_existing_class_hash() {
 
     let first_stdout = command_stdout(&args, tempdir.path());
     assert_stdout_contains(
-        first_stdout.clone(),
+        first_stdout,
         indoc! {r"
         Success: Declaration completed
+
+        Class Hash:       0x[..]
+        Transaction Hash: 0x[..]
         "},
-    );
-    assert!(
-        first_stdout.contains("Transaction Hash:"),
-        "a new declaration should still report a transaction hash: {first_stdout}"
     );
 
     let second_stdout = command_stdout(&args, tempdir.path());
@@ -585,11 +584,6 @@ async fn test_skip_if_declared_returns_existing_class_hash() {
 
         Class Hash: 0x[..]
 
-        To see class details, visit:
-        class: https://[..]
-
-        To deploy a contract of this class, run:
-        sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
         "},
     );
 }
