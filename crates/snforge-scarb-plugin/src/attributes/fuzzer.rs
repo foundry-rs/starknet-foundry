@@ -1,17 +1,19 @@
 use super::{AttributeCollector, AttributeInfo, AttributeTypeData, ErrorExt};
 use crate::args::Arguments;
 use crate::asserts::assert_is_used_once;
+use crate::attributes::extract_config::{config_fn_ident, fuzzer_config_fn_ident};
 use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
 use crate::cairo_expression::CairoExpression;
-use crate::common::into_proc_macro_result;
-use crate::config_statement::extend_with_config_cheatcodes;
+use crate::common::{into_proc_macro_result, with_parsed_values};
+use crate::config_statement::config_cheatcode;
 use crate::parse::parse;
 use crate::types::{Number, ParseFromExpr};
 use crate::utils::create_single_token;
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::TypedSyntaxNode;
+use cairo_lang_syntax::node::ast::FunctionWithBody;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
+use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 use cairo_lang_utils::Upcast;
 use num_bigint::BigInt;
 
@@ -73,7 +75,46 @@ pub fn fuzzer(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 
 #[must_use]
 pub fn fuzzer_config(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    extend_with_config_cheatcodes::<FuzzerCollector>(args, item)
+    into_proc_macro_result(args, item, |args, item, warns| {
+        with_parsed_values::<FuzzerCollector>(args, item, warns, fuzzer_config_internal)
+    })
+}
+
+// The fuzzer config must not end up in the shared config function, because explicit
+// `#[test_case]`s use it too and they are not fuzzed. It goes into a separate function used only
+// by the fuzzed test instead.
+fn fuzzer_config_internal(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+    args_db: &SimpleParserDatabase,
+    args: Arguments,
+    warns: &mut Vec<Diagnostic>,
+) -> Result<TokenStream, Diagnostics> {
+    assert_is_used_once::<FuzzerCollector>(db, func)?;
+
+    // Keep going on invalid arguments - the generated test calls the function below by name.
+    let cheatcode =
+        config_cheatcode::<FuzzerCollector>(args_db, args, warns).unwrap_or_else(|diagnostics| {
+            warns.extend(diagnostics);
+            TokenStream::empty()
+        });
+
+    let name = func.declaration(db).name(db).text(db).to_string();
+    let config_fn = config_fn_ident(&name);
+    let fuzzer_config_fn = fuzzer_config_fn_ident(&name);
+
+    let func_item = func.as_syntax_node();
+    let func_item = SyntaxNodeWithDb::new(&func_item, db);
+
+    Ok(quote!(
+        fn #fuzzer_config_fn() {
+            #config_fn ();
+
+            #cheatcode
+        }
+
+        #func_item
+    ))
 }
 
 fn fuzzer_internal(
