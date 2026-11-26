@@ -1,0 +1,105 @@
+---
+source: crates/forge/tests/e2e/json_output.rs
+expression: nested_calls
+---
+[
+  {
+    "selector": "get_balance",
+    "trace_info": {
+      "call_result": {
+        "value": null
+      },
+      "call_type": {
+        "value": null
+      },
+      "calldata": {
+        "value": null
+      },
+      "caller_address": {
+        "value": null
+      },
+      "contract_address": {
+        "value": null
+      },
+      "contract_name": {
+        "value": "HelloStarknet"
+      },
+      "entry_point_type": {
+        "value": null
+      },
+      "events": {
+        "value": null
+      },
+      "gas": {
+        "value": null
+      },
+      "nested_calls": []
+    }
+  },
+  {
+    "selector": "increase_balance",
+    "trace_info": {
+      "call_result": {
+        "value": null
+      },
+      "call_type": {
+        "value": null
+      },
+      "calldata": {
+        "value": null
+      },
+      "caller_address": {
+        "value": null
+      },
+      "contract_address": {
+        "value": null
+      },
+      "contract_name": {
+        "value": "HelloStarknet"
+      },
+      "entry_point_type": {
+        "value": null
+      },
+      "events": {
+        "value": null
+      },
+      "gas": {
+        "value": null
+      },
+      "nested_calls": []
+    }
+  },
+  {
+    "selector": "get_balance",
+    "trace_info": {
+      "call_result": {
+        "value": null
+      },
+      "call_type": {
+        "value": null
+      },
+      "calldata": {
+        "value": null
+      },
+      "caller_address": {
+        "value": null
+      },
+      "contract_address": {
+        "value": null
+      },
+      "contract_name": {
+        "value": "HelloStarknet"
+      },
+      "entry_point_type": {
+        "value": null
+      },
+      "events": {
+        "value": null
+      },
+      "gas": {
+        "value": null
+      },
+      "nested_calls": []
+    }
+  }
+]
