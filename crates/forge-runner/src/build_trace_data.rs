@@ -5,7 +5,6 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
     SyscallSelector, SyscallUsage, SyscallUsageMap,
 };
 
-use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::execution::call_info::{ExtendedExecutionResources, OrderedEvent};
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
@@ -25,10 +24,11 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::trace_data::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
-use runtime::starknet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
+use runtime::starknet::constants::{
+    TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR, versioned_constants,
+};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
-use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_rust::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -151,7 +151,7 @@ pub fn build_profiler_execution_resources(
 ) -> ProfilerExecutionResources {
     // Subtract syscall related resources to get the values expected by the profiler.
     // The profiler operates on resources excluding syscall overhead.
-    let versioned_constants = VersionedConstants::latest_constants();
+    let versioned_constants = versioned_constants();
     let opcodes = execution_resources.opcode_instance_counter.clone();
     let execution_resources = &execution_resources.vm_resources
         - &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);

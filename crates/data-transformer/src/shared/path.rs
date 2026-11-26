@@ -10,8 +10,6 @@ pub enum PathSplitError {
     InvalidGenericArgs,
     #[error("Expected exactly one generic argument")]
     MoreThanOneGenericArg,
-    #[error("Path segment missing")]
-    PathSegmentMissing,
 }
 
 pub enum SplitResult {
@@ -58,7 +56,6 @@ pub fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<SplitResult, 
                     Err(PathSplitError::InvalidGenericArgs)
                 };
             }
-            PathSegment::Missing(_segment) => Err(PathSplitError::PathSegmentMissing)?,
         }
     }
 

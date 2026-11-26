@@ -1,5 +1,6 @@
-use crate::starknet::constants::{TEST_ADDRESS, TEST_CONTRACT_CLASS_HASH};
-use blockifier::blockifier_versioned_constants::VersionedConstants;
+use crate::starknet::constants::{
+    STARKNET_VERSION, TEST_ADDRESS, TEST_CONTRACT_CLASS_HASH, versioned_constants,
+};
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
@@ -13,13 +14,12 @@ use blockifier::transaction::objects::{
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
-use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice, StarknetVersion};
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice};
 use starknet_api::block::{GasPriceVector, GasPrices, NonzeroGasPrice};
 use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::transaction::fields::{AccountDeploymentData, PaymasterData, ProofFacts, Tip};
 use starknet_api::transaction::fields::{AllResourceBounds, ResourceBounds, ValidResourceBounds};
-use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_api::{
     core::{ChainId, ContractAddress, Nonce},
     transaction::TransactionVersion,
@@ -54,7 +54,7 @@ pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) ->
             },
             is_l3: false,
         },
-        VersionedConstants::latest_constants().clone(),
+        versioned_constants().clone(),
         BouncerConfig::default(),
     )
 }
@@ -188,7 +188,7 @@ impl From<SerializableBlockInfo> for BlockInfo {
             sequencer_address: forge_block_info.sequencer_address,
             gas_prices: forge_block_info.gas_prices.into(),
             use_kzg_da: forge_block_info.use_kzg_da,
-            starknet_version: StarknetVersion::LATEST,
+            starknet_version: STARKNET_VERSION,
         }
     }
 }
@@ -236,12 +236,12 @@ impl From<GasPrices> for SerializableGasPrices {
 
 #[cfg(test)]
 mod tests {
-    use super::{VersionedConstants, VersionedConstantsTrait};
+    use super::versioned_constants;
 
     // Some parts of `snforge` logic relies on the fact that `enable_reverts` is always true.
     // This is a sanity check to make sure that it's not changed at any point.
     #[test]
     fn snforge_assumes_enable_reverts() {
-        assert!(VersionedConstants::latest_constants().enable_reverts);
+        assert!(versioned_constants().enable_reverts);
     }
 }

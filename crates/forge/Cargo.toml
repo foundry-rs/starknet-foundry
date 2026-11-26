@@ -23,6 +23,7 @@ include_dir.workspace = true
 starknet_api.workspace = true
 shared.workspace = true
 cheatnet = { path = "../cheatnet" }
+runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
 configuration = { path = "../configuration" }
 scarb-api = { path = "../scarb-api" }
