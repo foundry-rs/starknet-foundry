@@ -7,7 +7,7 @@ pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
 // snforge_std/src/cheatcodes.cairo::test_address
 pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
-/// Starknet version used by snforge, usually it should be set to the latest.
+/// Starknet version used by snforge, should be identical to the live Starknet version.
 pub const STARKNET_VERSION: StarknetVersion = StarknetVersion::V0_14_4;
 
 /// Returns versioned constants for [`STARKNET_VERSION`].
