@@ -20,13 +20,6 @@ mod tests {
 
     #[test]
     #[fuzzer]
-    fn adding() {
-        let result = adder(2, 3);
-        assert(result == 5, '2 + 3 == 5');
-    }
-
-    #[test]
-    #[fuzzer]
     fn fuzzed_argument(b: felt252) {
         let result = adder(2, b);
         assert(result == 2 + b, '2 + b == 2 + b');
@@ -37,13 +30,6 @@ mod tests {
     fn fuzzed_both_arguments(a: felt252, b: felt252) {
         let result = adder(a, b);
         assert(result == a + b, 'result == a + b');
-    }
-
-    #[test]
-    #[fuzzer]
-    fn passing() {
-        let result = always_five(2, 3);
-        assert(result == 5, 'result == 5');
     }
 
     #[test]
