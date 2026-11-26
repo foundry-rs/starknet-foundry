@@ -2,7 +2,9 @@ use crate::e2e::common::runner::setup_package_at_path;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
-use shared::test_utils::output_assert::{assert_stdout_contains, case_assert_stdout_contains};
+use shared::test_utils::output_assert::{
+    AsOutput, assert_stdout_contains, case_assert_stdout_contains,
+};
 use snapbox::cmd::Command as SnapboxCommand;
 use std::fs;
 
@@ -396,6 +398,39 @@ fn test_case() {
         note: this error originates in the attribute macro: `test`
 
         error: could not compile `test_case_attr_integrationtest` due to 3 previous errors and 1 warning
+    "},
+    );
+}
+
+#[test]
+fn fuzzer_without_parameters() {
+    let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/fuzzer_attr"));
+    let output = SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["build", "--test"])
+            .command(),
+    )
+    .assert()
+    .failure();
+
+    assert!(!output.as_stdout().contains("Function not found"));
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error[E2200]: Plugin diagnostic: #[fuzzer] function requires at least one parameter
+         --> [..]/tests/basic.cairo:2:1
+        #[fuzzer]
+        ^^^^^^^^^
+        note: this error originates in the attribute macro: `test`
+
+        error[E2200]: Plugin diagnostic: #[fuzzer] function requires at least one parameter
+         --> [..]/tests/basic.cairo:7:1
+        #[fuzzer]
+        ^^^^^^^^^
+
+        error: could not compile `fuzzer_attr_integrationtest` due to 2 previous errors and 1 warning
     "},
     );
 }

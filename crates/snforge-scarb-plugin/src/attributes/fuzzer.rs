@@ -120,18 +120,16 @@ fn fuzzer_config_internal(
 fn fuzzer_internal(
     args: &TokenStream,
     item: &TokenStream,
-    warns: &mut Vec<Diagnostic>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) -> Result<TokenStream, Diagnostics> {
     let (db, func) = parse::<FuzzerCollector>(item)?;
     let db = db.upcast();
 
     assert_is_used_once::<FuzzerCollector>(db, &func)?;
 
-    // Report the error, but still expand the function. Otherwise `#[__fuzzer_wrapper]` would not
-    // generate the `__snforge_internal_fuzzer_generated` function that `#[test]` calls,
-    // resulting in an additional "Function not found" error.
+    // Report the error, but still expand the function.
     if let Err(diagnostic) = assert_has_parameters(db, &func) {
-        warns.push(diagnostic);
+        diagnostics.push(diagnostic);
     }
 
     let attrs = func.attributes(db).as_syntax_node();
@@ -167,11 +165,11 @@ fn assert_has_parameters(
         .parameters(db)
         .elements(db);
 
-    if parameters.len() == 0 {
+    if parameters.len() > 0 {
+        Ok(())
+    } else {
         Err(FuzzerCollector::error(
             "function requires at least one parameter",
-        ))?;
+        ))
     }
-
-    Ok(())
 }
