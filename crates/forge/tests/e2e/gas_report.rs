@@ -18,8 +18,6 @@ fn snap_basic() {
     assert_cleaned_output!(output);
 }
 
-// TODO(#4474): Re-enable once cairo-native variant is fixed
-#[cfg_attr(feature = "cairo-native", ignore = "TODO(#4474)")]
 #[test]
 fn snap_recursive_calls() {
     let temp = setup_package("debugging");

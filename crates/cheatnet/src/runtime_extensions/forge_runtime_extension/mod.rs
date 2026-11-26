@@ -17,7 +17,6 @@ use crate::runtime_extensions::{
 };
 use crate::trace_data::{CallTrace, CallTraceNode, GasReportData};
 use anyhow::{Context, Result, anyhow};
-use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::extended_execution_resources_to_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{
@@ -37,13 +36,13 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
+use runtime::starknet::constants::versioned_constants;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
 use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasAmount;
-use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_rust::signers::SigningKey;
 use starknet_types_core::felt::Felt;
@@ -632,7 +631,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .base
                     .syscalls_usage;
-                let vm_steps_from_syscalls = &VersionedConstants::latest_constants()
+                let vm_steps_from_syscalls = &versioned_constants()
                     .get_additional_os_syscall_resources(top_call_syscalls)
                     .n_steps;
                 let total_vm_steps =
