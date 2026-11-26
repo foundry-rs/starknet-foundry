@@ -13,8 +13,9 @@ use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
+use runtime::starknet::constants::STARKNET_VERSION;
 use runtime::starknet::context::SerializableGasPrices;
-use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, StarknetVersion};
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
 use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
@@ -93,7 +94,7 @@ impl BlockInfoReader for ForkStateReader {
                     starknet_version: block
                         .starknet_version
                         .try_into()
-                        .unwrap_or(StarknetVersion::LATEST),
+                        .unwrap_or(STARKNET_VERSION),
                 };
 
                 self.cache

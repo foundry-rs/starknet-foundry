@@ -1,10 +1,10 @@
 use crate::utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use crate::utils::running_tests::run_test_case;
 use crate::utils::test_case;
-use blockifier::blockifier_versioned_constants::{EventLimits, VersionedConstants};
+use blockifier::blockifier_versioned_constants::EventLimits;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::formatdoc;
-use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
+use runtime::starknet::constants::versioned_constants;
 use std::path::Path;
 
 #[test]
@@ -13,7 +13,7 @@ fn ok_events() {
         max_data_length,
         max_keys_length,
         max_n_emitted_events,
-    } = VersionedConstants::latest_constants().tx_event_limits;
+    } = versioned_constants().tx_event_limits;
 
     let test = test_case!(
         &formatdoc!(
@@ -77,7 +77,7 @@ fn too_many_events() {
         max_data_length,
         max_keys_length,
         max_n_emitted_events,
-    } = VersionedConstants::latest_constants().tx_event_limits;
+    } = versioned_constants().tx_event_limits;
 
     let emit_too_many_events = max_n_emitted_events + 1;
     let emit_too_many_keys = max_keys_length + 1;

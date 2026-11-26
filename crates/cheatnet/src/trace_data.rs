@@ -3,7 +3,6 @@ use crate::runtime_extensions::outer_call_runtime_extension::rpc::{
     CallSuccess, recoverable_panic_data,
 };
 use crate::state::CheatedData;
-use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::execution::call_info::{
     CallInfo, ExecutionSummary, ExtendedExecutionResources, OrderedEvent, OrderedL2ToL1Message,
 };
@@ -16,10 +15,10 @@ use cairo_annotations::trace_data::L1Resources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::byte_array::ByteArray;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
+use runtime::starknet::constants::versioned_constants;
 use starknet_api::core::ClassHash;
 use starknet_api::execution_resources::GasVector;
 use starknet_api::transaction::fields::GasVectorComputationMode;
-use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use starknet_types_core::felt::Felt;
 use std::cell::{OnceCell, Ref, RefCell};
 use std::rc::Rc;
@@ -317,10 +316,9 @@ impl GasReportData {
 
     pub fn get_gas(&self) -> GasVector {
         *self.partial_gas_usage.get_or_init(|| {
-            self.execution_summary.clone().to_partial_gas_vector(
-                VersionedConstants::latest_constants(),
-                &GasVectorComputationMode::All,
-            )
+            self.execution_summary
+                .clone()
+                .to_partial_gas_vector(versioned_constants(), &GasVectorComputationMode::All)
         })
     }
 }

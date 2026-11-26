@@ -4,19 +4,18 @@ use crate::optimize_inlining::contract_size::{
 };
 use crate::run_tests::workspace::execute_workspace;
 use anyhow::{Context, Result};
-use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::fee::eth_gas_constants::WORD_WIDTH;
 use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use foundry_ui::UI;
 use indoc::formatdoc;
+use runtime::starknet::constants::versioned_constants;
 use scarb_api::ScarbCommand;
 use scarb_api::artifacts::deserialized::artifacts_for_package;
 use scarb_api::manifest::ManifestEditor;
 use scarb_api::metadata::{Metadata, MetadataOpts, metadata_with_opts};
 use scarb_api::{target_dir_for_workspace, test_targets_by_name};
 use starknet_api::transaction::fields::GasVectorComputationMode;
-use starknet_api::versioned_constants_logic::VersionedConstantsTrait;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::{env, fs};
@@ -207,7 +206,7 @@ fn contract_code_l2_gas(sizes: &[ContractSizeInfo]) -> Result<u64> {
         }
     }
 
-    let versioned_constants = VersionedConstants::latest_constants();
+    let versioned_constants = versioned_constants();
     let gas_per_code_byte = versioned_constants
         .get_archival_data_gas_costs(&GasVectorComputationMode::All)
         .gas_per_code_byte;
