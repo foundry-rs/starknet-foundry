@@ -13,7 +13,7 @@ use std::path::Path;
 // 1 cairo step = 0.0025 L1 gas = 100 L2 gas
 // 1 sierra gas = 1 l2 gas
 // Costs of syscalls (if provided) are taken from versioned_constants (blockifier).
-// (blockifier 0.21.0-rc.1, versioned_constants 0.14.5) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json
+// (blockifier 0.21.0-rc.1, versioned_constants 0.14.4) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json
 
 // In Sierra gas tests, only the most significant costs are considered
 // Asserted values should be slightly greater than the computed values,
@@ -1242,22 +1242,22 @@ fn deploy_syscall_cost_sierra_gas() {
     // n = 1 (unique contracts updated - in this case it's the new contract address)
     // ( l + n * 2 ) * felt_size_in_bytes(32) = 96 (total l1 data cost)
     //
-    // 152_270 = cost of 1 deploy syscall (because 1 * (1176 + 8) * 100 + (7 + 1) * 4050 + 21 * 70)
-    //      -> 1 deploy syscall costs 1184 = (1176 + 8) cairo steps, 8 pedersen and 21 range check builtins (1 calldata felt)
+    // 151_970 = cost of 1 deploy syscall (because 1 * (1173 + 8) * 100 + (7 + 1) * 4050 + 21 * 70)
+    //      -> 1 deploy syscall costs 1181 = (1173 + 8) cairo steps, 8 pedersen and 21 range check builtins (1 calldata felt)
     //      -> 1 calldata element costs 8 cairo steps and 1 pedersen
     //      -> Deploy os_resources:
-    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L251-L267
+    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L252-L268
     //      -> 1 pedersen costs 4050, 1 range check costs 70
     //
     // 96 l1_data_gas
-    // l2 gas > 152_270
+    // l2 gas > 151_970
     assert_gas(
         &result,
         "deploy_syscall_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(176_180),
+            l2_gas: GasAmount(175_880),
         },
     );
 }
@@ -1287,7 +1287,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
-    // 152_270 = deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 151_970 = deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // snforge_std `declare().deploy()` adds 6_640 l2 on top of the `deploy_syscall_cost`
     //
     // 96 l1_data_gas
@@ -1297,7 +1297,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(182_820),
+            l2_gas: GasAmount(182_520),
         },
     );
 }
@@ -1326,7 +1326,7 @@ fn keccak_cost_sierra_gas() {
     //      -> 45 range check builtins cost 45 * 70 = 3150
     //      -> 223 steps cost 223 * 100 = 22_300
     //      -> KeccakRound os_resources:
-    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L342-L350
+    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L343-L351
     //
     // l2 gas > 175_137
     assert_gas(
@@ -1358,9 +1358,9 @@ fn sha512_cost_sierra_gas() {
     // 2_413_810 = sierra-gas cost of 1 sha512_process_block syscall = 4737 * 100 + 3320 * 583 + 65 * 70,
     // derived from versioned constants:
     //   - os_resources `Sha512ProcessBlock` (n_steps = 4737, bitwise_builtin = 3320, range_check_builtin = 65):
-    //     (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L481-L488
+    //     (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L482-L489
     //   - per-resource sierra-gas costs (step_gas_cost = 100, bitwise = 583, range_check = 70):
-    //     (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L166-L179
+    //     (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L167-L180
     //
     // l2 gas > 2_413_810 (the remainder is the surrounding `compute_sha512_u64_array`)
     assert_gas(
@@ -1404,23 +1404,23 @@ fn contract_keccak_cost_sierra_gas() {
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
-    // 147_420 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 147_120 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 875_685 = 5 * 175_137 = cost of 5 keccak syscall (see `keccak_cost_sierra_gas` test)
-    // 91_660 = cost of 1 call contract syscall (because 1 * 904 * 100 + 18 * 70)
-    //      -> 1 call contract syscall costs 904 cairo steps and 18 range check builtins
+    // 91_360 = cost of 1 call contract syscall (because 1 * 901 * 100 + 18 * 70)
+    //      -> 1 call contract syscall costs 901 cairo steps and 18 range check builtins
     //      -> CallContract os_resources:
-    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L230-L236
+    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L231-L237
     //      -> 1 range check costs 70
     //
     // 96 l1_data_gas
-    // l2 gas > 1_114_765 (= 147_420 + 875_685 + 91_660)
+    // l2 gas > 1_114_165 (= 147_120 + 875_685 + 91_360)
     assert_gas(
         &result,
         "contract_keccak_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_312_375),
+            l2_gas: GasAmount(1_311_775),
         },
     );
 }
@@ -1458,23 +1458,23 @@ fn storage_write_cost_sierra_gas() {
     // 64 = storage_updates(1) * 2 * 32
     // 32 = storage updates from zero value(1) * 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
     // allocation cost: 402_000 l2 gas
-    // 147_420 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
-    // 91_660 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 147_120 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 91_360 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
     // 59_970 = cost of 1 storage_write syscall (because 1 * 599 * 100 + 1 * 70)
     //      -> 1 storage write syscall costs 599 cairo steps and 1 range check builtin
     //      -> StorageWrite os_resources:
-    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L496-L502
+    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L497-L503
     //      -> 1 range check costs 70
     //
     // (96 + 64 + 32 =) 192 l1_data_gas
-    // l2 gas > 701_050 (= 147_420 + 91_660 + 59_970 + 402_000)
+    // l2 gas > 700_450 (= 147_120 + 91_360 + 59_970 + 402_000)
     assert_gas(
         &result,
         "storage_write_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(733_520),
+            l2_gas: GasAmount(732_920),
         },
     );
 }
@@ -1516,19 +1516,19 @@ fn multiple_storage_writes_cost_sierra_gas() {
     //      -> n = unique contracts updated
     //      -> m = unique(!) values updated
     // 32 = storage updates from zero value(1) * 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    // 147_420 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
-    // 183_320 = 2 * 91_660 = cost of 2 call contract syscalls (see `contract_keccak_cost_sierra_gas` test)
+    // 147_120 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 182_720 = 2 * 91_360 = cost of 2 call contract syscalls (see `contract_keccak_cost_sierra_gas` test)
     // 119_940 = cost of 2 storage_write syscall (see `storage_write_cost_sierra_gas` test)
     // allocation cost: 402_000 l2 gas
     // 192 = (64 + 64 + 32 + 32) l1_data_gas
-    // l2 gas > 852_680 (= 147_420 + 183_320 + 119_940 + 402_000)
+    // l2 gas > 851_780 (= 147_120 + 182_720 + 119_940 + 402_000)
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(890_260),
+            l2_gas: GasAmount(889_360),
         },
     );
 }
@@ -1571,27 +1571,27 @@ fn l1_message_cost_sierra_gas() {
     //      -> 5 * 256 = 1280 data array cost (payload length + 2 required solidity params for array)
     //      -> 20_000 l1 storage write cost
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
-    // 91_660 = cost of 1 call_contract syscall (because 1 * 904 * 100 + 18 * 70)
-    //      -> 1 call contract syscall costs 904 cairo steps and 18 range check builtins
+    // 91_360 = cost of 1 call_contract syscall (because 1 * 901 * 100 + 18 * 70)
+    //      -> 1 call contract syscall costs 901 cairo steps and 18 range check builtins
     //      -> 1 range check costs 70
     // 14_570 = cost of 1 SendMessageToL1 syscall with a 3-felt payload (because 1 * 127 * 100 + 1 * 70 + 3 * 6 * 100)
     //      -> constant part: 127 cairo steps and 1 range check builtin = 12_770
     //      -> calldata factor: 6 cairo steps per payload felt = 3 * 6 * 100 = 1800
     //      -> SendMessageToL1 os_resources:
-    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L459-L472
+    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L460-L473
     //      -> 1 range check costs 70
-    // 179_150 = snforge_std declare+deploy bundle (285_380 − 91_660 − 14_570)
+    // 178_850 = snforge_std declare+deploy bundle (284_780 − 91_360 − 14_570)
     //
     // 29_524 l1_gas
     // 96 l1_data_gas
-    // l2 gas = 285_380 (= 179_150 + 91_660 + 14_570)
+    // l2 gas = 284_780 (= 178_850 + 91_360 + 14_570)
     assert_gas(
         &result,
         "l1_message_cost",
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(285_380),
+            l2_gas: GasAmount(284_780),
         },
     );
 }
@@ -1641,21 +1641,21 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     // 64 = l(2) * 32
     //      -> l = number of class hash updates
     //      -> n = unique contracts updated
-    // 183_320 = 2 * 91_660 call_contract (test → proxy → gas_checker)
+    // 182_720 = 2 * 91_360 call_contract (test → proxy → gas_checker)
     // 14_570 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
-    // 351_200 = 2 * 175_600 snforge_std declare+deploy per contract
-    //      -> 175_600 = (549_090 − 183_320 − 14_570) / 2
+    // 350_600 = 2 * 175_300 snforge_std declare+deploy per contract
+    //      -> 175_300 = (547_890 − 182_720 − 14_570) / 2
     //
     // 29_524 l1_gas
     // (128 + 64 =) 192 l1_data_gas
-    // l2 gas = 549_090 (= 351_200 + 183_320 + 14_570)
+    // l2 gas = 547_890 (= 350_600 + 182_720 + 14_570)
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29_524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(549_090),
+            l2_gas: GasAmount(547_890),
         },
     );
 }
@@ -1692,7 +1692,7 @@ fn events_cost_sierra_gas() {
     // 10_000 = cost of 1 emit_event syscall (because 1 * 47 * 100 + 1 * 70 = 4770)
     //      -> 1 emit event syscall costs 47 cairo steps and 1 range check builtin
     //      -> EmitEvent os_resources:
-    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_5.json#L268-L274
+    //         (blockifier 0.21.0-rc.1) https://github.com/starkware-libs/sequencer/blob/38ff83bf3baa20e5e9a3e4060efd0015d11c91c4/crates/blockifier/resources/blockifier_versioned_constants_0_14_4.json#L269-L275
     //      -> 1 range check costs 70
     //      -> the minimum total cost is `syscall_base_gas_cost`, which is pre-charged by the compiler (atm it is 100 * 100)
     //
@@ -1739,18 +1739,18 @@ fn events_contract_cost_sierra_gas() {
     // 102_400 = event keys cost (see `events_cost_sierra_gas` test)
     // 51_200 = event data cost (see `events_cost_sierra_gas` test)
     // 10_000 = cost of 1 emit event syscall (see `events_cost_sierra_gas` test)
-    // 147_420 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
-    // 91_660 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 147_120 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 91_360 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
     //
     // 96 l1_data_gas
-    // l2 gas > 402_680 (= 102_400 + 51_200 + 10_000 + 147_420 + 91_660)
+    // l2 gas > 402_080 (= 102_400 + 51_200 + 10_000 + 147_120 + 91_360)
     assert_gas(
         &result,
         "event_emission_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(463_290),
+            l2_gas: GasAmount(462_690),
         },
     );
 }
@@ -1811,19 +1811,19 @@ fn nested_call_cost_sierra_gas() {
     // 10_000 = cost of 1 emit event syscall (see `events_cost_sierra_gas` test)
     // 175_137 = cost of 1 keccak syscall (see `keccak_cost_sierra_gas` test)
     // 10_810 = cost of 1 get block hash syscall (106 * 100 + 3 * 70)
-    // 442_260 = 3 * 147_420 = cost of 3 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
-    // 274_980 = 3 * 91_660 = cost of 3 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 441_360 = 3 * 147_120 = cost of 3 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 274_080 = 3 * 91_360 = cost of 3 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
     // 839_995 = cost of 1 sha256_process_block_syscall syscall (1854 * 100 + 1115 * 583 + 65 * 70)
     //
     // 288 l1_data_gas
-    // l2 gas > 1_768_542 (= 10_240 + 5120 + 10_000 + 175_137 + 10_810 + 442_260 + 274_980 + 839_995)
+    // l2 gas > 1_766_742 (= 10_240 + 5120 + 10_000 + 175_137 + 10_810 + 441_360 + 274_080 + 839_995)
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(1_923_952),
+            l2_gas: GasAmount(1_922_152),
         },
     );
 }
@@ -1884,19 +1884,19 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
     // 10_000 = cost of 1 emit event syscall (see `events_cost_sierra_gas` test)
     // 175_137 = cost of 1 keccak syscall (see `keccak_cost_sierra_gas` test)
     // 10_810 = cost of 1 get block hash syscall (106 * 100 + 3 * 70)
-    // 294_840 = 2 * 147_420 = cost of 2 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
-    // 274_980 = 3 * 91_660 = cost of 3 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 294_240 = 2 * 147_120 = cost of 2 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 274_080 = 3 * 91_360 = cost of 3 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
     // 839_995 = cost of 1 sha256_process_block_syscall syscall (1854 * 100 + 1115 * 583 + 65 * 70)
     //
     // 192 l1_data_gas
-    // l2 gas > 1_621_122 (= 10_240 + 5120 + 10_000 + 175_137 + 10_810 + 294_840 + 274_980 + 839_995)
+    // l2 gas > 1_619_622 (= 10_240 + 5120 + 10_000 + 175_137 + 10_810 + 294_240 + 274_080 + 839_995)
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(1_796_082),
+            l2_gas: GasAmount(1_794_582),
         },
     );
 }
