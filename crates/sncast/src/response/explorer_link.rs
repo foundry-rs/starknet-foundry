@@ -31,7 +31,7 @@ impl Serialize for ExplorerLinksMessage {
         S: serde::Serializer,
     {
         #[derive(Default, Serialize)]
-        struct ExplorerLinksS<'a> {
+        struct ExplorerLinksRepr<'a> {
             #[serde(skip_serializing_if = "Option::is_none")]
             account: Option<&'a str>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -47,12 +47,12 @@ impl Serialize for ExplorerLinksMessage {
         }
 
         #[derive(Serialize)]
-        struct ExplorerLinksMessageS<'a> {
+        struct ExplorerLinksMessageRepr<'a> {
             title: &'a str,
-            links: ExplorerLinksS<'a>,
+            links: ExplorerLinksRepr<'a>,
         }
 
-        let mut links = ExplorerLinksS::default();
+        let mut links = ExplorerLinksRepr::default();
 
         for ExplorerLink { link_type, link } in &self.links {
             match link_type {
@@ -69,7 +69,7 @@ impl Serialize for ExplorerLinksMessage {
             }
         }
 
-        ExplorerLinksMessageS {
+        ExplorerLinksMessageRepr {
             title: &self.title,
             links,
         }
