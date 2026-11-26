@@ -145,18 +145,25 @@ pub async fn declare(
         DeclareResponse::DryRun(response) => {
             Ok(process_command_result("declare", Ok(response), ui, None))
         }
-        DeclareResponse::Success(response) => {
+        DeclareResponse::Success(mut response) => {
+            if let Some(verify_args) = args.verify {
+                response.verification_message = verify_declared_class(
+                    verify_args,
+                    response.class_hash.0,
+                    &args.contract_name,
+                    args.package,
+                    &package,
+                    &provider,
+                    &args.rpc,
+                    &config,
+                    ui,
+                )
+                .await;
+            }
+
             finalize_declare_response(
                 response.class_hash,
                 response,
-                |response, message| DeclareTransactionResponse {
-                    verification_message: Some(message),
-                    ..response
-                },
-                args.verify,
-                &args.contract_name,
-                args.package,
-                &package,
                 &provider,
                 &args.rpc,
                 &config,
@@ -176,11 +183,6 @@ pub async fn declare(
             finalize_declare_response(
                 response.class_hash,
                 response,
-                |response, _| response,
-                None,
-                &args.contract_name,
-                args.package,
-                &package,
                 &provider,
                 &args.rpc,
                 &config,
@@ -194,14 +196,9 @@ pub async fn declare(
 }
 
 #[expect(clippy::too_many_arguments)]
-async fn finalize_declare_response<T, F>(
+async fn finalize_declare_response<T>(
     class_hash: PaddedFelt,
-    mut response: T,
-    set_verification_message: F,
-    verify_args: Option<VerifyCommonArgs>,
-    contract_name: &str,
-    package: Option<String>,
-    package_metadata: &PackageMetadata,
+    response: T,
     provider: &JsonRpcClient<HttpTransport>,
     rpc: &RpcArgs,
     config: &CastConfig,
@@ -212,31 +209,7 @@ async fn finalize_declare_response<T, F>(
 where
     T: SncastCommandMessage + OutputLink + Serialize + Clone,
     SncastMessage<T>: Message,
-    F: FnOnce(T, String) -> T,
 {
-    if let Some(verify_args) = verify_args {
-        match verify_after_declare(
-            verify_args,
-            class_hash.0,
-            contract_name,
-            package,
-            package_metadata,
-            provider,
-            rpc,
-            config,
-            ui,
-        )
-        .await
-        {
-            Ok(VerifyResponse { message }) => {
-                response = set_verification_message(response, message);
-            }
-            Err(e) => {
-                ui.print_command_error("declare", format!("Failed to verify the contract: {e}"));
-            }
-        }
-    }
-
     let response = Ok(response);
     let block_explorer_link =
         block_explorer_link_if_allowed(&response, provider.chain_id().await?, config).await;
@@ -410,6 +383,39 @@ where
         ),
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
+    }
+}
+
+#[expect(clippy::too_many_arguments)]
+async fn verify_declared_class(
+    verify_args: VerifyCommonArgs,
+    class_hash: Felt,
+    contract_name: &str,
+    package: Option<String>,
+    package_metadata: &PackageMetadata,
+    provider: &JsonRpcClient<HttpTransport>,
+    rpc: &RpcArgs,
+    config: &CastConfig,
+    ui: &UI,
+) -> Option<String> {
+    match verify_after_declare(
+        verify_args,
+        class_hash,
+        contract_name,
+        package,
+        package_metadata,
+        provider,
+        rpc,
+        config,
+        ui,
+    )
+    .await
+    {
+        Ok(VerifyResponse { message }) => Some(message),
+        Err(e) => {
+            ui.print_command_error("declare", format!("Failed to verify the contract: {e}"));
+            None
+        }
     }
 }
 
