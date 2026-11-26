@@ -46,6 +46,7 @@ missing_panics_doc = "allow"
 assert_is_empty = "allow"
 
 [workspace.dependencies]
+# TODO: update `versioned_constants()` to use latest on the next blockifier bump.
 blockifier = { version = "0.21.0-rc.1", features = ["testing", "tracing", "node_api"] }
 starknet_api = "0.21.0-rc.1"
 bigdecimal = "0.4.10"

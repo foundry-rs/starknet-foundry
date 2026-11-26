@@ -12,10 +12,10 @@ use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cheatnet::runtime_extensions::forge_config_extension::{
     ForgeConfigExtension, config::RawForgeConfig,
 };
+use runtime::starknet::constants::STARKNET_VERSION;
 use runtime::{ExtendedRuntime, StarknetRuntime, starknet::context::build_context};
 use starknet_api::block::{
     BlockInfo, BlockNumber, BlockTimestamp, GasPrice, GasPriceVector, GasPrices, NonzeroGasPrice,
-    StarknetVersion,
 };
 use starknet_types_core::felt::Felt;
 use std::default::Default;
@@ -84,7 +84,7 @@ pub fn run_config_pass(
         },
         sequencer_address: 0_u8.into(),
         use_kzg_da: true,
-        starknet_version: StarknetVersion::LATEST,
+        starknet_version: STARKNET_VERSION,
     };
     let mut context = build_context(&block_info, None, &TrackedResource::from(tracked_resource));
 

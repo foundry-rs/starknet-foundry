@@ -3635,6 +3635,7 @@ dependencies = [
  "rand 0.8.8",
  "rayon",
  "regex",
+ "runtime",
  "scarb-api",
  "scarb-metadata",
  "scarb-ui",
