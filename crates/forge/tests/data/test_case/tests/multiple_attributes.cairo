@@ -52,3 +52,26 @@ fn with_ignore(a: felt252, b: felt252, expected: felt252) {
     let result = add(a, b);
     assert!(result == expected);
 }
+
+#[test]
+#[fuzzer(runs: 3)]
+#[test_case(name: "explicit", 1)]
+fn with_fuzzer_runs(a: felt252) {
+    add(a, a);
+}
+
+#[test]
+#[should_panic(expected: 'panic message')]
+#[fuzzer(runs: 3)]
+#[test_case(name: "explicit", 1)]
+fn with_should_panic_before_fuzzer(a: felt252) {
+    assert(a != a, 'panic message');
+}
+
+#[test]
+#[fuzzer(runs: 3)]
+#[should_panic(expected: 'panic message')]
+#[test_case(name: "explicit", 1)]
+fn with_should_panic_after_fuzzer(a: felt252) {
+    assert(a != a, 'panic message');
+}
