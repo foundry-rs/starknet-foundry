@@ -45,8 +45,9 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
 pub struct TestResultMessage {
     name: String,
     status: TestResultStatus,
-    gas_usage: GasVector,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    gas_usage: Option<GasVector>,
     #[serde(skip_serializing_if = "Option::is_none")]
     debugging_trace: Option<Trace>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -106,9 +107,9 @@ impl TestResultMessage {
                     .as_ref()
                     .map(std::string::ToString::to_string);
 
-                (gas_info.gas_used, gas_report)
+                (Some(gas_info.gas_used), gas_report)
             }
-            _ => (GasVector::ZERO, None),
+            _ => (None, None),
         };
 
         let used_resources = match (show_detailed_resources, &test_result) {
@@ -179,10 +180,13 @@ impl Message for TestResultMessage {
             .as_ref()
             .map_or_default(std::string::ToString::to_string);
 
-        let gas_usage = format!(
-            " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-            self.gas_usage.l1_gas, self.gas_usage.l1_data_gas, self.gas_usage.l2_gas
-        );
+        let gas_usage = self.gas_usage.map_or_default(|gas| {
+            format!(
+                " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                gas.l1_gas, gas.l1_data_gas, gas.l2_gas
+            )
+        });
+
         let gas_report = self.gas_report.as_deref().unwrap_or_default();
         let used_resources = self
             .used_resources
