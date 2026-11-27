@@ -3,11 +3,17 @@ use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quot
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 
+fn function_with_params() -> TokenStream {
+    quote!(
+        fn with_param(f: felt252) {}
+    )
+}
+
 #[test]
 fn work_without_args() {
     let args = TokenStream::empty();
 
-    let result = fuzzer(args, empty_function());
+    let result = fuzzer(args, function_with_params());
 
     assert_diagnostics(&result, &[]);
 
@@ -18,7 +24,7 @@ fn work_without_args() {
 fn work_with_args() {
     let args = quote!((runs: 655, seed: 32872357));
 
-    let result = fuzzer(args, empty_function());
+    let result = fuzzer(args, function_with_params());
 
     assert_diagnostics(&result, &[]);
 
@@ -239,4 +245,21 @@ fn fails_with_unexpected_args() {
             "#[fuzzer] unexpected argument(s): <tomato>",
         )],
     );
+}
+
+#[test]
+fn fails_without_params() {
+    let args = TokenStream::empty();
+
+    let result = fuzzer(args, empty_function());
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[fuzzer] function requires at least one parameter",
+        )],
+    );
+
+    // The function is still expanded, so the function called by `#[test]` is generated
+    insta::assert_snapshot!(format_output(&result));
 }

@@ -4,4 +4,4 @@ expression: format_output(&result)
 ---
 #[__fuzzer_config]
 #[__fuzzer_wrapper]
-fn empty_fn() {}
+fn with_param(f: felt252) {}

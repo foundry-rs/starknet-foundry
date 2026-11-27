@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Minimal recommended `Scarb` version is now `2.20.1` (updated from `2.18.0`).
+- *BREAKING*: `#[fuzzer]` attribute now emits an error when used on a function without parameters.
 
 #### Fixed
 

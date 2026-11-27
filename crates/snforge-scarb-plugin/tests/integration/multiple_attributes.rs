@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, empty_function, format_output, get_function};
-use cairo_lang_macro::{TokenStream, quote};
+use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quote};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
@@ -43,8 +43,12 @@ fn works_with_few_attributes() {
 #[test]
 fn works_with_fuzzer() {
     let args = TokenStream::empty();
+    let item = quote!(
+        #[fuzzer]
+        fn empty_fn(f: felt252) {}
+    );
 
-    let result = test(args, empty_function());
+    let result = test(args, item);
 
     assert_diagnostics(&result, &[]);
 
@@ -52,7 +56,12 @@ fn works_with_fuzzer() {
         insta::assert_snapshot!(format_output(&result));
     });
 
-    let item = get_function(&result.token_stream, "empty_fn", false);
+    // The compiler strips the `#[fuzzer]` attribute before expanding it, so remove it here too
+    let item = get_function(&result.token_stream, "empty_fn", false).to_string();
+    let item = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        item.replacen("#[fuzzer]", "", 1),
+        TextSpan::call_site(),
+    ))]);
     let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer(args, item);
@@ -62,6 +71,61 @@ fn works_with_fuzzer() {
     insta::with_settings!({ snapshot_suffix => "after_fuzzer" }, {
         insta::assert_snapshot!(format_output(&result));
     });
+}
+
+#[test]
+fn fuzzer_without_params_after_test() {
+    let args = TokenStream::empty();
+    let item = quote!(
+        #[fuzzer]
+        fn empty_fn() {}
+    );
+
+    let result = test(args, item);
+
+    assert_diagnostics(&result, &[]);
+    assert!(
+        result
+            .token_stream
+            .to_string()
+            .contains("empty_fn__snforge_internal_fuzzer_generated();")
+    );
+
+    // The compiler strips the `#[fuzzer]` attribute before expanding it, so remove it here too
+    let item = get_function(&result.token_stream, "empty_fn", false).to_string();
+    let item = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        item.replacen("#[fuzzer]", "", 1),
+        TextSpan::call_site(),
+    ))]);
+
+    let result = fuzzer(TokenStream::empty(), item);
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[fuzzer] function requires at least one parameter",
+        )],
+    );
+
+    // Despite the error, `#[fuzzer]` still expands the function, so the function called by
+    // `#[test]` is generated and no additional "Function not found" error is emitted
+    assert!(
+        result
+            .token_stream
+            .to_string()
+            .contains("#[__fuzzer_wrapper]")
+    );
+
+    let item = get_function(&result.token_stream, "empty_fn", true);
+    let result = fuzzer_wrapper(TokenStream::empty(), item);
+
+    assert_diagnostics(&result, &[]);
+    assert!(
+        result
+            .token_stream
+            .to_string()
+            .contains("fn empty_fn__snforge_internal_fuzzer_generated()")
+    );
 }
 
 #[test]
