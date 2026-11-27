@@ -1,4 +1,6 @@
-use forge::{ExitStatus, main_execution};
+use clap::Parser;
+use forge::{Cli, ExitStatus, main_execution};
+use foundry_ui::OutputFormat;
 use foundry_ui::{UI, components::error::ErrorMessage};
 use mimalloc::MiMalloc;
 use std::io::IsTerminal;
@@ -11,8 +13,10 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() -> ExitCode {
     let _guard = init_logging();
-    let ui = Arc::new(UI::default());
-    match main_execution(ui.clone()) {
+    let cli = Cli::parse();
+    let ui = Arc::new(UI::new(OutputFormat::from_json_flag(cli.json)));
+
+    match main_execution(cli, ui.clone()) {
         Ok(ExitStatus::Success) => ExitCode::SUCCESS,
         Ok(ExitStatus::Failure) => ExitCode::from(1),
         Err(error) => {

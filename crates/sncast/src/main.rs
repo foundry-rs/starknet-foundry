@@ -30,7 +30,6 @@ use sncast::helpers::configuration::{
     CastConfig, CliConfigOpts, ConfigScope, MaybeConfig, PartialCastConfig, warn_unknown_keys,
 };
 use sncast::helpers::fee::FeeParams;
-use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
@@ -287,7 +286,7 @@ fn main() -> ExitCode {
     let cli = Cli::from_arg_matches(&matches)
         .expect("should always be possible to reconstruct cli from its own matches");
 
-    let ui = UI::new(output_format_from_json_flag(cli.json));
+    let ui = UI::new(OutputFormat::from_json_flag(cli.json));
 
     let command_name = command_path(&matches);
 

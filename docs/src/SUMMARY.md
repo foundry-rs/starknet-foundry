@@ -80,6 +80,7 @@
 # Appendix
 
 * [`snforge` Commands](appendix/snforge.md)
+    * [common flags](appendix/snforge/common.md)
     * [test](appendix/snforge/test.md)
     * [new](appendix/snforge/new.md)
     * [clean](appendix/snforge/clean.md)

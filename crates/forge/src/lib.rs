@@ -74,11 +74,14 @@ Join the community:
 Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
 )]
-#[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
-#[command(name = "snforge")]
+#[command(name = "snforge", about = "snforge - a testing tool for Starknet contracts", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
     subcommand: ForgeSubcommand,
+
+    /// If passed, output will be displayed in json format
+    #[arg(short, long, global = true)]
+    pub json: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -314,9 +317,7 @@ pub enum ExitStatus {
 }
 
 #[tracing::instrument(skip_all, level = "debug")]
-pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
-    let cli = Cli::parse();
-
+pub fn main_execution(cli: Cli, ui: Arc<UI>) -> Result<ExitStatus> {
     match cli.subcommand {
         ForgeSubcommand::New { args } => {
             new::new(args)?;
