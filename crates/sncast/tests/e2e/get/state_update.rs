@@ -14,7 +14,12 @@ async fn test_happy_case() {
         indoc! {r"
             Success: State update retrieved
 
-            Old Root: 0x[..]
+            Old Root:           0x[..]
+
+            Storage Diffs
+              Contract Address: 0x[..]
+                Key:            0x[..]
+                Value:          0x[..]
         "},
     );
 }
