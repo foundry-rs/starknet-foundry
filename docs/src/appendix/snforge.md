@@ -1,5 +1,6 @@
 # `snforge` CLI Reference
 
+* [common flags](./snforge/common.md)
 * [`snforge test`](./snforge/test.md)
 * [`snforge new`](./snforge/new.md)
 * [`snforge clean`](./snforge/clean.md)
