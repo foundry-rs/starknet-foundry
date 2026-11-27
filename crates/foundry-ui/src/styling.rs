@@ -14,7 +14,10 @@ enum OutputEntry {
         indent: usize,
     },
     BlankLine,
-    Text(String),
+    Text {
+        text: String,
+        indent: usize,
+    },
     Heading {
         text: String,
         indent: usize,
@@ -131,7 +134,10 @@ impl OutputBuilder {
 
     #[must_use]
     pub fn text_field(mut self, text: &str) -> Self {
-        self.entries.push(OutputEntry::Text(text.to_string()));
+        self.entries.push(OutputEntry::Text {
+            text: text.to_string(),
+            indent: self.current_indent,
+        });
         self
     }
 
@@ -219,12 +225,11 @@ impl OutputBuilder {
                 OutputEntry::BlankLine => {
                     content.push('\n');
                 }
-                OutputEntry::Text(text) => {
+                OutputEntry::Text { text, indent } => {
                     if !content.is_empty() && !content.ends_with('\n') {
                         content.push('\n');
                     }
-                    content.push_str(&text);
-                    content.push('\n');
+                    writeln!(content, "{:indent$}{}", "", text).unwrap();
                 }
             }
         }

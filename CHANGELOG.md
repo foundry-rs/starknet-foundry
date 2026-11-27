@@ -64,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Invalid Cairo-like calldata now reports missing and unexpected positional arguments, alongside the provided arguments and expected argument names and types.
 - Error message for a struct constructor invocation whose fields do not match the ABI now lists the expected fields (with their types) along with the provided fields.
+- `sncast verify` and `sncast declare --verifier ...` requires `--confirm_verification` if `--json` is provided.
+- `sncast verify` and `sncast declare --verifier ...` now prints which files will be uploaded as a single notification in `--json` mode.
 
 #### Fixed
 
