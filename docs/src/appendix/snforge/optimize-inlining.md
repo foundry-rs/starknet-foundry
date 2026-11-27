@@ -32,9 +32,9 @@ Step size between tested thresholds. Must be greater than zero. Default: `25`.
 Maximum allowed contract file size in bytes. Thresholds that produce contracts exceeding this value are
 skipped. Default: `4089446`.
 
-## `--max-contract-felts <MAX_CONTRACT_FELTS>`
+## `--max-contract-program-len <MAX_CONTRACT_PROGRAM_LEN>`
 
-Maximum allowed number of felts in a compiled contract. Thresholds that exceed this limit are
+Maximum allowed length of a compiled contract program, in felts. Thresholds that exceed this limit are
 skipped. Default: `81920`.
 
 ## `--gas`

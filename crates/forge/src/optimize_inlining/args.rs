@@ -67,7 +67,7 @@ impl OptimizeInliningArgs {
 #[cfg(test)]
 mod tests {
     use super::OptimizeInliningArgs;
-    use clap::Parser;
+    use clap::{CommandFactory, Parser};
 
     #[test]
     fn validation_fails_without_exact() {
@@ -101,5 +101,30 @@ mod tests {
             "test_name",
         ]);
         args.validate().unwrap();
+    }
+
+    #[test]
+    fn documented_flags_exist() {
+        let docs = include_str!("../../../../docs/src/appendix/snforge/optimize-inlining.md");
+        let command = OptimizeInliningArgs::command();
+        let known_flags: Vec<&str> = command
+            .get_arguments()
+            .filter_map(clap::Arg::get_long)
+            .chain(["help"])
+            .collect();
+
+        let documented_flags = docs
+            .lines()
+            .filter(|line| line.starts_with("## "))
+            .flat_map(|line| line.split('`'))
+            .filter_map(|token| token.strip_prefix("--"))
+            .filter_map(|flag| flag.split_whitespace().next());
+
+        for flag in documented_flags {
+            assert!(
+                known_flags.contains(&flag),
+                "`--{flag}` is documented but not accepted by `snforge optimize-inlining`"
+            );
+        }
     }
 }
