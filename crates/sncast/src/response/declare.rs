@@ -41,6 +41,16 @@ pub struct AlreadyDeclaredResponse {
     pub class_hash: PaddedFelt,
 }
 
+impl SncastCommandMessage for AlreadyDeclaredResponse {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .warning_message("Class already declared")
+            .blank_line()
+            .field("Class Hash", &self.class_hash.into_hex_string())
+            .build()
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "status")]
 pub enum DeclareResponse {
@@ -79,6 +89,19 @@ impl OutputLink for DeclareTransactionResponse {
     }
 }
 
+impl OutputLink for AlreadyDeclaredResponse {
+    const TITLE: &'static str = "class";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        formatdoc!(
+            "
+            class: {}
+            ",
+            provider.class(self.class_hash)
+        )
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployCommandMessage {
     accounts_file: Option<String>,
@@ -93,7 +116,7 @@ impl DeployCommandMessage {
     pub fn new(
         abi: &[AbiEntry],
         no_abi: bool,
-        response: &DeclareTransactionResponse,
+        class_hash: PaddedFelt,
         account: &str,
         accounts_file: &Utf8PathBuf,
         keystore: Option<&Utf8PathBuf>,
@@ -108,7 +131,7 @@ impl DeployCommandMessage {
             account: account.to_string(),
             accounts_file,
             keystore: keystore.map(std::string::ToString::to_string),
-            class_hash: response.class_hash,
+            class_hash,
             constructor_args: ConstructorArgs::from_abi(abi, !no_abi),
             network_flag,
         })

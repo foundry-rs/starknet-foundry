@@ -1,9 +1,10 @@
 use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::OutputFormat;
-use foundry_ui::UI;
+use conversions::padded_felt::PaddedFelt;
+use foundry_ui::{Message, OutputFormat, UI};
 use scarb_metadata::PackageMetadata;
+use serde::Serialize;
 use shared::rpc::get_starknet_version;
 use sncast::helpers::artifacts::resolve_contract_artifacts;
 use sncast::helpers::command::process_command_result;
@@ -14,13 +15,14 @@ use sncast::helpers::rpc::{RpcArgs, generate_network_flag};
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
+use sncast::response::cast_message::{SncastCommandMessage, SncastMessage};
 use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse, DeployCommandMessage,
 };
 use sncast::response::errors::{
     SNCastProviderError, SNCastStarknetError, StarknetCommandError, handle_starknet_command_error,
 };
-use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::explorer_link::{OutputLink, block_explorer_link_if_allowed};
 use sncast::response::ui::UIExt;
 use sncast::response::verify::VerifyResponse;
 use sncast::{WaitForTx, apply_optional_fields, get_account, handle_wait_for_tx, with_account};
@@ -32,7 +34,7 @@ use starknet_rust::core::types::{
 use starknet_rust::providers::{Provider as _, ProviderError};
 use starknet_rust::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{CompiledClass, SierraClass},
+    core::types::contract::{AbiEntry, CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::Signer,
 };
@@ -77,6 +79,10 @@ pub struct Declare {
     /// If passed, omits ABI from the declared Sierra class. This changes the resulting class hash
     #[arg(long)]
     pub no_abi: bool,
+
+    /// If the class is already declared, return its class hash instead of an error
+    #[arg(long = "skip-if-declared", conflicts_with = "dry_run")]
+    pub skip_if_declared: bool,
 
     #[command(flatten)]
     pub common: DeclareCommonArgs,
@@ -129,63 +135,96 @@ pub async fn declare(
         args.no_abi,
         account,
         wait_config,
-        false,
+        args.skip_if_declared,
         ui,
     )
     .await)
     .map_err(handle_starknet_command_error)?;
 
-    let mut response = match result {
-        DeclareResponse::Success(response) => response,
+    match result {
         DeclareResponse::DryRun(response) => {
-            return Ok(process_command_result("declare", Ok(response), ui, None));
+            Ok(process_command_result("declare", Ok(response), ui, None))
         }
-        DeclareResponse::AlreadyDeclared(_) => {
-            unreachable!("Argument `skip_on_already_declared` is false")
-        }
-    };
-
-    if let Some(verify_args) = args.verify {
-        match verify_after_declare(
-            verify_args,
-            response.class_hash.0,
-            &args.contract_name,
-            args.package,
-            &package,
-            &provider,
-            &args.rpc,
-            &config,
-            ui,
-        )
-        .await
-        {
-            Ok(VerifyResponse { message }) => response.verification_message = Some(message),
-            Err(e) => {
-                ui.print_command_error("declare", format!("Failed to verify the contract: {e}"));
+        DeclareResponse::Success(mut response) => {
+            if let Some(verify_args) = args.verify {
+                response.verification_message = verify_declared_class(
+                    verify_args,
+                    response.class_hash.0,
+                    &args.contract_name,
+                    args.package,
+                    &package,
+                    &provider,
+                    &args.rpc,
+                    &config,
+                    ui,
+                )
+                .await;
             }
+
+            finalize_declare_response(
+                response.class_hash,
+                response,
+                &provider,
+                &args.rpc,
+                &config,
+                ui,
+                &contract_definition.abi,
+                args.no_abi,
+            )
+            .await
+        }
+        DeclareResponse::AlreadyDeclared(response) => {
+            if args.verify.is_some() {
+                ui.print_warning(
+                    "Contract verification is skipped because the class is already declared",
+                );
+            }
+
+            finalize_declare_response(
+                response.class_hash,
+                response,
+                &provider,
+                &args.rpc,
+                &config,
+                ui,
+                &contract_definition.abi,
+                args.no_abi,
+            )
+            .await
         }
     }
+}
 
-    let network_flag = generate_network_flag(&args.rpc, &config);
+#[expect(clippy::too_many_arguments)]
+async fn finalize_declare_response<T>(
+    class_hash: PaddedFelt,
+    response: T,
+    provider: &JsonRpcClient<HttpTransport>,
+    rpc: &RpcArgs,
+    config: &CastConfig,
+    ui: &UI,
+    abi: &[AbiEntry],
+    no_abi: bool,
+) -> Result<ExitCode>
+where
+    T: SncastCommandMessage + OutputLink + Serialize + Clone,
+    SncastMessage<T>: Message,
+{
+    let response = Ok(response);
+    let block_explorer_link =
+        block_explorer_link_if_allowed(&response, provider.chain_id().await?, config).await;
+    let res = process_command_result("declare", response, ui, block_explorer_link);
 
     let deploy_message = DeployCommandMessage::new(
-        &contract_definition.abi,
-        args.no_abi,
-        &response,
+        abi,
+        no_abi,
+        class_hash,
         &config.account,
         &config.accounts_file,
         config.keystore.as_ref(),
-        network_flag,
-    );
-
-    let response = Ok(response);
-
-    let block_explorer_link =
-        block_explorer_link_if_allowed(&response, provider.chain_id().await?, &config).await;
-
-    let res = process_command_result("declare", response, ui, block_explorer_link);
-
-    ui.print_notification(deploy_message?);
+        generate_network_flag(rpc, config),
+    )?;
+    ui.print_notification(deploy_message);
 
     Ok(res)
 }
@@ -344,6 +383,39 @@ where
         ),
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
+    }
+}
+
+#[expect(clippy::too_many_arguments)]
+async fn verify_declared_class(
+    verify_args: VerifyCommonArgs,
+    class_hash: Felt,
+    contract_name: &str,
+    package: Option<String>,
+    package_metadata: &PackageMetadata,
+    provider: &JsonRpcClient<HttpTransport>,
+    rpc: &RpcArgs,
+    config: &CastConfig,
+    ui: &UI,
+) -> Option<String> {
+    match verify_after_declare(
+        verify_args,
+        class_hash,
+        contract_name,
+        package,
+        package_metadata,
+        provider,
+        rpc,
+        config,
+        ui,
+    )
+    .await
+    {
+        Ok(VerifyResponse { message }) => Some(message),
+        Err(e) => {
+            ui.print_command_error("declare", format!("Failed to verify the contract: {e}"));
+            None
+        }
     }
 }
 
