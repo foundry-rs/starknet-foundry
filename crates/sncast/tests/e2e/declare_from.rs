@@ -52,8 +52,8 @@ async fn test_happy_case() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class:       https://[..]
+        Transaction: https://[..]
     ", EXAMPLE_CONTRACT_CLASS_HASH_SEPOLIA },
     );
 }
@@ -96,8 +96,8 @@ async fn test_happy_case_with_block_id() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class:       https://[..]
+        Transaction: https://[..]
     " },
     );
 }
@@ -354,8 +354,8 @@ async fn test_declare_from_sierra_happy_case() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class:       https://[..]
+        Transaction: https://[..]
     "},
     );
 }

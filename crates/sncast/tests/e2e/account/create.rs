@@ -55,14 +55,14 @@ pub async fn test_happy_case(account_type: &str) {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "},
     );
 
@@ -319,14 +319,14 @@ pub async fn test_create_with_class_hash_alias() {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy  --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -430,14 +430,14 @@ pub async fn test_happy_case_generate_salt() {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -527,14 +527,14 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -632,14 +632,14 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         Success: Account created
 
         Address: 0x0[..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
     ", account_file, keystore_file, URL});
 
     assert!(temp_dir.path().join(keystore_file).exists());
@@ -836,14 +836,14 @@ pub async fn test_happy_case_keystore_int_format() {
         Success: Account created
 
         Address: [..]
-        
+
         Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
         After prefunding the account, run:
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
-        account: [..]
+        Account: [..]
     ", account_file, keystore_file, URL});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
@@ -890,14 +890,14 @@ pub async fn test_happy_case_default_name_generation() {
             Success: Account created
 
             Address: 0x0[..]
-            
+
             Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
             After prefunding the account, run:
             sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
 
             To see account creation details, visit:
-            account: [..]
+            Account: [..]
         ", id = id});
     };
 
@@ -1151,7 +1151,7 @@ pub async fn test_json_output_format() {
         .current_dir(temp_dir.path());
     snapbox.assert().stdout_eq(indoc! {r#"
         {"add_profile":"Profile my_account successfully added to [..]/snfoundry.toml","address":"0x[..]","command":"account create","estimated_fee":"[..]","message":"Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee/n/nAfter prefunding the account, run:/nsncast --accounts-file accounts.json account deploy --url [..] --name my_account","type":"response"}
-        {"links":"account: https://sepolia.voyager.online/contract/0x[..]","title":"account creation","type":"notification"}
+        {"links":{"account":"https://sepolia.voyager.online/contract/0x[..]"},"title":"account creation","type":"notification"}
     "#});
 }
 

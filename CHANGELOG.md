@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cosmetic improvement: section headings in `get state-update`, `get block` and `ledger sign-hash` output are now bold, and `ledger sign-hash` prints `Hash signature` without a trailing colon.
 - *BREAKING*: `sncast account list` text output is now grouped by network, and its JSON output is now `{ "accounts_file", "accounts": [...] }`, where each account entry includes its `network` and `name`.
 - `sncast completions` along with `--json` flag will result with an error.
+- Updated format of block explorer links in json format and cosmetic changes in human readable format.
 
 #### Fixed
 

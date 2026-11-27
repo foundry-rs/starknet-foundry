@@ -48,7 +48,7 @@ async fn test_happy_case(account: &str) {
         Transaction Hash: 0x[..]
 
         To see invocation details, visit:
-        transaction: [..]
+        Transaction: [..]
     "});
 }
 
@@ -92,7 +92,7 @@ async fn test_calldata_ids() {
         Transaction Hash: 0x[..]
 
         To see invocation details, visit:
-        transaction: [..]
+        Transaction: [..]
     "});
 }
 
@@ -363,7 +363,7 @@ async fn test_run_id_overrides_alias() {
         Transaction Hash: 0x[..]
 
         To see invocation details, visit:
-        transaction: [..]
+        Transaction: [..]
     "});
 }
 
@@ -409,7 +409,7 @@ async fn test_run_alias_from_config_only() {
         Transaction Hash: 0x[..]
 
         To see invocation details, visit:
-        transaction: [..]
+        Transaction: [..]
     "});
 }
 
@@ -492,6 +492,6 @@ async fn test_numeric_inputs() {
         Transaction Hash: 0x[..]
 
         To see invocation details, visit:
-        transaction: [..]
+        Transaction: [..]
     "});
 }

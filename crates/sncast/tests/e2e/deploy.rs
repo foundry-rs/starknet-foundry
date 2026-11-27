@@ -62,8 +62,8 @@ async fn test_happy_case_human_readable() {
             Transaction Hash: 0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            transaction: [..]
+            Contract:    [..]
+            Transaction: [..]
             "
         },
     );
@@ -571,8 +571,45 @@ async fn test_json_output_format() {
         output,
         indoc! {r#"
             {"command":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]","type":"response"}
-            {"links":"contract: https://sepolia.voyager.online/contract/0x[..]\ntransaction: https://sepolia.voyager.online/tx/0x[..]\n","title":"deployment","type":"notification"}
+            {"links":{"contract":"https://sepolia.voyager.online/contract/0x[..]","transaction":"https://sepolia.voyager.online/tx/0x[..]"},"title":"deployment","type":"notification"}
             "#},
+    );
+}
+
+#[tokio::test]
+async fn test_json_output_format_with_declare() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "json_output_with_declare",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+    ];
+
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r#"
+            {"class_hash":"0x[..]","command":"deploy","contract_address":"0x[..]","declare_transaction_hash":"0x[..]","deploy_transaction_hash":"0x[..]","type":"response"}
+            {"links":{"class":"https://sepolia.voyager.online/class/0x[..]","contract":"https://sepolia.voyager.online/contract/0x[..]","declare_transaction":"https://sepolia.voyager.online/tx/0x[..]","deploy_transaction":"https://sepolia.voyager.online/tx/0x[..]"},"title":"deployment","type":"notification"}
+        "#},
     );
 }
 
@@ -615,10 +652,10 @@ async fn test_happy_case_with_declare() {
             Deploy Transaction Hash:  0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            class: [..]
-            deploy transaction: [..]
-            declare transaction: [..]
+            Contract:            [..]
+            Class:               [..]
+            Deploy Transaction:  [..]
+            Declare Transaction: [..]
             "
         },
     );
@@ -765,10 +802,10 @@ async fn test_happy_case_with_declare_no_abi_and_constructor_inputs(use_argument
             Deploy Transaction Hash:  0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            class: [..]
-            deploy transaction: [..]
-            declare transaction: [..]
+            Contract:            [..]
+            Class:               [..]
+            Deploy Transaction:  [..]
+            Declare Transaction: [..]
             "
         },
     );
@@ -829,8 +866,8 @@ async fn test_happy_case_with_already_declared() {
             Transaction Hash: 0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            transaction: [..]
+            Contract:    [..]
+            Transaction: [..]
             "
         },
     );
@@ -911,10 +948,10 @@ async fn test_happy_case_with_declare_nonce() {
             Deploy Transaction Hash:  0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            class: [..]
-            deploy transaction: [..]
-            declare transaction: [..]
+            Contract:            [..]
+            Class:               [..]
+            Deploy Transaction:  [..]
+            Declare Transaction: [..]
             "
         },
     );

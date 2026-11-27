@@ -33,7 +33,7 @@ Success: Multicall completed
 Transaction Hash: 0x[..]
 
 To see invocation details, visit:
-transaction: https://sepolia.voyager.online/tx/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>
@@ -136,7 +136,7 @@ Success: Multicall completed
 Transaction Hash: 0x[..]
 
 To see invocation details, visit:
-transaction: https://sepolia.voyager.online/tx/[..]
+Transaction: https://sepolia.voyager.online/tx/[..]
 ```
 </details>
 <br>

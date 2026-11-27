@@ -67,8 +67,8 @@ async fn test_happy_case_human_readable(no_abi: bool) {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class:       https://[..]
+        Transaction: https://[..]
 
         To deploy a contract of this class, run:
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
@@ -111,7 +111,7 @@ async fn test_happy_case_json_output() {
 {"status":"compiling","message":"[..]"}
 {"status":"finished","message":"[..]"}
 {"class_hash":"0x0[..]","command":"declare","transaction_hash":"0x0[..]","type":"response"}
-{"links":"class: https://sepolia.voyager.online/class/0x0[..]/ntransaction: https://sepolia.voyager.online/tx/0x0[..]/n","title":"declaration","type":"notification"}
+{"links":{"class":"https://sepolia.voyager.online/class/[..]","transaction":"https://sepolia.voyager.online/tx/[..]"},"title":"declaration","type":"notification"}
 "#,
     });
 }
@@ -188,8 +188,8 @@ async fn test_contract_with_constructor_params() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class:       https://[..]
+        Transaction: https://[..]
 
         To deploy a contract of this class, replace the placeholders in `--arguments` with your actual values, then run:
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --arguments '<foo: felt252>, <bar: felt252>' --url http://127.0.0.1:5055/rpc
@@ -230,8 +230,8 @@ async fn test_happy_case_with_full_module_path_contract_name() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class:       https://[..]
+        Transaction: https://[..]
     "},
     );
 }
@@ -273,8 +273,8 @@ async fn test_contract_with_constructor_params_no_abi() {
         Transaction Hash: 0x[..]
 
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class:       https://[..]
+        Transaction: https://[..]
 
         To deploy a contract of this class, replace the placeholders in `--constructor-calldata` with your actual values, then run:
         sncast --accounts-file accounts.json --account my_account deploy --class-hash 0x[..] --constructor-calldata <serialized-constructor-args> --url http://127.0.0.1:5055/rpc
@@ -964,8 +964,8 @@ async fn test_non_existent_profile() {
             Transaction Hash: [..]
 
             To see declaration details, visit:
-            class: [..]
-            transaction: [..]
+            Class:       [..]
+            Transaction: [..]
 
             To deploy a contract of this class, run:
             sncast --accounts-file [..]accounts.json --account user8 deploy --class-hash 0x[..] --url http://127.0.0.1:5055/rpc
