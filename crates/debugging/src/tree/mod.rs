@@ -8,11 +8,11 @@ use ptree::item::StringItem;
 
 /// Serialize a type that implements [`AsTreeNode`] to a string.
 pub trait TreeSerialize {
-    fn serialize(&self) -> String;
+    fn tree_serialize(&self) -> String;
 }
 
 impl<T: AsTreeNode> TreeSerialize for T {
-    fn serialize(&self) -> String {
+    fn tree_serialize(&self) -> String {
         let mut builder = TreeBuilderWithGuard::new();
         Node::new(&mut builder).as_tree_node(self);
         let string_item = builder.build();

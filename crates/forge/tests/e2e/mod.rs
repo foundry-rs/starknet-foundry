@@ -30,6 +30,7 @@ mod forking;
 mod fuzzing;
 mod gas_report;
 mod io_operations;
+mod json_output;
 mod new;
 mod optimize_inlining;
 mod oracles;

@@ -22,6 +22,7 @@ data-transformer = { path = "../data-transformer" }
 paste.workspace = true
 ptree.workspace = true
 rayon.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 starknet-types-core.workspace = true
 starknet-rust.workspace = true

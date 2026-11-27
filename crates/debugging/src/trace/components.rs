@@ -63,7 +63,7 @@ macro_rules! impl_component_container {
                 "` that is computed only if `Component::", stringify!($variant),
                 "` is included in the [`Components`]."
             )]
-            #[derive(Debug, Clone)]
+            #[derive(Debug, Clone, serde::Serialize)]
             pub struct [<$variant Container>] {
                 value: Option<$ty>,
             }

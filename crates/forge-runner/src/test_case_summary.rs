@@ -19,6 +19,7 @@ use cheatnet::runtime_extensions::outer_call_runtime_extension::rpc::UsedResourc
 use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
 use num_traits::ToPrimitive;
+use serde::Serialize;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_api::execution_utils::format_panic_data;
@@ -35,7 +36,7 @@ static BYTE_ARRAY_MAGIC_FELT: LazyLock<Felt> =
 // and `pending_word_len`. The total length is thus `words_len` + this constant.
 const BYTE_ARRAY_FIXED_PART_LEN: usize = 4;
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default, Serialize)]
 pub struct GasFuzzingInfo {
     pub l1_gas: GasStats,
     pub l1_data_gas: GasStats,

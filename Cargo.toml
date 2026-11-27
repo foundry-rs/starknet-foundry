@@ -47,7 +47,7 @@ assert_is_empty = "allow"
 
 [workspace.dependencies]
 # TODO: update `versioned_constants()` to use latest on the next blockifier bump.
-blockifier = { version = "0.21.0-rc.1", features = ["testing", "tracing", "node_api"] }
+blockifier = { version = "0.21.0-rc.1", features = ["testing", "tracing", "node_api", "transaction_serde"] }
 starknet_api = "0.21.0-rc.1"
 bigdecimal = "0.4.10"
 cairo-debugger = { git = "https://github.com/software-mansion-labs/cairo-debugger", rev = "12736c4156f02fc83d51070c189927b7144f4cb3" }
