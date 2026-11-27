@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- `sncast` now performs all configured transaction status checks and waits asynchronously for the configured retry interval.
 - `sncast verify` confirmation prompt now correctly defaults to "Yes".
 - `sncast account list` no longer hides accounts that share a name with an account on a different network.
 - `sncast account list --json` now reports `"command": "account list"` instead of `"account delete"`.
