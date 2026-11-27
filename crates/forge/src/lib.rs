@@ -1,5 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use camino::Utf8PathBuf;
 use clap::builder::BoolishValueParser;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
@@ -7,8 +7,8 @@ use derive_more::Display;
 use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::partition::Partition;
-use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::{OutputFormat, UI};
 use run_tests::workspace::run_for_workspace;
 use scarb_api::ScarbCommand;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
@@ -343,10 +343,13 @@ pub fn main_execution(cli: Cli, ui: Arc<UI>) -> Result<ExitStatus> {
             check_requirements(true, &ui)?;
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Completions(completions) => {
-            let _ = generate_completions(completions.shell, &mut Cli::command())?;
-            Ok(ExitStatus::Success)
-        }
+        ForgeSubcommand::Completions(completions) => match ui.output_format() {
+            OutputFormat::Human => {
+                let _ = generate_completions(completions.shell, &mut Cli::command())?;
+                Ok(ExitStatus::Success)
+            }
+            OutputFormat::Json => Err(anyhow!("`--json` flag is not supported")),
+        },
         ForgeSubcommand::OptimizeInlining { args } => {
             let cores = resolve_thread_count(args.test_args.max_threads, &ui);
             check_requirements(false, &ui)?;
