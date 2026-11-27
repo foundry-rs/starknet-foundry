@@ -8,7 +8,7 @@ use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use regex::Regex;
 use scarb_api::ScarbCommand;
-use shared::consts::FREE_RPC_PROVIDER_URL;
+use shared::consts::SEPOLIA_RPC_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_data_eq;
 use snapbox::cmd::Command as SnapboxCommand;
@@ -169,7 +169,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
             r#"
             [[tool.snforge.fork]]
             name = "SEPOLIA_LATEST"
-            url = "{FREE_RPC_PROVIDER_URL}"
+            url = "{SEPOLIA_RPC_URL}"
             block_id = {{ tag = "latest" }}
         "#
         )

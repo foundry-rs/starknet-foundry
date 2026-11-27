@@ -12,7 +12,7 @@ network and perform actions on top of it.
 ## Test Contract
 
 We will demonstrate fork testing on an example of the `Pokemons` contract deployed on Sepolia network.
-We are going to use a free, open RPC endpoint - [Zan](https://zan.top/blockchain/starknet).
+We are going to use a free, open RPC endpoint hosted by [Software Mansion](https://rpc.pathfinder.swmansion.com/testnet-sepolia/rpc/v0_10).
 
 We first need to define the contract's interface along with all the structures used by its externals:
 ```rust
@@ -77,7 +77,7 @@ the same fork in tests.
 ```toml
 [[tool.snforge.fork]]
 name = "SEPOLIA_LATEST"
-url = "https://api.zan.top/public/starknet-sepolia/rpc/v0_10"
+url = "https://rpc.pathfinder.swmansion.com/testnet-sepolia/rpc/v0_10"
 block_id.tag = "latest"
 ```
 
