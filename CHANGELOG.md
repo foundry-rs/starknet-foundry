@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- JSON support for all `snforge` commands
+
 ## [0.65.0] - 2026-11-27
 
 ### Forge
